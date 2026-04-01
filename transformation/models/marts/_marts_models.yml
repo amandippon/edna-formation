@@ -1,0 +1,81 @@
+version: 2
+
+models:
+  - name: dim_athletes
+    description: "Table de dimension des athlètes enrichie avec les informations du sport."
+    columns:
+      - name: athlete_id
+        description: "Identifiant unique de l'athlète"
+        data_tests:
+          - unique
+          - not_null
+      - name: full_name
+        description: "Nom complet (prénom + nom)"
+        data_tests:
+          - not_null
+      - name: country_name
+        description: "Pays représenté"
+        data_tests:
+          - not_null
+      - name: gender
+        description: "Genre (M/F)"
+        data_tests:
+          - accepted_values:
+              values: ['M', 'F']
+      - name: age
+        description: "Âge calculé par rapport à 2024"
+      - name: sport_name
+        description: "Nom du sport pratiqué"
+      - name: sport_category
+        description: "Catégorie du sport"
+
+  - name: dim_competitions
+    description: "Table de dimension des compétitions enrichie avec les informations du sport."
+    columns:
+      - name: competition_id
+        description: "Identifiant unique de la compétition"
+        data_tests:
+          - unique
+          - not_null
+      - name: edition
+        description: "Édition olympique (ex: Paris 2024)"
+        data_tests:
+          - not_null
+      - name: year
+        description: "Année des Jeux"
+        data_tests:
+          - not_null
+
+  - name: fct_results
+    description: "Table de faits des résultats au grain résultat/athlète/compétition. Ne référence que le staging."
+    columns:
+      - name: result_id
+        description: "Identifiant unique du résultat"
+        data_tests:
+          - unique
+          - not_null
+      - name: athlete_id
+        description: "Clé étrangère vers l'athlète"
+        data_tests:
+          - not_null
+      - name: competition_id
+        description: "Clé étrangère vers la compétition"
+        data_tests:
+          - not_null
+      - name: rank
+        description: "Classement final"
+        data_tests:
+          - not_null
+      - name: medal
+        description: "Médaille obtenue (Gold, Silver, Bronze, None)"
+        data_tests:
+          - accepted_values:
+              values: ['Gold', 'Silver', 'Bronze', 'None']
+      - name: performance_value
+        description: "Valeur de la performance"
+      - name: performance_unit
+        description: "Unité de mesure de la performance"
+      - name: is_medalist
+        description: "True si l'athlète a gagné une médaille"
+      - name: medal_points
+        description: "Points de médaille (Or=3, Argent=2, Bronze=1, Aucun=0)"

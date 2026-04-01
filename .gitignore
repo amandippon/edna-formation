@@ -1,0 +1,29 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# dlt
+.dlt/pipelines/
+.dlt/secrets.toml
+
+# dbt
+transformation/target/
+transformation/logs/
+transformation/dbt_packages/
+
+# DuckDB
+*.duckdb
+*.duckdb.wal
+
+# Données générées
+processed-resources/
+
+# Environnement
+.env
+
+# OS
+.DS_Store
+Thumbs.db

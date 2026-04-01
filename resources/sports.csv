@@ -1,0 +1,16 @@
+sport_id,sport_name,discipline,sport_category
+S01,Athlétisme,100m,Athlétisme
+S02,Athlétisme,400m haies,Athlétisme
+S03,Athlétisme,Marathon,Athlétisme
+S04,Athlétisme,Saut en hauteur,Athlétisme
+S05,Natation,100m nage libre,Natation
+S06,Natation,200m papillon,Natation
+S07,Natation,400m quatre nages,Natation
+S08,Gymnastique,Sol,Gymnastique
+S09,Gymnastique,Barres asymétriques,Gymnastique
+S10,Cyclisme,Route - Course en ligne,Cyclisme
+S11,Cyclisme,Piste - Keirin,Cyclisme
+S12,Judo,Moins de 73kg,Judo
+S13,Judo,Moins de 63kg,Judo
+S14,Escrime,Fleuret individuel,Escrime
+S15,Tennis de table,Simple,Tennis de table

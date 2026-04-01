@@ -1,0 +1,69 @@
+version: 2
+
+models:
+  - name: rpt_results
+    description: "Table de reporting dénormalisée des résultats olympiques. Seule couche exposée à Superset."
+    columns:
+      - name: result_id
+        description: "Identifiant unique du résultat"
+        data_tests:
+          - unique
+          - not_null
+      - name: athlete_id
+        description: "Identifiant de l'athlète"
+        data_tests:
+          - not_null
+      - name: athlete_name
+        description: "Nom complet de l'athlète"
+        data_tests:
+          - not_null
+      - name: first_name
+        description: "Prénom de l'athlète"
+      - name: last_name
+        description: "Nom de famille de l'athlète"
+      - name: country_code
+        description: "Code pays ISO (3 lettres)"
+      - name: country_name
+        description: "Pays représenté par l'athlète"
+      - name: gender
+        description: "Genre (M/F)"
+        data_tests:
+          - accepted_values:
+              values: ['M', 'F']
+      - name: age
+        description: "Âge calculé par rapport à 2024"
+      - name: sport_name
+        description: "Nom du sport"
+      - name: discipline
+        description: "Discipline spécifique"
+      - name: sport_category
+        description: "Catégorie du sport"
+      - name: competition_id
+        description: "Identifiant de la compétition"
+      - name: competition_name
+        description: "Nom de l'épreuve"
+      - name: edition
+        description: "Édition olympique (ex: Paris 2024)"
+      - name: year
+        description: "Année des Jeux"
+      - name: season
+        description: "Saison (Summer/Winter)"
+      - name: city
+        description: "Ville hôte"
+      - name: host_country
+        description: "Pays hôte"
+      - name: rank
+        description: "Classement final"
+      - name: medal
+        description: "Médaille obtenue (Gold, Silver, Bronze, None)"
+        data_tests:
+          - accepted_values:
+              values: ['Gold', 'Silver', 'Bronze', 'None']
+      - name: performance_value
+        description: "Valeur de la performance"
+      - name: performance_unit
+        description: "Unité de mesure de la performance"
+      - name: is_medalist
+        description: "True si l'athlète a gagné une médaille"
+      - name: medal_points
+        description: "Points de médaille (Or=3, Argent=2, Bronze=1, Aucun=0)"

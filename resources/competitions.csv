@@ -1,0 +1,26 @@
+competition_id,competition_name,sport_id,city,country,year,season,edition
+C01,100m Hommes,S01,Rio de Janeiro,Brésil,2016,Summer,Rio 2016
+C02,100m Femmes,S01,Rio de Janeiro,Brésil,2016,Summer,Rio 2016
+C03,400m haies Hommes,S02,Tokyo,Japon,2021,Summer,Tokyo 2020
+C04,400m haies Femmes,S02,Tokyo,Japon,2021,Summer,Tokyo 2020
+C05,Marathon Hommes,S03,Tokyo,Japon,2021,Summer,Tokyo 2020
+C06,Marathon Femmes,S03,Tokyo,Japon,2021,Summer,Tokyo 2020
+C07,Saut en hauteur Hommes,S04,Tokyo,Japon,2021,Summer,Tokyo 2020
+C08,Saut en hauteur Femmes,S04,Tokyo,Japon,2021,Summer,Tokyo 2020
+C09,100m nage libre Hommes,S05,Tokyo,Japon,2021,Summer,Tokyo 2020
+C10,100m nage libre Femmes,S05,Paris,France,2024,Summer,Paris 2024
+C11,200m papillon Hommes,S06,Tokyo,Japon,2021,Summer,Tokyo 2020
+C12,200m papillon Femmes,S06,Tokyo,Japon,2021,Summer,Tokyo 2020
+C13,400m quatre nages Hommes,S07,Paris,France,2024,Summer,Paris 2024
+C14,400m quatre nages Femmes,S07,Tokyo,Japon,2021,Summer,Tokyo 2020
+C15,Sol Hommes,S08,Paris,France,2024,Summer,Paris 2024
+C16,Sol Femmes,S08,Paris,France,2024,Summer,Paris 2024
+C17,Barres asymétriques Femmes,S09,Paris,France,2024,Summer,Paris 2024
+C18,Course en ligne Hommes,S10,Paris,France,2024,Summer,Paris 2024
+C19,Course en ligne Femmes,S10,Paris,France,2024,Summer,Paris 2024
+C20,Keirin Hommes,S11,Tokyo,Japon,2021,Summer,Tokyo 2020
+C21,Keirin Femmes,S11,Tokyo,Japon,2021,Summer,Tokyo 2020
+C22,Judo -73kg Hommes,S12,Paris,France,2024,Summer,Paris 2024
+C23,Judo -63kg Femmes,S13,Tokyo,Japon,2021,Summer,Tokyo 2020
+C24,Fleuret Hommes,S14,Rio de Janeiro,Brésil,2016,Summer,Rio 2016
+C25,Simple Femmes,S15,Paris,France,2024,Summer,Paris 2024

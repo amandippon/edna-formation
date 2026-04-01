@@ -1,0 +1,7 @@
+edna-transformation:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: ../edna-sports-data.duckdb
+      threads: 1

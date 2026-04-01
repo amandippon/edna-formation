@@ -1,0 +1,135 @@
+version: 2
+
+models:
+  - name: stg_sports
+    description: "Catalogue des sports olympiques et leurs disciplines."
+    columns:
+      - name: sport_id
+        description: "Identifiant unique du sport"
+        data_tests:
+          - unique
+          - not_null
+      - name: sport_name
+        description: "Nom du sport"
+        data_tests:
+          - not_null
+      - name: discipline
+        description: "Discipline spécifique (ex: 100m, Marathon)"
+      - name: sport_category
+        description: "Catégorie du sport (ex: Athlétisme, Natation)"
+        data_tests:
+          - not_null
+
+  - name: stg_athletes
+    description: "Athlètes olympiques et leurs informations personnelles."
+    columns:
+      - name: athlete_id
+        description: "Identifiant unique de l'athlète"
+        data_tests:
+          - unique
+          - not_null
+      - name: first_name
+        description: "Prénom"
+        data_tests:
+          - not_null
+      - name: last_name
+        description: "Nom de famille"
+        data_tests:
+          - not_null
+      - name: country_code
+        description: "Code pays ISO (3 lettres)"
+        data_tests:
+          - not_null
+      - name: country_name
+        description: "Nom complet du pays"
+        data_tests:
+          - not_null
+      - name: birth_year
+        description: "Année de naissance"
+      - name: gender
+        description: "Genre (M/F)"
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['M', 'F']
+      - name: sport_id
+        description: "Référence vers la table sports"
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('stg_sports')
+              field: sport_id
+
+  - name: stg_competitions
+    description: "Compétitions olympiques par édition."
+    columns:
+      - name: competition_id
+        description: "Identifiant unique de la compétition"
+        data_tests:
+          - unique
+          - not_null
+      - name: competition_name
+        description: "Nom de l'épreuve"
+        data_tests:
+          - not_null
+      - name: sport_id
+        description: "Référence vers la table sports"
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('stg_sports')
+              field: sport_id
+      - name: city
+        description: "Ville hôte"
+        data_tests:
+          - not_null
+      - name: year
+        description: "Année de la compétition"
+        data_tests:
+          - not_null
+      - name: season
+        description: "Saison (Summer/Winter)"
+        data_tests:
+          - accepted_values:
+              values: ['Summer', 'Winter']
+      - name: edition
+        description: "Nom de l'édition olympique (ex: Paris 2024)"
+        data_tests:
+          - not_null
+
+  - name: stg_results
+    description: "Résultats des athlètes aux compétitions."
+    columns:
+      - name: result_id
+        description: "Identifiant unique du résultat"
+        data_tests:
+          - unique
+          - not_null
+      - name: athlete_id
+        description: "Référence vers la table athletes"
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('stg_athletes')
+              field: athlete_id
+      - name: competition_id
+        description: "Référence vers la table competitions"
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('stg_competitions')
+              field: competition_id
+      - name: rank
+        description: "Classement final (1 = médaille d'or)"
+        data_tests:
+          - not_null
+      - name: medal
+        description: "Médaille obtenue"
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['Gold', 'Silver', 'Bronze', 'None']
+      - name: performance_value
+        description: "Valeur de la performance (temps, distance, points...)"
+      - name: performance_unit
+        description: "Unité de mesure de la performance"

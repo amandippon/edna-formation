@@ -1,0 +1,2059 @@
+{
+  "metadata": {
+    "colibri_version": "0.2.8",
+    "generated_at": "2026-04-01T12:47:45Z",
+    "adapter_type": "duckdb",
+    "dbt_version": "1.11.7",
+    "dbt_schema_version": "https://schemas.getdbt.com/dbt/manifest/v12.json",
+    "dbt_invocation_id": "febff1b1-8c9a-4b7e-bc71-0ed8324e4b3c",
+    "dbt_project_name": "transformation",
+    "dbt_project_id": "3935f8feee087b4547de27296ec777b9"
+  },
+  "nodes": {
+    "model.transformation.rpt_results": {
+      "id": "model.transformation.rpt_results",
+      "name": "rpt_results",
+      "fullName": "model.transformation.rpt_results",
+      "nodeType": "model",
+      "materialized": "table",
+      "modelType": "unknown",
+      "database": "edna-sports-data",
+      "schema": "main_reporting",
+      "path": "models/reporting/rpt_results.sql",
+      "description": "Table de reporting d\u00e9normalis\u00e9e des r\u00e9sultats olympiques. Seule couche expos\u00e9e \u00e0 Superset.",
+      "contractEnforced": false,
+      "rawCode": "with results as (\n    select * from {{ ref('fct_results') }}\n),\n\nathletes as (\n    select * from {{ ref('dim_athletes') }}\n),\n\ncompetitions as (\n    select * from {{ ref('dim_competitions') }}\n),\n\nfinal as (\n    select\n        r.result_id,\n        -- Athl\u00e8te\n        a.athlete_id,\n        a.full_name                 as athlete_name,\n        a.first_name,\n        a.last_name,\n        a.country_code,\n        a.country_name,\n        a.gender,\n        a.age,\n        a.sport_name,\n        a.discipline,\n        a.sport_category,\n        -- Comp\u00e9tition\n        c.competition_id,\n        c.competition_name,\n        c.edition,\n        c.year,\n        c.season,\n        c.city,\n        c.country                   as host_country,\n        -- R\u00e9sultat\n        r.rank,\n        r.medal,\n        r.performance_value,\n        r.performance_unit,\n        r.is_medalist,\n        r.medal_points\n    from results r\n    left join athletes    a on r.athlete_id    = a.athlete_id\n    left join competitions c on r.competition_id = c.competition_id\n)\n\nselect * from final",
+      "compiledCode": "with results as (\n    select * from \"edna-sports-data\".\"main_marts\".\"fct_results\"\n),\n\nathletes as (\n    select * from \"edna-sports-data\".\"main_marts\".\"dim_athletes\"\n),\n\ncompetitions as (\n    select * from \"edna-sports-data\".\"main_marts\".\"dim_competitions\"\n),\n\nfinal as (\n    select\n        r.result_id,\n        -- Athl\u00e8te\n        a.athlete_id,\n        a.full_name                 as athlete_name,\n        a.first_name,\n        a.last_name,\n        a.country_code,\n        a.country_name,\n        a.gender,\n        a.age,\n        a.sport_name,\n        a.discipline,\n        a.sport_category,\n        -- Comp\u00e9tition\n        c.competition_id,\n        c.competition_name,\n        c.edition,\n        c.year,\n        c.season,\n        c.city,\n        c.country                   as host_country,\n        -- R\u00e9sultat\n        r.rank,\n        r.medal,\n        r.performance_value,\n        r.performance_unit,\n        r.is_medalist,\n        r.medal_points\n    from results r\n    left join athletes    a on r.athlete_id    = a.athlete_id\n    left join competitions c on r.competition_id = c.competition_id\n)\n\nselect * from final",
+      "refs": [
+        {
+          "name": "fct_results",
+          "package": null,
+          "version": null
+        },
+        {
+          "name": "dim_athletes",
+          "package": null,
+          "version": null
+        },
+        {
+          "name": "dim_competitions",
+          "package": null,
+          "version": null
+        }
+      ],
+      "columns": {
+        "result_id": {
+          "columnName": "result_id",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Identifiant unique du r\u00e9sultat",
+          "lineageType": "pass-through"
+        },
+        "athlete_id": {
+          "columnName": "athlete_id",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Identifiant de l'athl\u00e8te",
+          "lineageType": "pass-through"
+        },
+        "athlete_name": {
+          "columnName": "athlete_name",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Nom complet de l'athl\u00e8te",
+          "lineageType": "rename"
+        },
+        "first_name": {
+          "columnName": "first_name",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Pr\u00e9nom de l'athl\u00e8te",
+          "lineageType": "pass-through"
+        },
+        "last_name": {
+          "columnName": "last_name",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Nom de famille de l'athl\u00e8te",
+          "lineageType": "pass-through"
+        },
+        "country_code": {
+          "columnName": "country_code",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Code pays ISO (3 lettres)",
+          "lineageType": "pass-through"
+        },
+        "country_name": {
+          "columnName": "country_name",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Pays repr\u00e9sent\u00e9 par l'athl\u00e8te",
+          "lineageType": "pass-through"
+        },
+        "gender": {
+          "columnName": "gender",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Genre (M/F)",
+          "lineageType": "pass-through"
+        },
+        "age": {
+          "columnName": "age",
+          "hasLineage": true,
+          "dataType": "BIGINT",
+          "description": "\u00c2ge calcul\u00e9 par rapport \u00e0 2024",
+          "lineageType": "pass-through"
+        },
+        "sport_name": {
+          "columnName": "sport_name",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Nom du sport",
+          "lineageType": "pass-through"
+        },
+        "discipline": {
+          "columnName": "discipline",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Discipline sp\u00e9cifique",
+          "lineageType": "pass-through"
+        },
+        "sport_category": {
+          "columnName": "sport_category",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Cat\u00e9gorie du sport",
+          "lineageType": "pass-through"
+        },
+        "competition_id": {
+          "columnName": "competition_id",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Identifiant de la comp\u00e9tition",
+          "lineageType": "pass-through"
+        },
+        "competition_name": {
+          "columnName": "competition_name",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Nom de l'\u00e9preuve",
+          "lineageType": "pass-through"
+        },
+        "edition": {
+          "columnName": "edition",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "\u00c9dition olympique (ex: Paris 2024)",
+          "lineageType": "pass-through"
+        },
+        "year": {
+          "columnName": "year",
+          "hasLineage": true,
+          "dataType": "BIGINT",
+          "description": "Ann\u00e9e des Jeux",
+          "lineageType": "pass-through"
+        },
+        "season": {
+          "columnName": "season",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Saison (Summer/Winter)",
+          "lineageType": "pass-through"
+        },
+        "city": {
+          "columnName": "city",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Ville h\u00f4te",
+          "lineageType": "pass-through"
+        },
+        "host_country": {
+          "columnName": "host_country",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Pays h\u00f4te",
+          "lineageType": "rename"
+        },
+        "rank": {
+          "columnName": "rank",
+          "hasLineage": true,
+          "dataType": "BIGINT",
+          "description": "Classement final",
+          "lineageType": "pass-through"
+        },
+        "medal": {
+          "columnName": "medal",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "M\u00e9daille obtenue (Gold, Silver, Bronze, None)",
+          "lineageType": "pass-through"
+        },
+        "performance_value": {
+          "columnName": "performance_value",
+          "hasLineage": true,
+          "dataType": "DOUBLE",
+          "description": "Valeur de la performance",
+          "lineageType": "pass-through"
+        },
+        "performance_unit": {
+          "columnName": "performance_unit",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Unit\u00e9 de mesure de la performance",
+          "lineageType": "pass-through"
+        },
+        "is_medalist": {
+          "columnName": "is_medalist",
+          "hasLineage": true,
+          "dataType": "BOOLEAN",
+          "description": "True si l'athl\u00e8te a gagn\u00e9 une m\u00e9daille",
+          "lineageType": "pass-through"
+        },
+        "medal_points": {
+          "columnName": "medal_points",
+          "hasLineage": true,
+          "dataType": "INTEGER",
+          "description": "Points de m\u00e9daille (Or=3, Argent=2, Bronze=1, Aucun=0)",
+          "lineageType": "pass-through"
+        }
+      }
+    },
+    "model.transformation.fct_results": {
+      "id": "model.transformation.fct_results",
+      "name": "fct_results",
+      "fullName": "model.transformation.fct_results",
+      "nodeType": "model",
+      "materialized": "table",
+      "modelType": "unknown",
+      "database": "edna-sports-data",
+      "schema": "main_marts",
+      "path": "models/marts/fct_results.sql",
+      "description": "Table de faits des r\u00e9sultats au grain r\u00e9sultat/athl\u00e8te/comp\u00e9tition. Ne r\u00e9f\u00e9rence que le staging.",
+      "contractEnforced": false,
+      "rawCode": "with results as (\n    select * from {{ ref('stg_results') }}\n),\n\nfinal as (\n    select\n        result_id,\n        athlete_id,\n        competition_id,\n        rank,\n        medal,\n        performance_value,\n        performance_unit,\n        -- Indicateurs calcul\u00e9s\n        case when medal != 'None' then true else false end as is_medalist,\n        case when medal = 'Gold'   then 3\n             when medal = 'Silver' then 2\n             when medal = 'Bronze' then 1\n             else 0\n        end                                                as medal_points\n    from results\n)\n\nselect * from final",
+      "compiledCode": "with results as (\n    select * from \"edna-sports-data\".\"main_staging\".\"stg_results\"\n),\n\nfinal as (\n    select\n        result_id,\n        athlete_id,\n        competition_id,\n        rank,\n        medal,\n        performance_value,\n        performance_unit,\n        -- Indicateurs calcul\u00e9s\n        case when medal != 'None' then true else false end as is_medalist,\n        case when medal = 'Gold'   then 3\n             when medal = 'Silver' then 2\n             when medal = 'Bronze' then 1\n             else 0\n        end                                                as medal_points\n    from results\n)\n\nselect * from final",
+      "refs": [
+        {
+          "name": "stg_results",
+          "package": null,
+          "version": null
+        }
+      ],
+      "columns": {
+        "result_id": {
+          "columnName": "result_id",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Identifiant unique du r\u00e9sultat",
+          "lineageType": "pass-through"
+        },
+        "athlete_id": {
+          "columnName": "athlete_id",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Cl\u00e9 \u00e9trang\u00e8re vers l'athl\u00e8te",
+          "lineageType": "pass-through"
+        },
+        "competition_id": {
+          "columnName": "competition_id",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Cl\u00e9 \u00e9trang\u00e8re vers la comp\u00e9tition",
+          "lineageType": "pass-through"
+        },
+        "rank": {
+          "columnName": "rank",
+          "hasLineage": true,
+          "dataType": "BIGINT",
+          "description": "Classement final",
+          "lineageType": "pass-through"
+        },
+        "medal": {
+          "columnName": "medal",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "M\u00e9daille obtenue (Gold, Silver, Bronze, None)",
+          "lineageType": "pass-through"
+        },
+        "performance_value": {
+          "columnName": "performance_value",
+          "hasLineage": true,
+          "dataType": "DOUBLE",
+          "description": "Valeur de la performance",
+          "lineageType": "pass-through"
+        },
+        "performance_unit": {
+          "columnName": "performance_unit",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Unit\u00e9 de mesure de la performance",
+          "lineageType": "pass-through"
+        },
+        "is_medalist": {
+          "columnName": "is_medalist",
+          "hasLineage": true,
+          "dataType": "BOOLEAN",
+          "description": "True si l'athl\u00e8te a gagn\u00e9 une m\u00e9daille",
+          "lineageType": "transformation"
+        },
+        "medal_points": {
+          "columnName": "medal_points",
+          "hasLineage": true,
+          "dataType": "INTEGER",
+          "description": "Points de m\u00e9daille (Or=3, Argent=2, Bronze=1, Aucun=0)",
+          "lineageType": "transformation"
+        }
+      }
+    },
+    "model.transformation.dim_athletes": {
+      "id": "model.transformation.dim_athletes",
+      "name": "dim_athletes",
+      "fullName": "model.transformation.dim_athletes",
+      "nodeType": "model",
+      "materialized": "table",
+      "modelType": "dimension",
+      "database": "edna-sports-data",
+      "schema": "main_marts",
+      "path": "models/marts/dim_athletes.sql",
+      "description": "Table de dimension des athl\u00e8tes enrichie avec les informations du sport.",
+      "contractEnforced": false,
+      "rawCode": "with athletes as (\n    select * from {{ ref('stg_athletes') }}\n),\n\nsports as (\n    select * from {{ ref('stg_sports') }}\n),\n\nfinal as (\n    select\n        a.athlete_id,\n        a.first_name || ' ' || a.last_name   as full_name,\n        a.first_name,\n        a.last_name,\n        a.country_code,\n        a.country_name,\n        a.birth_year,\n        2024 - a.birth_year                  as age,\n        a.gender,\n        s.sport_name,\n        s.discipline,\n        s.sport_category\n    from athletes a\n    left join sports s on a.sport_id = s.sport_id\n)\n\nselect * from final",
+      "compiledCode": "with athletes as (\n    select * from \"edna-sports-data\".\"main_staging\".\"stg_athletes\"\n),\n\nsports as (\n    select * from \"edna-sports-data\".\"main_staging\".\"stg_sports\"\n),\n\nfinal as (\n    select\n        a.athlete_id,\n        a.first_name || ' ' || a.last_name   as full_name,\n        a.first_name,\n        a.last_name,\n        a.country_code,\n        a.country_name,\n        a.birth_year,\n        2024 - a.birth_year                  as age,\n        a.gender,\n        s.sport_name,\n        s.discipline,\n        s.sport_category\n    from athletes a\n    left join sports s on a.sport_id = s.sport_id\n)\n\nselect * from final",
+      "refs": [
+        {
+          "name": "stg_athletes",
+          "package": null,
+          "version": null
+        },
+        {
+          "name": "stg_sports",
+          "package": null,
+          "version": null
+        }
+      ],
+      "columns": {
+        "athlete_id": {
+          "columnName": "athlete_id",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Identifiant unique de l'athl\u00e8te",
+          "lineageType": "pass-through"
+        },
+        "full_name": {
+          "columnName": "full_name",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Nom complet (pr\u00e9nom + nom)",
+          "lineageType": "transformation"
+        },
+        "first_name": {
+          "columnName": "first_name",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "lineageType": "pass-through"
+        },
+        "last_name": {
+          "columnName": "last_name",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "lineageType": "pass-through"
+        },
+        "country_code": {
+          "columnName": "country_code",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "lineageType": "pass-through"
+        },
+        "country_name": {
+          "columnName": "country_name",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Pays repr\u00e9sent\u00e9",
+          "lineageType": "pass-through"
+        },
+        "birth_year": {
+          "columnName": "birth_year",
+          "hasLineage": true,
+          "dataType": "BIGINT",
+          "lineageType": "pass-through"
+        },
+        "age": {
+          "columnName": "age",
+          "hasLineage": true,
+          "dataType": "BIGINT",
+          "description": "\u00c2ge calcul\u00e9 par rapport \u00e0 2024",
+          "lineageType": "transformation"
+        },
+        "gender": {
+          "columnName": "gender",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Genre (M/F)",
+          "lineageType": "pass-through"
+        },
+        "sport_name": {
+          "columnName": "sport_name",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Nom du sport pratiqu\u00e9",
+          "lineageType": "pass-through"
+        },
+        "discipline": {
+          "columnName": "discipline",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "lineageType": "pass-through"
+        },
+        "sport_category": {
+          "columnName": "sport_category",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Cat\u00e9gorie du sport",
+          "lineageType": "pass-through"
+        }
+      }
+    },
+    "model.transformation.dim_competitions": {
+      "id": "model.transformation.dim_competitions",
+      "name": "dim_competitions",
+      "fullName": "model.transformation.dim_competitions",
+      "nodeType": "model",
+      "materialized": "table",
+      "modelType": "dimension",
+      "database": "edna-sports-data",
+      "schema": "main_marts",
+      "path": "models/marts/dim_competitions.sql",
+      "description": "Table de dimension des comp\u00e9titions enrichie avec les informations du sport.",
+      "contractEnforced": false,
+      "rawCode": "with competitions as (\n    select * from {{ ref('stg_competitions') }}\n),\n\nsports as (\n    select * from {{ ref('stg_sports') }}\n),\n\nfinal as (\n    select\n        c.competition_id,\n        c.competition_name,\n        c.city,\n        c.country,\n        c.year,\n        c.season,\n        c.edition,\n        s.sport_name,\n        s.discipline,\n        s.sport_category\n    from competitions c\n    left join sports s on c.sport_id = s.sport_id\n)\n\nselect * from final",
+      "compiledCode": "with competitions as (\n    select * from \"edna-sports-data\".\"main_staging\".\"stg_competitions\"\n),\n\nsports as (\n    select * from \"edna-sports-data\".\"main_staging\".\"stg_sports\"\n),\n\nfinal as (\n    select\n        c.competition_id,\n        c.competition_name,\n        c.city,\n        c.country,\n        c.year,\n        c.season,\n        c.edition,\n        s.sport_name,\n        s.discipline,\n        s.sport_category\n    from competitions c\n    left join sports s on c.sport_id = s.sport_id\n)\n\nselect * from final",
+      "refs": [
+        {
+          "name": "stg_competitions",
+          "package": null,
+          "version": null
+        },
+        {
+          "name": "stg_sports",
+          "package": null,
+          "version": null
+        }
+      ],
+      "columns": {
+        "competition_id": {
+          "columnName": "competition_id",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Identifiant unique de la comp\u00e9tition",
+          "lineageType": "pass-through"
+        },
+        "competition_name": {
+          "columnName": "competition_name",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "lineageType": "pass-through"
+        },
+        "city": {
+          "columnName": "city",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "lineageType": "pass-through"
+        },
+        "country": {
+          "columnName": "country",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "lineageType": "pass-through"
+        },
+        "year": {
+          "columnName": "year",
+          "hasLineage": true,
+          "dataType": "BIGINT",
+          "description": "Ann\u00e9e des Jeux",
+          "lineageType": "pass-through"
+        },
+        "season": {
+          "columnName": "season",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "lineageType": "pass-through"
+        },
+        "edition": {
+          "columnName": "edition",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "\u00c9dition olympique (ex: Paris 2024)",
+          "lineageType": "pass-through"
+        },
+        "sport_name": {
+          "columnName": "sport_name",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "lineageType": "pass-through"
+        },
+        "discipline": {
+          "columnName": "discipline",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "lineageType": "pass-through"
+        },
+        "sport_category": {
+          "columnName": "sport_category",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "lineageType": "pass-through"
+        }
+      }
+    },
+    "model.transformation.stg_athletes": {
+      "id": "model.transformation.stg_athletes",
+      "name": "stg_athletes",
+      "fullName": "model.transformation.stg_athletes",
+      "nodeType": "model",
+      "materialized": "view",
+      "modelType": "staging",
+      "database": "edna-sports-data",
+      "schema": "main_staging",
+      "path": "models/staging/stg_athletes.sql",
+      "description": "Athl\u00e8tes olympiques et leurs informations personnelles.",
+      "contractEnforced": false,
+      "rawCode": "with source as (\n    select * from read_parquet('../processed-resources/athletes/*.parquet')\n),\n\nrenamed as (\n    select\n        athlete_id,\n        first_name,\n        last_name,\n        country_code,\n        country_name,\n        birth_year,\n        gender,\n        sport_id\n    from source\n)\n\nselect * from renamed",
+      "compiledCode": "with source as (\n    select * from read_parquet('../processed-resources/athletes/*.parquet')\n),\n\nrenamed as (\n    select\n        athlete_id,\n        first_name,\n        last_name,\n        country_code,\n        country_name,\n        birth_year,\n        gender,\n        sport_id\n    from source\n)\n\nselect * from renamed",
+      "refs": [],
+      "columns": {
+        "athlete_id": {
+          "columnName": "athlete_id",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Identifiant unique de l'athl\u00e8te",
+          "lineageType": "unknown"
+        },
+        "first_name": {
+          "columnName": "first_name",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Pr\u00e9nom",
+          "lineageType": "unknown"
+        },
+        "last_name": {
+          "columnName": "last_name",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Nom de famille",
+          "lineageType": "unknown"
+        },
+        "country_code": {
+          "columnName": "country_code",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Code pays ISO (3 lettres)",
+          "lineageType": "unknown"
+        },
+        "country_name": {
+          "columnName": "country_name",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Nom complet du pays",
+          "lineageType": "unknown"
+        },
+        "birth_year": {
+          "columnName": "birth_year",
+          "hasLineage": true,
+          "dataType": "BIGINT",
+          "description": "Ann\u00e9e de naissance",
+          "lineageType": "unknown"
+        },
+        "gender": {
+          "columnName": "gender",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Genre (M/F)",
+          "lineageType": "unknown"
+        },
+        "sport_id": {
+          "columnName": "sport_id",
+          "hasLineage": false,
+          "dataType": "VARCHAR",
+          "description": "R\u00e9f\u00e9rence vers la table sports",
+          "lineageType": "unknown"
+        }
+      }
+    },
+    "model.transformation.stg_results": {
+      "id": "model.transformation.stg_results",
+      "name": "stg_results",
+      "fullName": "model.transformation.stg_results",
+      "nodeType": "model",
+      "materialized": "view",
+      "modelType": "staging",
+      "database": "edna-sports-data",
+      "schema": "main_staging",
+      "path": "models/staging/stg_results.sql",
+      "description": "R\u00e9sultats des athl\u00e8tes aux comp\u00e9titions.",
+      "contractEnforced": false,
+      "rawCode": "with source as (\n    select * from read_parquet('../processed-resources/results/*.parquet')\n),\n\nrenamed as (\n    select\n        result_id,\n        athlete_id,\n        competition_id,\n        rank,\n        medal,\n        performance_value,\n        performance_unit\n    from source\n)\n\nselect * from renamed",
+      "compiledCode": "with source as (\n    select * from read_parquet('../processed-resources/results/*.parquet')\n),\n\nrenamed as (\n    select\n        result_id,\n        athlete_id,\n        competition_id,\n        rank,\n        medal,\n        performance_value,\n        performance_unit\n    from source\n)\n\nselect * from renamed",
+      "refs": [],
+      "columns": {
+        "result_id": {
+          "columnName": "result_id",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Identifiant unique du r\u00e9sultat",
+          "lineageType": "unknown"
+        },
+        "athlete_id": {
+          "columnName": "athlete_id",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "R\u00e9f\u00e9rence vers la table athletes",
+          "lineageType": "unknown"
+        },
+        "competition_id": {
+          "columnName": "competition_id",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "R\u00e9f\u00e9rence vers la table competitions",
+          "lineageType": "unknown"
+        },
+        "rank": {
+          "columnName": "rank",
+          "hasLineage": true,
+          "dataType": "BIGINT",
+          "description": "Classement final (1 = m\u00e9daille d'or)",
+          "lineageType": "unknown"
+        },
+        "medal": {
+          "columnName": "medal",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "M\u00e9daille obtenue",
+          "lineageType": "unknown"
+        },
+        "performance_value": {
+          "columnName": "performance_value",
+          "hasLineage": true,
+          "dataType": "DOUBLE",
+          "description": "Valeur de la performance (temps, distance, points...)",
+          "lineageType": "unknown"
+        },
+        "performance_unit": {
+          "columnName": "performance_unit",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Unit\u00e9 de mesure de la performance",
+          "lineageType": "unknown"
+        }
+      }
+    },
+    "model.transformation.stg_sports": {
+      "id": "model.transformation.stg_sports",
+      "name": "stg_sports",
+      "fullName": "model.transformation.stg_sports",
+      "nodeType": "model",
+      "materialized": "view",
+      "modelType": "staging",
+      "database": "edna-sports-data",
+      "schema": "main_staging",
+      "path": "models/staging/stg_sports.sql",
+      "description": "Catalogue des sports olympiques et leurs disciplines.",
+      "contractEnforced": false,
+      "rawCode": "with source as (\n    select * from read_parquet('../processed-resources/sports/*.parquet')\n),\n\nrenamed as (\n    select\n        sport_id,\n        sport_name,\n        discipline,\n        sport_category\n    from source\n)\n\nselect * from renamed",
+      "compiledCode": "with source as (\n    select * from read_parquet('../processed-resources/sports/*.parquet')\n),\n\nrenamed as (\n    select\n        sport_id,\n        sport_name,\n        discipline,\n        sport_category\n    from source\n)\n\nselect * from renamed",
+      "refs": [],
+      "columns": {
+        "sport_id": {
+          "columnName": "sport_id",
+          "hasLineage": false,
+          "dataType": "VARCHAR",
+          "description": "Identifiant unique du sport",
+          "lineageType": "unknown"
+        },
+        "sport_name": {
+          "columnName": "sport_name",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Nom du sport",
+          "lineageType": "unknown"
+        },
+        "discipline": {
+          "columnName": "discipline",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Discipline sp\u00e9cifique (ex: 100m, Marathon)",
+          "lineageType": "unknown"
+        },
+        "sport_category": {
+          "columnName": "sport_category",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Cat\u00e9gorie du sport (ex: Athl\u00e9tisme, Natation)",
+          "lineageType": "unknown"
+        }
+      }
+    },
+    "model.transformation.stg_competitions": {
+      "id": "model.transformation.stg_competitions",
+      "name": "stg_competitions",
+      "fullName": "model.transformation.stg_competitions",
+      "nodeType": "model",
+      "materialized": "view",
+      "modelType": "staging",
+      "database": "edna-sports-data",
+      "schema": "main_staging",
+      "path": "models/staging/stg_competitions.sql",
+      "description": "Comp\u00e9titions olympiques par \u00e9dition.",
+      "contractEnforced": false,
+      "rawCode": "with source as (\n    select * from read_parquet('../processed-resources/competitions/*.parquet')\n),\n\nrenamed as (\n    select\n        competition_id,\n        competition_name,\n        sport_id,\n        city,\n        country,\n        year,\n        season,\n        edition\n    from source\n)\n\nselect * from renamed",
+      "compiledCode": "with source as (\n    select * from read_parquet('../processed-resources/competitions/*.parquet')\n),\n\nrenamed as (\n    select\n        competition_id,\n        competition_name,\n        sport_id,\n        city,\n        country,\n        year,\n        season,\n        edition\n    from source\n)\n\nselect * from renamed",
+      "refs": [],
+      "columns": {
+        "competition_id": {
+          "columnName": "competition_id",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Identifiant unique de la comp\u00e9tition",
+          "lineageType": "unknown"
+        },
+        "competition_name": {
+          "columnName": "competition_name",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Nom de l'\u00e9preuve",
+          "lineageType": "unknown"
+        },
+        "sport_id": {
+          "columnName": "sport_id",
+          "hasLineage": false,
+          "dataType": "VARCHAR",
+          "description": "R\u00e9f\u00e9rence vers la table sports",
+          "lineageType": "unknown"
+        },
+        "city": {
+          "columnName": "city",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Ville h\u00f4te",
+          "lineageType": "unknown"
+        },
+        "country": {
+          "columnName": "country",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "lineageType": "unknown"
+        },
+        "year": {
+          "columnName": "year",
+          "hasLineage": true,
+          "dataType": "BIGINT",
+          "description": "Ann\u00e9e de la comp\u00e9tition",
+          "lineageType": "unknown"
+        },
+        "season": {
+          "columnName": "season",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Saison (Summer/Winter)",
+          "lineageType": "unknown"
+        },
+        "edition": {
+          "columnName": "edition",
+          "hasLineage": true,
+          "dataType": "VARCHAR",
+          "description": "Nom de l'\u00e9dition olympique (ex: Paris 2024)",
+          "lineageType": "unknown"
+        }
+      }
+    }
+  },
+  "lineage": {
+    "edges": [
+      {
+        "id": 1,
+        "source": "model.transformation.fct_results",
+        "target": "model.transformation.rpt_results",
+        "sourceColumn": "result_id",
+        "targetColumn": "result_id"
+      },
+      {
+        "id": 2,
+        "source": "model.transformation.dim_athletes",
+        "target": "model.transformation.rpt_results",
+        "sourceColumn": "athlete_id",
+        "targetColumn": "athlete_id"
+      },
+      {
+        "id": 3,
+        "source": "model.transformation.dim_athletes",
+        "target": "model.transformation.rpt_results",
+        "sourceColumn": "full_name",
+        "targetColumn": "athlete_name"
+      },
+      {
+        "id": 4,
+        "source": "model.transformation.dim_athletes",
+        "target": "model.transformation.rpt_results",
+        "sourceColumn": "first_name",
+        "targetColumn": "first_name"
+      },
+      {
+        "id": 5,
+        "source": "model.transformation.dim_athletes",
+        "target": "model.transformation.rpt_results",
+        "sourceColumn": "last_name",
+        "targetColumn": "last_name"
+      },
+      {
+        "id": 6,
+        "source": "model.transformation.dim_athletes",
+        "target": "model.transformation.rpt_results",
+        "sourceColumn": "country_code",
+        "targetColumn": "country_code"
+      },
+      {
+        "id": 7,
+        "source": "model.transformation.dim_athletes",
+        "target": "model.transformation.rpt_results",
+        "sourceColumn": "country_name",
+        "targetColumn": "country_name"
+      },
+      {
+        "id": 8,
+        "source": "model.transformation.dim_athletes",
+        "target": "model.transformation.rpt_results",
+        "sourceColumn": "gender",
+        "targetColumn": "gender"
+      },
+      {
+        "id": 9,
+        "source": "model.transformation.dim_athletes",
+        "target": "model.transformation.rpt_results",
+        "sourceColumn": "age",
+        "targetColumn": "age"
+      },
+      {
+        "id": 10,
+        "source": "model.transformation.dim_athletes",
+        "target": "model.transformation.rpt_results",
+        "sourceColumn": "sport_name",
+        "targetColumn": "sport_name"
+      },
+      {
+        "id": 11,
+        "source": "model.transformation.dim_athletes",
+        "target": "model.transformation.rpt_results",
+        "sourceColumn": "discipline",
+        "targetColumn": "discipline"
+      },
+      {
+        "id": 12,
+        "source": "model.transformation.dim_athletes",
+        "target": "model.transformation.rpt_results",
+        "sourceColumn": "sport_category",
+        "targetColumn": "sport_category"
+      },
+      {
+        "id": 13,
+        "source": "model.transformation.dim_competitions",
+        "target": "model.transformation.rpt_results",
+        "sourceColumn": "competition_id",
+        "targetColumn": "competition_id"
+      },
+      {
+        "id": 14,
+        "source": "model.transformation.dim_competitions",
+        "target": "model.transformation.rpt_results",
+        "sourceColumn": "competition_name",
+        "targetColumn": "competition_name"
+      },
+      {
+        "id": 15,
+        "source": "model.transformation.dim_competitions",
+        "target": "model.transformation.rpt_results",
+        "sourceColumn": "edition",
+        "targetColumn": "edition"
+      },
+      {
+        "id": 16,
+        "source": "model.transformation.dim_competitions",
+        "target": "model.transformation.rpt_results",
+        "sourceColumn": "year",
+        "targetColumn": "year"
+      },
+      {
+        "id": 17,
+        "source": "model.transformation.dim_competitions",
+        "target": "model.transformation.rpt_results",
+        "sourceColumn": "season",
+        "targetColumn": "season"
+      },
+      {
+        "id": 18,
+        "source": "model.transformation.dim_competitions",
+        "target": "model.transformation.rpt_results",
+        "sourceColumn": "city",
+        "targetColumn": "city"
+      },
+      {
+        "id": 19,
+        "source": "model.transformation.dim_competitions",
+        "target": "model.transformation.rpt_results",
+        "sourceColumn": "country",
+        "targetColumn": "host_country"
+      },
+      {
+        "id": 20,
+        "source": "model.transformation.fct_results",
+        "target": "model.transformation.rpt_results",
+        "sourceColumn": "rank",
+        "targetColumn": "rank"
+      },
+      {
+        "id": 21,
+        "source": "model.transformation.fct_results",
+        "target": "model.transformation.rpt_results",
+        "sourceColumn": "medal",
+        "targetColumn": "medal"
+      },
+      {
+        "id": 22,
+        "source": "model.transformation.fct_results",
+        "target": "model.transformation.rpt_results",
+        "sourceColumn": "performance_value",
+        "targetColumn": "performance_value"
+      },
+      {
+        "id": 23,
+        "source": "model.transformation.fct_results",
+        "target": "model.transformation.rpt_results",
+        "sourceColumn": "performance_unit",
+        "targetColumn": "performance_unit"
+      },
+      {
+        "id": 24,
+        "source": "model.transformation.fct_results",
+        "target": "model.transformation.rpt_results",
+        "sourceColumn": "is_medalist",
+        "targetColumn": "is_medalist"
+      },
+      {
+        "id": 25,
+        "source": "model.transformation.fct_results",
+        "target": "model.transformation.rpt_results",
+        "sourceColumn": "medal_points",
+        "targetColumn": "medal_points"
+      },
+      {
+        "id": 26,
+        "source": "model.transformation.stg_athletes",
+        "target": "model.transformation.dim_athletes",
+        "sourceColumn": "athlete_id",
+        "targetColumn": "athlete_id"
+      },
+      {
+        "id": 27,
+        "source": "model.transformation.stg_athletes",
+        "target": "model.transformation.dim_athletes",
+        "sourceColumn": "first_name",
+        "targetColumn": "full_name"
+      },
+      {
+        "id": 28,
+        "source": "model.transformation.stg_athletes",
+        "target": "model.transformation.dim_athletes",
+        "sourceColumn": "last_name",
+        "targetColumn": "full_name"
+      },
+      {
+        "id": 29,
+        "source": "model.transformation.stg_athletes",
+        "target": "model.transformation.dim_athletes",
+        "sourceColumn": "first_name",
+        "targetColumn": "first_name"
+      },
+      {
+        "id": 30,
+        "source": "model.transformation.stg_athletes",
+        "target": "model.transformation.dim_athletes",
+        "sourceColumn": "last_name",
+        "targetColumn": "last_name"
+      },
+      {
+        "id": 31,
+        "source": "model.transformation.stg_athletes",
+        "target": "model.transformation.dim_athletes",
+        "sourceColumn": "country_code",
+        "targetColumn": "country_code"
+      },
+      {
+        "id": 32,
+        "source": "model.transformation.stg_athletes",
+        "target": "model.transformation.dim_athletes",
+        "sourceColumn": "country_name",
+        "targetColumn": "country_name"
+      },
+      {
+        "id": 33,
+        "source": "model.transformation.stg_athletes",
+        "target": "model.transformation.dim_athletes",
+        "sourceColumn": "birth_year",
+        "targetColumn": "birth_year"
+      },
+      {
+        "id": 34,
+        "source": "model.transformation.stg_athletes",
+        "target": "model.transformation.dim_athletes",
+        "sourceColumn": "birth_year",
+        "targetColumn": "age"
+      },
+      {
+        "id": 35,
+        "source": "model.transformation.stg_athletes",
+        "target": "model.transformation.dim_athletes",
+        "sourceColumn": "gender",
+        "targetColumn": "gender"
+      },
+      {
+        "id": 36,
+        "source": "model.transformation.stg_sports",
+        "target": "model.transformation.dim_athletes",
+        "sourceColumn": "sport_name",
+        "targetColumn": "sport_name"
+      },
+      {
+        "id": 37,
+        "source": "model.transformation.stg_sports",
+        "target": "model.transformation.dim_athletes",
+        "sourceColumn": "discipline",
+        "targetColumn": "discipline"
+      },
+      {
+        "id": 38,
+        "source": "model.transformation.stg_sports",
+        "target": "model.transformation.dim_athletes",
+        "sourceColumn": "sport_category",
+        "targetColumn": "sport_category"
+      },
+      {
+        "id": 39,
+        "source": "model.transformation.stg_competitions",
+        "target": "model.transformation.dim_competitions",
+        "sourceColumn": "competition_id",
+        "targetColumn": "competition_id"
+      },
+      {
+        "id": 40,
+        "source": "model.transformation.stg_competitions",
+        "target": "model.transformation.dim_competitions",
+        "sourceColumn": "competition_name",
+        "targetColumn": "competition_name"
+      },
+      {
+        "id": 41,
+        "source": "model.transformation.stg_competitions",
+        "target": "model.transformation.dim_competitions",
+        "sourceColumn": "city",
+        "targetColumn": "city"
+      },
+      {
+        "id": 42,
+        "source": "model.transformation.stg_competitions",
+        "target": "model.transformation.dim_competitions",
+        "sourceColumn": "country",
+        "targetColumn": "country"
+      },
+      {
+        "id": 43,
+        "source": "model.transformation.stg_competitions",
+        "target": "model.transformation.dim_competitions",
+        "sourceColumn": "year",
+        "targetColumn": "year"
+      },
+      {
+        "id": 44,
+        "source": "model.transformation.stg_competitions",
+        "target": "model.transformation.dim_competitions",
+        "sourceColumn": "season",
+        "targetColumn": "season"
+      },
+      {
+        "id": 45,
+        "source": "model.transformation.stg_competitions",
+        "target": "model.transformation.dim_competitions",
+        "sourceColumn": "edition",
+        "targetColumn": "edition"
+      },
+      {
+        "id": 46,
+        "source": "model.transformation.stg_sports",
+        "target": "model.transformation.dim_competitions",
+        "sourceColumn": "sport_name",
+        "targetColumn": "sport_name"
+      },
+      {
+        "id": 47,
+        "source": "model.transformation.stg_sports",
+        "target": "model.transformation.dim_competitions",
+        "sourceColumn": "discipline",
+        "targetColumn": "discipline"
+      },
+      {
+        "id": 48,
+        "source": "model.transformation.stg_sports",
+        "target": "model.transformation.dim_competitions",
+        "sourceColumn": "sport_category",
+        "targetColumn": "sport_category"
+      },
+      {
+        "id": 49,
+        "source": "model.transformation.stg_results",
+        "target": "model.transformation.fct_results",
+        "sourceColumn": "result_id",
+        "targetColumn": "result_id"
+      },
+      {
+        "id": 50,
+        "source": "model.transformation.stg_results",
+        "target": "model.transformation.fct_results",
+        "sourceColumn": "athlete_id",
+        "targetColumn": "athlete_id"
+      },
+      {
+        "id": 51,
+        "source": "model.transformation.stg_results",
+        "target": "model.transformation.fct_results",
+        "sourceColumn": "competition_id",
+        "targetColumn": "competition_id"
+      },
+      {
+        "id": 52,
+        "source": "model.transformation.stg_results",
+        "target": "model.transformation.fct_results",
+        "sourceColumn": "rank",
+        "targetColumn": "rank"
+      },
+      {
+        "id": 53,
+        "source": "model.transformation.stg_results",
+        "target": "model.transformation.fct_results",
+        "sourceColumn": "medal",
+        "targetColumn": "medal"
+      },
+      {
+        "id": 54,
+        "source": "model.transformation.stg_results",
+        "target": "model.transformation.fct_results",
+        "sourceColumn": "performance_value",
+        "targetColumn": "performance_value"
+      },
+      {
+        "id": 55,
+        "source": "model.transformation.stg_results",
+        "target": "model.transformation.fct_results",
+        "sourceColumn": "performance_unit",
+        "targetColumn": "performance_unit"
+      },
+      {
+        "id": 56,
+        "source": "model.transformation.stg_results",
+        "target": "model.transformation.fct_results",
+        "sourceColumn": "medal",
+        "targetColumn": "is_medalist"
+      },
+      {
+        "id": 57,
+        "source": "model.transformation.stg_results",
+        "target": "model.transformation.fct_results",
+        "sourceColumn": "medal",
+        "targetColumn": "medal_points"
+      },
+      {
+        "id": 58,
+        "source": "model.transformation.fct_results",
+        "target": "model.transformation.rpt_results",
+        "sourceColumn": "",
+        "targetColumn": ""
+      },
+      {
+        "id": 59,
+        "source": "model.transformation.dim_athletes",
+        "target": "model.transformation.rpt_results",
+        "sourceColumn": "",
+        "targetColumn": ""
+      },
+      {
+        "id": 60,
+        "source": "model.transformation.dim_competitions",
+        "target": "model.transformation.rpt_results",
+        "sourceColumn": "",
+        "targetColumn": ""
+      },
+      {
+        "id": 61,
+        "source": "model.transformation.stg_athletes",
+        "target": "model.transformation.dim_athletes",
+        "sourceColumn": "",
+        "targetColumn": ""
+      },
+      {
+        "id": 62,
+        "source": "model.transformation.stg_sports",
+        "target": "model.transformation.dim_athletes",
+        "sourceColumn": "",
+        "targetColumn": ""
+      },
+      {
+        "id": 63,
+        "source": "model.transformation.stg_competitions",
+        "target": "model.transformation.dim_competitions",
+        "sourceColumn": "",
+        "targetColumn": ""
+      },
+      {
+        "id": 64,
+        "source": "model.transformation.stg_sports",
+        "target": "model.transformation.dim_competitions",
+        "sourceColumn": "",
+        "targetColumn": ""
+      },
+      {
+        "id": 65,
+        "source": "model.transformation.stg_results",
+        "target": "model.transformation.fct_results",
+        "sourceColumn": "",
+        "targetColumn": ""
+      }
+    ],
+    "parents": {
+      "model.transformation.rpt_results": {
+        "result_id": [
+          {
+            "column": "result_id",
+            "dbt_node": "model.transformation.fct_results",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "athlete_id": [
+          {
+            "column": "athlete_id",
+            "dbt_node": "model.transformation.dim_athletes",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "athlete_name": [
+          {
+            "column": "full_name",
+            "dbt_node": "model.transformation.dim_athletes",
+            "lineage_type": "rename"
+          }
+        ],
+        "first_name": [
+          {
+            "column": "first_name",
+            "dbt_node": "model.transformation.dim_athletes",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "last_name": [
+          {
+            "column": "last_name",
+            "dbt_node": "model.transformation.dim_athletes",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "country_code": [
+          {
+            "column": "country_code",
+            "dbt_node": "model.transformation.dim_athletes",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "country_name": [
+          {
+            "column": "country_name",
+            "dbt_node": "model.transformation.dim_athletes",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "gender": [
+          {
+            "column": "gender",
+            "dbt_node": "model.transformation.dim_athletes",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "age": [
+          {
+            "column": "age",
+            "dbt_node": "model.transformation.dim_athletes",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "sport_name": [
+          {
+            "column": "sport_name",
+            "dbt_node": "model.transformation.dim_athletes",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "discipline": [
+          {
+            "column": "discipline",
+            "dbt_node": "model.transformation.dim_athletes",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "sport_category": [
+          {
+            "column": "sport_category",
+            "dbt_node": "model.transformation.dim_athletes",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "competition_id": [
+          {
+            "column": "competition_id",
+            "dbt_node": "model.transformation.dim_competitions",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "competition_name": [
+          {
+            "column": "competition_name",
+            "dbt_node": "model.transformation.dim_competitions",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "edition": [
+          {
+            "column": "edition",
+            "dbt_node": "model.transformation.dim_competitions",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "year": [
+          {
+            "column": "year",
+            "dbt_node": "model.transformation.dim_competitions",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "season": [
+          {
+            "column": "season",
+            "dbt_node": "model.transformation.dim_competitions",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "city": [
+          {
+            "column": "city",
+            "dbt_node": "model.transformation.dim_competitions",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "host_country": [
+          {
+            "column": "country",
+            "dbt_node": "model.transformation.dim_competitions",
+            "lineage_type": "rename"
+          }
+        ],
+        "rank": [
+          {
+            "column": "rank",
+            "dbt_node": "model.transformation.fct_results",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "medal": [
+          {
+            "column": "medal",
+            "dbt_node": "model.transformation.fct_results",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "performance_value": [
+          {
+            "column": "performance_value",
+            "dbt_node": "model.transformation.fct_results",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "performance_unit": [
+          {
+            "column": "performance_unit",
+            "dbt_node": "model.transformation.fct_results",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "is_medalist": [
+          {
+            "column": "is_medalist",
+            "dbt_node": "model.transformation.fct_results",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "medal_points": [
+          {
+            "column": "medal_points",
+            "dbt_node": "model.transformation.fct_results",
+            "lineage_type": "pass-through"
+          }
+        ]
+      },
+      "model.transformation.stg_athletes": {
+        "athlete_id": [],
+        "first_name": [],
+        "last_name": [],
+        "country_code": [],
+        "country_name": [],
+        "birth_year": [],
+        "gender": [],
+        "sport_id": []
+      },
+      "model.transformation.stg_results": {
+        "result_id": [],
+        "athlete_id": [],
+        "competition_id": [],
+        "rank": [],
+        "medal": [],
+        "performance_value": [],
+        "performance_unit": []
+      },
+      "model.transformation.stg_sports": {
+        "sport_id": [],
+        "sport_name": [],
+        "discipline": [],
+        "sport_category": []
+      },
+      "model.transformation.stg_competitions": {
+        "competition_id": [],
+        "competition_name": [],
+        "sport_id": [],
+        "city": [],
+        "country": [],
+        "year": [],
+        "season": [],
+        "edition": []
+      },
+      "model.transformation.dim_athletes": {
+        "athlete_id": [
+          {
+            "column": "athlete_id",
+            "dbt_node": "model.transformation.stg_athletes",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "full_name": [
+          {
+            "column": "first_name",
+            "dbt_node": "model.transformation.stg_athletes",
+            "lineage_type": "transformation"
+          },
+          {
+            "column": "last_name",
+            "dbt_node": "model.transformation.stg_athletes",
+            "lineage_type": "transformation"
+          }
+        ],
+        "first_name": [
+          {
+            "column": "first_name",
+            "dbt_node": "model.transformation.stg_athletes",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "last_name": [
+          {
+            "column": "last_name",
+            "dbt_node": "model.transformation.stg_athletes",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "country_code": [
+          {
+            "column": "country_code",
+            "dbt_node": "model.transformation.stg_athletes",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "country_name": [
+          {
+            "column": "country_name",
+            "dbt_node": "model.transformation.stg_athletes",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "birth_year": [
+          {
+            "column": "birth_year",
+            "dbt_node": "model.transformation.stg_athletes",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "age": [
+          {
+            "column": "birth_year",
+            "dbt_node": "model.transformation.stg_athletes",
+            "lineage_type": "transformation"
+          }
+        ],
+        "gender": [
+          {
+            "column": "gender",
+            "dbt_node": "model.transformation.stg_athletes",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "sport_name": [
+          {
+            "column": "sport_name",
+            "dbt_node": "model.transformation.stg_sports",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "discipline": [
+          {
+            "column": "discipline",
+            "dbt_node": "model.transformation.stg_sports",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "sport_category": [
+          {
+            "column": "sport_category",
+            "dbt_node": "model.transformation.stg_sports",
+            "lineage_type": "pass-through"
+          }
+        ]
+      },
+      "model.transformation.dim_competitions": {
+        "competition_id": [
+          {
+            "column": "competition_id",
+            "dbt_node": "model.transformation.stg_competitions",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "competition_name": [
+          {
+            "column": "competition_name",
+            "dbt_node": "model.transformation.stg_competitions",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "city": [
+          {
+            "column": "city",
+            "dbt_node": "model.transformation.stg_competitions",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "country": [
+          {
+            "column": "country",
+            "dbt_node": "model.transformation.stg_competitions",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "year": [
+          {
+            "column": "year",
+            "dbt_node": "model.transformation.stg_competitions",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "season": [
+          {
+            "column": "season",
+            "dbt_node": "model.transformation.stg_competitions",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "edition": [
+          {
+            "column": "edition",
+            "dbt_node": "model.transformation.stg_competitions",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "sport_name": [
+          {
+            "column": "sport_name",
+            "dbt_node": "model.transformation.stg_sports",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "discipline": [
+          {
+            "column": "discipline",
+            "dbt_node": "model.transformation.stg_sports",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "sport_category": [
+          {
+            "column": "sport_category",
+            "dbt_node": "model.transformation.stg_sports",
+            "lineage_type": "pass-through"
+          }
+        ]
+      },
+      "model.transformation.fct_results": {
+        "result_id": [
+          {
+            "column": "result_id",
+            "dbt_node": "model.transformation.stg_results",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "athlete_id": [
+          {
+            "column": "athlete_id",
+            "dbt_node": "model.transformation.stg_results",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "competition_id": [
+          {
+            "column": "competition_id",
+            "dbt_node": "model.transformation.stg_results",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "rank": [
+          {
+            "column": "rank",
+            "dbt_node": "model.transformation.stg_results",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "medal": [
+          {
+            "column": "medal",
+            "dbt_node": "model.transformation.stg_results",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "performance_value": [
+          {
+            "column": "performance_value",
+            "dbt_node": "model.transformation.stg_results",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "performance_unit": [
+          {
+            "column": "performance_unit",
+            "dbt_node": "model.transformation.stg_results",
+            "lineage_type": "pass-through"
+          }
+        ],
+        "is_medalist": [
+          {
+            "column": "medal",
+            "dbt_node": "model.transformation.stg_results",
+            "lineage_type": "transformation"
+          }
+        ],
+        "medal_points": [
+          {
+            "column": "medal",
+            "dbt_node": "model.transformation.stg_results",
+            "lineage_type": "transformation"
+          }
+        ]
+      }
+    },
+    "children": {
+      "model.transformation.fct_results": {
+        "result_id": [
+          {
+            "column": "result_id",
+            "dbt_node": "model.transformation.rpt_results"
+          }
+        ],
+        "rank": [
+          {
+            "column": "rank",
+            "dbt_node": "model.transformation.rpt_results"
+          }
+        ],
+        "medal": [
+          {
+            "column": "medal",
+            "dbt_node": "model.transformation.rpt_results"
+          }
+        ],
+        "performance_value": [
+          {
+            "column": "performance_value",
+            "dbt_node": "model.transformation.rpt_results"
+          }
+        ],
+        "performance_unit": [
+          {
+            "column": "performance_unit",
+            "dbt_node": "model.transformation.rpt_results"
+          }
+        ],
+        "is_medalist": [
+          {
+            "column": "is_medalist",
+            "dbt_node": "model.transformation.rpt_results"
+          }
+        ],
+        "medal_points": [
+          {
+            "column": "medal_points",
+            "dbt_node": "model.transformation.rpt_results"
+          }
+        ]
+      },
+      "model.transformation.dim_athletes": {
+        "athlete_id": [
+          {
+            "column": "athlete_id",
+            "dbt_node": "model.transformation.rpt_results"
+          }
+        ],
+        "full_name": [
+          {
+            "column": "athlete_name",
+            "dbt_node": "model.transformation.rpt_results"
+          }
+        ],
+        "first_name": [
+          {
+            "column": "first_name",
+            "dbt_node": "model.transformation.rpt_results"
+          }
+        ],
+        "last_name": [
+          {
+            "column": "last_name",
+            "dbt_node": "model.transformation.rpt_results"
+          }
+        ],
+        "country_code": [
+          {
+            "column": "country_code",
+            "dbt_node": "model.transformation.rpt_results"
+          }
+        ],
+        "country_name": [
+          {
+            "column": "country_name",
+            "dbt_node": "model.transformation.rpt_results"
+          }
+        ],
+        "gender": [
+          {
+            "column": "gender",
+            "dbt_node": "model.transformation.rpt_results"
+          }
+        ],
+        "age": [
+          {
+            "column": "age",
+            "dbt_node": "model.transformation.rpt_results"
+          }
+        ],
+        "sport_name": [
+          {
+            "column": "sport_name",
+            "dbt_node": "model.transformation.rpt_results"
+          }
+        ],
+        "discipline": [
+          {
+            "column": "discipline",
+            "dbt_node": "model.transformation.rpt_results"
+          }
+        ],
+        "sport_category": [
+          {
+            "column": "sport_category",
+            "dbt_node": "model.transformation.rpt_results"
+          }
+        ]
+      },
+      "model.transformation.dim_competitions": {
+        "competition_id": [
+          {
+            "column": "competition_id",
+            "dbt_node": "model.transformation.rpt_results"
+          }
+        ],
+        "competition_name": [
+          {
+            "column": "competition_name",
+            "dbt_node": "model.transformation.rpt_results"
+          }
+        ],
+        "edition": [
+          {
+            "column": "edition",
+            "dbt_node": "model.transformation.rpt_results"
+          }
+        ],
+        "year": [
+          {
+            "column": "year",
+            "dbt_node": "model.transformation.rpt_results"
+          }
+        ],
+        "season": [
+          {
+            "column": "season",
+            "dbt_node": "model.transformation.rpt_results"
+          }
+        ],
+        "city": [
+          {
+            "column": "city",
+            "dbt_node": "model.transformation.rpt_results"
+          }
+        ],
+        "country": [
+          {
+            "column": "host_country",
+            "dbt_node": "model.transformation.rpt_results"
+          }
+        ]
+      },
+      "model.transformation.stg_athletes": {
+        "athlete_id": [
+          {
+            "column": "athlete_id",
+            "dbt_node": "model.transformation.dim_athletes"
+          }
+        ],
+        "first_name": [
+          {
+            "column": "full_name",
+            "dbt_node": "model.transformation.dim_athletes"
+          },
+          {
+            "column": "first_name",
+            "dbt_node": "model.transformation.dim_athletes"
+          }
+        ],
+        "last_name": [
+          {
+            "column": "full_name",
+            "dbt_node": "model.transformation.dim_athletes"
+          },
+          {
+            "column": "last_name",
+            "dbt_node": "model.transformation.dim_athletes"
+          }
+        ],
+        "country_code": [
+          {
+            "column": "country_code",
+            "dbt_node": "model.transformation.dim_athletes"
+          }
+        ],
+        "country_name": [
+          {
+            "column": "country_name",
+            "dbt_node": "model.transformation.dim_athletes"
+          }
+        ],
+        "birth_year": [
+          {
+            "column": "birth_year",
+            "dbt_node": "model.transformation.dim_athletes"
+          },
+          {
+            "column": "age",
+            "dbt_node": "model.transformation.dim_athletes"
+          }
+        ],
+        "gender": [
+          {
+            "column": "gender",
+            "dbt_node": "model.transformation.dim_athletes"
+          }
+        ]
+      },
+      "model.transformation.stg_sports": {
+        "sport_name": [
+          {
+            "column": "sport_name",
+            "dbt_node": "model.transformation.dim_athletes"
+          },
+          {
+            "column": "sport_name",
+            "dbt_node": "model.transformation.dim_competitions"
+          }
+        ],
+        "discipline": [
+          {
+            "column": "discipline",
+            "dbt_node": "model.transformation.dim_athletes"
+          },
+          {
+            "column": "discipline",
+            "dbt_node": "model.transformation.dim_competitions"
+          }
+        ],
+        "sport_category": [
+          {
+            "column": "sport_category",
+            "dbt_node": "model.transformation.dim_athletes"
+          },
+          {
+            "column": "sport_category",
+            "dbt_node": "model.transformation.dim_competitions"
+          }
+        ]
+      },
+      "model.transformation.stg_competitions": {
+        "competition_id": [
+          {
+            "column": "competition_id",
+            "dbt_node": "model.transformation.dim_competitions"
+          }
+        ],
+        "competition_name": [
+          {
+            "column": "competition_name",
+            "dbt_node": "model.transformation.dim_competitions"
+          }
+        ],
+        "city": [
+          {
+            "column": "city",
+            "dbt_node": "model.transformation.dim_competitions"
+          }
+        ],
+        "country": [
+          {
+            "column": "country",
+            "dbt_node": "model.transformation.dim_competitions"
+          }
+        ],
+        "year": [
+          {
+            "column": "year",
+            "dbt_node": "model.transformation.dim_competitions"
+          }
+        ],
+        "season": [
+          {
+            "column": "season",
+            "dbt_node": "model.transformation.dim_competitions"
+          }
+        ],
+        "edition": [
+          {
+            "column": "edition",
+            "dbt_node": "model.transformation.dim_competitions"
+          }
+        ]
+      },
+      "model.transformation.stg_results": {
+        "result_id": [
+          {
+            "column": "result_id",
+            "dbt_node": "model.transformation.fct_results"
+          }
+        ],
+        "athlete_id": [
+          {
+            "column": "athlete_id",
+            "dbt_node": "model.transformation.fct_results"
+          }
+        ],
+        "competition_id": [
+          {
+            "column": "competition_id",
+            "dbt_node": "model.transformation.fct_results"
+          }
+        ],
+        "rank": [
+          {
+            "column": "rank",
+            "dbt_node": "model.transformation.fct_results"
+          }
+        ],
+        "medal": [
+          {
+            "column": "medal",
+            "dbt_node": "model.transformation.fct_results"
+          },
+          {
+            "column": "is_medalist",
+            "dbt_node": "model.transformation.fct_results"
+          },
+          {
+            "column": "medal_points",
+            "dbt_node": "model.transformation.fct_results"
+          }
+        ],
+        "performance_value": [
+          {
+            "column": "performance_value",
+            "dbt_node": "model.transformation.fct_results"
+          }
+        ],
+        "performance_unit": [
+          {
+            "column": "performance_unit",
+            "dbt_node": "model.transformation.fct_results"
+          }
+        ]
+      }
+    }
+  },
+  "tree": {
+    "byDatabase": {
+      "edna-sports-data": {
+        "main_marts": [
+          "model.transformation.dim_athletes",
+          "model.transformation.dim_competitions",
+          "model.transformation.fct_results"
+        ],
+        "main_reporting": [
+          "model.transformation.rpt_results"
+        ],
+        "main_staging": [
+          "model.transformation.stg_athletes",
+          "model.transformation.stg_competitions",
+          "model.transformation.stg_results",
+          "model.transformation.stg_sports"
+        ]
+      }
+    },
+    "byPath": {
+      "transformation": {
+        "models": {
+          "marts": {
+            "__items__": [
+              "model.transformation.dim_athletes",
+              "model.transformation.dim_competitions",
+              "model.transformation.fct_results"
+            ]
+          },
+          "reporting": {
+            "__items__": [
+              "model.transformation.rpt_results"
+            ]
+          },
+          "staging": {
+            "__items__": [
+              "model.transformation.stg_athletes",
+              "model.transformation.stg_competitions",
+              "model.transformation.stg_results",
+              "model.transformation.stg_sports"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,59 @@
+services:
+  superset:
+    build: ./docker
+    container_name: superset
+    ports:
+      - "8089:8088"
+    environment:
+      SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY:-supersetsecretkey123}
+      DATABASE_URI: postgresql+psycopg2://${SUPERSET_DB_USER:-superset}:${SUPERSET_DB_PASSWORD:-superset}@db:5432/${SUPERSET_DB_NAME:-superset}
+      TALISMAN_ENABLED: "false"
+      GUNICORN_TIMEOUT: "300"
+    volumes:
+      - superset_home:/app/superset_home
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8088/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  db:
+    image: postgres:16-alpine
+    container_name: superset_db
+    environment:
+      POSTGRES_USER: ${SUPERSET_DB_USER:-superset}
+      POSTGRES_PASSWORD: ${SUPERSET_DB_PASSWORD:-superset}
+      POSTGRES_DB: ${SUPERSET_DB_NAME:-superset}
+    volumes:
+      - superset_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${SUPERSET_DB_USER:-superset}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: superset_cache
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - superset_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  superset_home:
+  superset_postgres_data:
+  superset_redis_data:
+
+networks:
+  default:
+    name: superset-network

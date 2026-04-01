@@ -1,0 +1,52 @@
+{
+  "name": "edna-formation",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "charliermarsh.ruff",
+        "innoverio.vscode-dbt-power-user",
+        "tamasfe.even-better-toml",
+        "ms-azuretools.vscode-docker",
+        "mechatroner.rainbow-csv",
+        "lucien-martijn.parquet-visualizer"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": ".venv/bin/python",
+        "python.analysis.typeCheckingMode": "basic",
+        "python.analysis.autoImportCompletions": true,
+        "dbt.enableNewLineagePanel": true,
+        "[python]": {
+          "editor.defaultFormatter": "charliermarsh.ruff",
+          "editor.formatOnSave": true
+        },
+        "python.terminal.activateEnvironment": true,
+        "python.terminal.useEnvFile": true,
+        "dbt.dbtPythonPathOverride": "${workspaceFolder}/.venv/bin/python",
+        "dbt.projectConfigPath": "${workspaceFolder}/transformation"
+      }
+    }
+  },
+  "workspaceFolder": "/workspaces/edna-formation",
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "remoteUser": "vscode",
+  "forwardPorts": [8088, 8089],
+  "portsAttributes": {
+    "8089": {
+      "label": "Superset",
+      "onAutoForward": "notify"
+    },
+    "8088": {
+      "label": "Colibri (lineage)",
+      "onAutoForward": "notify"
+    }
+  }
+}
