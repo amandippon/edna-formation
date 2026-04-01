@@ -121,7 +121,7 @@ Une fois les outils installés, récupère le projet sur ton ordinateur.
 Puis tape :
 
 ```bash
-git clone <lien-du-repo>
+git clone https://github.com/amandippon/edna-formation
 cd edna-formation
 ```
 
