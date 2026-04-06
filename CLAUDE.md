@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Pedagogical data pipeline for design students (no coding background). Students run `task` commands and explore data in Superset and DBeaver.
 
-**Theme**: Olympic Games data (athletes, sports, competitions, results — 2016–2024).
+**Theme**: NCAA Women's Basketball data (teams, seasons, games, tournament results — 1998–2019).
 
 ## Commands
 
@@ -27,8 +27,8 @@ task clean           # Remove transformation/target, logs, dbt_packages, __pycac
 - **Ingestion** (`ingestion/pipeline.py`): pure PyArrow — reads every `resources/*.csv`, writes one Parquet file per table to `processed-resources/<table_name>/<table_name>.parquet`. No dlt, no cloud.
 - **Transformation** (`transformation/`): dbt-duckdb reads Parquet via `read_parquet(...)` in sources, outputs to `edna-sports-data.duckdb` at the repo root.
   - `models/staging/`: one view per CSV source, no business logic
-  - `models/marts/`: `dim_athletes`, `dim_competitions` (enriched dimensions) + `fct_results` (fact table joining staging only)
-  - `models/reporting/`: `rpt_results` — wide denormalized table joining all marts, intended as the primary Superset dataset
+  - `models/marts/`: `dim_teams`, `dim_seasons`, `dim_cities` (enriched dimensions) + `fct_regular_season_games`, `fct_tourney_games` (fact tables)
+  - `models/reporting/`: `rpt_games` (all games denormalized), `rpt_team_season_stats` (team rankings), `rpt_tourney_runs` (tournament progression) — intended as the primary Superset datasets
 - **Visualization** (`visualization/`): Superset 6.0.0 + PostgreSQL 16 + Redis 7 via Docker Compose.
   - Packages (`psycopg2-binary`, `duckdb==1.5.1`, `duckdb-engine`) are installed into the image's venv via `/app/.venv/bin/python -m ensurepip && /app/.venv/bin/python -m pip install ...` — plain `pip install` installs into system Python and is invisible to Superset.
   - The DuckDB file is copied into the container via `docker cp` (in `superset:up`) to `/app/superset_home/edna-sports-data.duckdb`. No bind mount — bind mounts don't work in Docker-outside-of-Docker devcontainers because the host path (`/workspaces/...`) doesn't exist on the Mac.

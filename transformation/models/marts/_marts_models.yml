@@ -1,81 +1,95 @@
 version: 2
 
 models:
-  - name: dim_athletes
-    description: "Table de dimension des athlètes enrichie avec les informations du sport."
+  - name: dim_teams
+    description: "Dimension équipes NCAA Women avec état d'origine déduit des matchs à domicile."
     columns:
-      - name: athlete_id
-        description: "Identifiant unique de l'athlète"
-        data_tests:
-          - unique
-          - not_null
-      - name: full_name
-        description: "Nom complet (prénom + nom)"
-        data_tests:
-          - not_null
-      - name: country_name
-        description: "Pays représenté"
-        data_tests:
-          - not_null
-      - name: gender
-        description: "Genre (M/F)"
-        data_tests:
-          - accepted_values:
-              values: ['M', 'F']
-      - name: age
-        description: "Âge calculé par rapport à 2024"
-      - name: sport_name
-        description: "Nom du sport pratiqué"
-      - name: sport_category
-        description: "Catégorie du sport"
+      - name: team_id
+        description: "Identifiant unique de l'équipe (PK)."
+        data_tests: [unique, not_null]
+      - name: team_name
+        data_tests: [not_null]
+      - name: team_state
+        description: "Code état US déduit de la ville où l'équipe joue le plus à domicile (ex: NC, CT)."
+      - name: team_state_iso
+        description: "Code ISO 3166-2:US pour les cartes Superset (ex: US-NC, US-CT)."
 
-  - name: dim_competitions
-    description: "Table de dimension des compétitions enrichie avec les informations du sport."
+  - name: dim_seasons
+    description: "Dimension saisons avec date de référence et labels lisibles."
     columns:
-      - name: competition_id
-        description: "Identifiant unique de la compétition"
-        data_tests:
-          - unique
-          - not_null
-      - name: edition
-        description: "Édition olympique (ex: Paris 2024)"
-        data_tests:
-          - not_null
-      - name: year
-        description: "Année des Jeux"
-        data_tests:
-          - not_null
+      - name: season
+        description: "Année de la saison (PK)."
+        data_tests: [unique, not_null]
+      - name: day_zero
+        data_tests: [not_null]
+      - name: season_label
+        data_tests: [not_null]
 
-  - name: fct_results
-    description: "Table de faits des résultats au grain résultat/athlète/compétition. Ne référence que le staging."
+  - name: dim_cities
+    description: "Dimension villes hôtes avec label combiné ville+état."
     columns:
-      - name: result_id
-        description: "Identifiant unique du résultat"
-        data_tests:
-          - unique
-          - not_null
-      - name: athlete_id
-        description: "Clé étrangère vers l'athlète"
-        data_tests:
-          - not_null
-      - name: competition_id
-        description: "Clé étrangère vers la compétition"
-        data_tests:
-          - not_null
-      - name: rank
-        description: "Classement final"
+      - name: city_id
+        description: "Identifiant unique de la ville (PK)."
+        data_tests: [unique, not_null]
+      - name: city_state
+        data_tests: [not_null]
+
+  - name: fct_regular_season_games
+    description: "Table de faits des matchs de saison régulière. 107k+ matchs, 1998-2019."
+    columns:
+      - name: game_id
+        description: "Clé surrogate du match (PK)."
+        data_tests: [unique, not_null]
+      - name: season
         data_tests:
           - not_null
-      - name: medal
-        description: "Médaille obtenue (Gold, Silver, Bronze, None)"
+          - relationships:
+              to: ref('dim_seasons')
+              field: season
+      - name: w_team_id
         data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_teams')
+              field: team_id
+      - name: l_team_id
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_teams')
+              field: team_id
+      - name: game_date
+        data_tests: [not_null]
+      - name: w_score
+        data_tests: [not_null]
+      - name: l_score
+        data_tests: [not_null]
+      - name: game_location
+        data_tests:
+          - not_null
           - accepted_values:
-              values: ['Gold', 'Silver', 'Bronze', 'None']
-      - name: performance_value
-        description: "Valeur de la performance"
-      - name: performance_unit
-        description: "Unité de mesure de la performance"
-      - name: is_medalist
-        description: "True si l'athlète a gagné une médaille"
-      - name: medal_points
-        description: "Points de médaille (Or=3, Argent=2, Bronze=1, Aucun=0)"
+              values: ['Home', 'Away', 'Neutral']
+
+  - name: fct_tourney_games
+    description: "Table de faits des matchs du tournoi NCAA. 1323 matchs, 1998-2018."
+    columns:
+      - name: game_id
+        description: "Clé surrogate du match de tournoi (PK)."
+        data_tests: [unique, not_null]
+      - name: season
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_seasons')
+              field: season
+      - name: w_team_id
+        data_tests: [not_null]
+      - name: l_team_id
+        data_tests: [not_null]
+      - name: game_date
+        data_tests: [not_null]
+      - name: game_location
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['Home', 'Away', 'Neutral']

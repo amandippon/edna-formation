@@ -1,135 +1,134 @@
 version: 2
 
 models:
-  - name: stg_sports
-    description: "Catalogue des sports olympiques et leurs disciplines."
+  - name: stg_teams
+    description: "Référentiel des équipes NCAA Women Division I."
     columns:
-      - name: sport_id
-        description: "Identifiant unique du sport"
-        data_tests:
-          - unique
-          - not_null
-      - name: sport_name
-        description: "Nom du sport"
-        data_tests:
-          - not_null
-      - name: discipline
-        description: "Discipline spécifique (ex: 100m, Marathon)"
-      - name: sport_category
-        description: "Catégorie du sport (ex: Athlétisme, Natation)"
-        data_tests:
-          - not_null
+      - name: team_id
+        description: "Identifiant unique de l'équipe."
+        data_tests: [unique, not_null]
+      - name: team_name
+        description: "Nom court de l'équipe."
+        data_tests: [not_null]
 
-  - name: stg_athletes
-    description: "Athlètes olympiques et leurs informations personnelles."
+  - name: stg_seasons
+    description: "Référentiel des saisons avec date de référence DayZero."
     columns:
-      - name: athlete_id
-        description: "Identifiant unique de l'athlète"
-        data_tests:
-          - unique
-          - not_null
-      - name: first_name
-        description: "Prénom"
-        data_tests:
-          - not_null
-      - name: last_name
-        description: "Nom de famille"
-        data_tests:
-          - not_null
-      - name: country_code
-        description: "Code pays ISO (3 lettres)"
-        data_tests:
-          - not_null
-      - name: country_name
-        description: "Nom complet du pays"
-        data_tests:
-          - not_null
-      - name: birth_year
-        description: "Année de naissance"
-      - name: gender
-        description: "Genre (M/F)"
-        data_tests:
-          - not_null
-          - accepted_values:
-              values: ['M', 'F']
-      - name: sport_id
-        description: "Référence vers la table sports"
-        data_tests:
-          - not_null
-          - relationships:
-              to: ref('stg_sports')
-              field: sport_id
-
-  - name: stg_competitions
-    description: "Compétitions olympiques par édition."
-    columns:
-      - name: competition_id
-        description: "Identifiant unique de la compétition"
-        data_tests:
-          - unique
-          - not_null
-      - name: competition_name
-        description: "Nom de l'épreuve"
-        data_tests:
-          - not_null
-      - name: sport_id
-        description: "Référence vers la table sports"
-        data_tests:
-          - not_null
-          - relationships:
-              to: ref('stg_sports')
-              field: sport_id
-      - name: city
-        description: "Ville hôte"
-        data_tests:
-          - not_null
-      - name: year
-        description: "Année de la compétition"
-        data_tests:
-          - not_null
       - name: season
-        description: "Saison (Summer/Winter)"
-        data_tests:
-          - accepted_values:
-              values: ['Summer', 'Winter']
-      - name: edition
-        description: "Nom de l'édition olympique (ex: Paris 2024)"
-        data_tests:
-          - not_null
+        description: "Année de la saison (ex: 2019 = saison 2018-19)."
+        data_tests: [unique, not_null]
+      - name: day_zero
+        description: "Date de référence pour le calcul des dates de match (DayNum + DayZero)."
+        data_tests: [not_null]
 
-  - name: stg_results
-    description: "Résultats des athlètes aux compétitions."
+  - name: stg_cities
+    description: "Référentiel des villes hôtes de matchs."
     columns:
-      - name: result_id
-        description: "Identifiant unique du résultat"
-        data_tests:
-          - unique
-          - not_null
-      - name: athlete_id
-        description: "Référence vers la table athletes"
-        data_tests:
-          - not_null
-          - relationships:
-              to: ref('stg_athletes')
-              field: athlete_id
-      - name: competition_id
-        description: "Référence vers la table competitions"
-        data_tests:
-          - not_null
-          - relationships:
-              to: ref('stg_competitions')
-              field: competition_id
-      - name: rank
-        description: "Classement final (1 = médaille d'or)"
-        data_tests:
-          - not_null
-      - name: medal
-        description: "Médaille obtenue"
+      - name: city_id
+        description: "Identifiant unique de la ville."
+        data_tests: [unique, not_null]
+      - name: city
+        data_tests: [not_null]
+      - name: state
+        data_tests: [not_null]
+
+  - name: stg_team_spellings
+    description: "Variantes orthographiques des noms d'équipes."
+    columns:
+      - name: team_id
+        data_tests: [not_null]
+      - name: team_name_spelling
+        data_tests: [not_null]
+
+  - name: stg_tourney_seeds
+    description: "Classements (seeds) des équipes au tournoi NCAA par saison."
+    columns:
+      - name: season
+        data_tests: [not_null]
+      - name: team_id
+        data_tests: [not_null]
+      - name: seed_raw
+        data_tests: [not_null]
+      - name: seed_region
         data_tests:
           - not_null
           - accepted_values:
-              values: ['Gold', 'Silver', 'Bronze', 'None']
-      - name: performance_value
-        description: "Valeur de la performance (temps, distance, points...)"
-      - name: performance_unit
-        description: "Unité de mesure de la performance"
+              values: ['W', 'X', 'Y', 'Z']
+      - name: seed_number
+        data_tests: [not_null]
+
+  - name: stg_tourney_slots
+    description: "Structure des brackets du tournoi NCAA."
+    columns:
+      - name: slot
+        data_tests: [unique, not_null]
+
+  - name: stg_tourney_compact_results
+    description: "Résultats des matchs du tournoi NCAA (tous, sans statistiques détaillées)."
+    columns:
+      - name: season
+        data_tests: [not_null]
+      - name: w_team_id
+        data_tests: [not_null]
+      - name: l_team_id
+        data_tests: [not_null]
+      - name: w_score
+        data_tests: [not_null]
+      - name: l_score
+        data_tests: [not_null]
+      - name: w_loc
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['H', 'A', 'N']
+
+  - name: stg_tourney_detailed_results
+    description: "Résultats du tournoi NCAA avec statistiques complètes (box score)."
+    columns:
+      - name: season
+        data_tests: [not_null]
+      - name: w_team_id
+        data_tests: [not_null]
+      - name: l_team_id
+        data_tests: [not_null]
+
+  - name: stg_game_cities
+    description: "Mapping matchs → ville hôte."
+    columns:
+      - name: season
+        data_tests: [not_null]
+      - name: w_team_id
+        data_tests: [not_null]
+      - name: l_team_id
+        data_tests: [not_null]
+      - name: city_id
+        data_tests: [not_null]
+
+  - name: stg_regular_season_compact_results
+    description: "Résultats de tous les matchs de saison régulière (sans statistiques)."
+    columns:
+      - name: season
+        data_tests: [not_null]
+      - name: w_team_id
+        data_tests: [not_null]
+      - name: l_team_id
+        data_tests: [not_null]
+      - name: w_score
+        data_tests: [not_null]
+      - name: l_score
+        data_tests: [not_null]
+      - name: w_loc
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['H', 'A', 'N']
+
+  - name: stg_regular_season_detailed_results
+    description: "Résultats de saison régulière avec statistiques complètes (box score)."
+    columns:
+      - name: season
+        data_tests: [not_null]
+      - name: w_team_id
+        data_tests: [not_null]
+      - name: l_team_id
+        data_tests: [not_null]
