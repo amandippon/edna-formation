@@ -2,133 +2,313 @@ version: 2
 
 models:
   - name: stg_teams
-    description: "Référentiel des équipes NCAA Women Division I."
+    description: "Référentiel des équipes NCAA Women Division I. 366 équipes, identifiées par un ID entre 3000 et 3999."
     columns:
       - name: team_id
-        description: "Identifiant unique de l'équipe."
+        description: "Identifiant unique de l'équipe (4 chiffres, entre 3000 et 3999). Stable d'une saison à l'autre."
         data_tests: [unique, not_null]
       - name: team_name
-        description: "Nom court de l'équipe."
+        description: "Nom court de l'équipe (16 caractères max). Peut contenir des caractères spéciaux (ex: Texas A&M, St Mary's CA)."
         data_tests: [not_null]
 
   - name: stg_seasons
-    description: "Référentiel des saisons avec date de référence DayZero."
+    description: "Référentiel des saisons NCAA (1998–2019) avec date de référence DayZero et régions du tournoi."
     columns:
       - name: season
-        description: "Année de la saison (ex: 2019 = saison 2018-19)."
+        description: "Année de la saison (ex: 2019 = saison 2018-19). Par convention, c'est l'année où le tournoi a lieu."
         data_tests: [unique, not_null]
       - name: day_zero
-        description: "Date de référence pour le calcul des dates de match (DayNum + DayZero)."
+        description: "Date de référence (jour 0) de la saison. Toutes les dates de matchs sont exprimées en nombre de jours après cette date. Aligné pour que le jour 133 soit le Selection Monday."
         data_tests: [not_null]
+      - name: region_w
+        description: "Nom de la région W du tournoi (1ère alphabétiquement). Ex: East, Bridgeport, Albany."
+      - name: region_x
+        description: "Nom de la région X du tournoi (joue contre la région W en demi-finale nationale)."
+      - name: region_y
+        description: "Nom de la région Y du tournoi (1ère alphabétiquement parmi les deux restantes)."
+      - name: region_z
+        description: "Nom de la région Z du tournoi (dernière alphabétiquement)."
 
   - name: stg_cities
-    description: "Référentiel des villes hôtes de matchs."
+    description: "Référentiel des 435 villes hôtes de matchs NCAA (depuis 2010)."
     columns:
       - name: city_id
-        description: "Identifiant unique de la ville."
+        description: "Identifiant unique de la ville (4 chiffres)."
         data_tests: [unique, not_null]
       - name: city
+        description: "Nom de la ville (ex: Durham, Storrs, Indianapolis)."
         data_tests: [not_null]
       - name: state
+        description: "Code état US à 2 lettres (ex: NC, CT, IN). Quelques exceptions hors US (ex: MX pour Cancun, Mexique)."
         data_tests: [not_null]
 
   - name: stg_team_spellings
-    description: "Variantes orthographiques des noms d'équipes."
+    description: "Variantes orthographiques des noms d'équipes. Utile pour relier des sources externes aux TeamID du dataset."
     columns:
       - name: team_id
+        description: "Identifiant de l'équipe (FK vers stg_teams)."
         data_tests: [not_null]
       - name: team_name_spelling
+        description: "Variante orthographique du nom d'équipe, toujours en minuscules (ex: 'ball state', 'ball st.', 'ball-state')."
         data_tests: [not_null]
 
   - name: stg_tourney_seeds
-    description: "Classements (seeds) des équipes au tournoi NCAA par saison."
+    description: "Seeds (classements) des 64 équipes sélectionnées pour le tournoi NCAA, par saison (1998–2018)."
     columns:
       - name: season
+        description: "Année de la saison du tournoi."
         data_tests: [not_null]
       - name: team_id
+        description: "Identifiant de l'équipe (FK vers stg_teams)."
         data_tests: [not_null]
       - name: seed_raw
+        description: "Seed brut sur 3 caractères : lettre de région + numéro (ex: W01 = seed 1 de la région W, X16 = seed 16 de la région X)."
         data_tests: [not_null]
       - name: seed_region
+        description: "Lettre de la région du bracket (W, X, Y ou Z). Correspond aux noms de régions dans stg_seasons."
         data_tests:
           - not_null
           - accepted_values:
               values: ['W', 'X', 'Y', 'Z']
       - name: seed_number
+        description: "Numéro du seed dans la région (1 = meilleur, 16 = moins bien classé). Entier de 1 à 16."
         data_tests: [not_null]
 
   - name: stg_tourney_slots
-    description: "Structure des brackets du tournoi NCAA."
+    description: "Structure fixe des brackets du tournoi NCAA féminin (64 équipes, 63 matchs, 6 rounds). Identique chaque saison car pas de play-in games."
     columns:
       - name: slot
+        description: "Identifiant unique du slot sur 4 caractères. Format : R<round><region><seed> (ex: R1W1 = Round 1, région W, seed 1). Cas spéciaux : R5WX et R5YZ (demi-finales), R6CH (finale)."
         data_tests: [unique, not_null]
+      - name: strong_seed
+        description: "Seed ou slot de l'équipe la mieux classée. En Round 1 c'est un seed (ex: W01), en rounds suivants c'est un slot (ex: R1W1)."
+      - name: weak_seed
+        description: "Seed ou slot de l'équipe la moins bien classée. Même logique que strong_seed."
 
   - name: stg_tourney_compact_results
-    description: "Résultats des matchs du tournoi NCAA (tous, sans statistiques détaillées)."
+    description: "Résultats des 63 matchs du tournoi NCAA par saison (1998–2018), sans statistiques détaillées."
     columns:
       - name: season
+        description: "Année de la saison du tournoi."
         data_tests: [not_null]
+      - name: day_num
+        description: "Numéro du jour du match (offset depuis DayZero). Permet de déterminer le round : 137-138 = R1, 139-140 = R2, 144-145 = Sweet 16, 146-147 = Elite 8, 151-153 = Final Four/Finale."
       - name: w_team_id
-        data_tests: [not_null]
-      - name: l_team_id
+        description: "Identifiant de l'équipe gagnante (toujours le gagnant, quel que soit le lieu)."
         data_tests: [not_null]
       - name: w_score
+        description: "Points marqués par l'équipe gagnante. Toujours supérieur à l_score."
+        data_tests: [not_null]
+      - name: l_team_id
+        description: "Identifiant de l'équipe perdante."
         data_tests: [not_null]
       - name: l_score
+        description: "Points marqués par l'équipe perdante."
         data_tests: [not_null]
       - name: w_loc
+        description: "Lieu du match du point de vue de l'équipe gagnante. H = domicile, A = extérieur, N = terrain neutre."
         data_tests:
           - not_null
           - accepted_values:
               values: ['H', 'A', 'N']
+      - name: num_ot
+        description: "Nombre de prolongations (0 = temps réglementaire)."
 
   - name: stg_tourney_detailed_results
-    description: "Résultats du tournoi NCAA avec statistiques complètes (box score)."
+    description: "Résultats du tournoi NCAA avec box score complet par équipe (depuis 2010). Mêmes matchs que stg_tourney_compact_results pour les saisons 2010+."
     columns:
       - name: season
+        description: "Année de la saison du tournoi."
         data_tests: [not_null]
+      - name: day_num
+        description: "Numéro du jour du match (offset depuis DayZero)."
       - name: w_team_id
+        description: "Identifiant de l'équipe gagnante."
         data_tests: [not_null]
+      - name: w_score
+        description: "Points marqués par l'équipe gagnante."
       - name: l_team_id
+        description: "Identifiant de l'équipe perdante."
         data_tests: [not_null]
+      - name: l_score
+        description: "Points marqués par l'équipe perdante."
+      - name: w_loc
+        description: "Lieu du match du point de vue du gagnant (H/A/N)."
+      - name: num_ot
+        description: "Nombre de prolongations."
+      - name: w_fgm
+        description: "Field goals réussis par le gagnant (2pts + 3pts combinés)."
+      - name: w_fga
+        description: "Field goals tentés par le gagnant."
+      - name: w_fgm3
+        description: "Tirs à 3 points réussis par le gagnant."
+      - name: w_fga3
+        description: "Tirs à 3 points tentés par le gagnant."
+      - name: w_ftm
+        description: "Lancers francs réussis par le gagnant."
+      - name: w_fta
+        description: "Lancers francs tentés par le gagnant."
+      - name: w_or
+        description: "Rebonds offensifs du gagnant."
+      - name: w_dr
+        description: "Rebonds défensifs du gagnant."
+      - name: w_ast
+        description: "Passes décisives du gagnant."
+      - name: w_to
+        description: "Balles perdues (turnovers) du gagnant."
+      - name: w_stl
+        description: "Interceptions (steals) du gagnant."
+      - name: w_blk
+        description: "Contres (blocks) du gagnant."
+      - name: w_pf
+        description: "Fautes personnelles du gagnant."
+      - name: l_fgm
+        description: "Field goals réussis par le perdant."
+      - name: l_fga
+        description: "Field goals tentés par le perdant."
+      - name: l_fgm3
+        description: "Tirs à 3 points réussis par le perdant."
+      - name: l_fga3
+        description: "Tirs à 3 points tentés par le perdant."
+      - name: l_ftm
+        description: "Lancers francs réussis par le perdant."
+      - name: l_fta
+        description: "Lancers francs tentés par le perdant."
+      - name: l_or
+        description: "Rebonds offensifs du perdant."
+      - name: l_dr
+        description: "Rebonds défensifs du perdant."
+      - name: l_ast
+        description: "Passes décisives du perdant."
+      - name: l_to
+        description: "Balles perdues du perdant."
+      - name: l_stl
+        description: "Interceptions du perdant."
+      - name: l_blk
+        description: "Contres du perdant."
+      - name: l_pf
+        description: "Fautes personnelles du perdant."
 
   - name: stg_game_cities
-    description: "Mapping matchs → ville hôte."
+    description: "Mapping matchs → ville hôte (depuis 2010). Couvre la saison régulière et le tournoi NCAA."
     columns:
       - name: season
+        description: "Année de la saison."
         data_tests: [not_null]
+      - name: day_num
+        description: "Numéro du jour du match."
       - name: w_team_id
+        description: "Identifiant de l'équipe gagnante."
         data_tests: [not_null]
       - name: l_team_id
+        description: "Identifiant de l'équipe perdante."
         data_tests: [not_null]
+      - name: cr_type
+        description: "Type de compétition : Regular (saison régulière) ou NCAA (tournoi)."
       - name: city_id
+        description: "Identifiant de la ville où le match a eu lieu (FK vers stg_cities)."
         data_tests: [not_null]
 
   - name: stg_regular_season_compact_results
-    description: "Résultats de tous les matchs de saison régulière (sans statistiques)."
+    description: "Résultats de tous les matchs de saison régulière (1998–2019), sans statistiques détaillées. Inclut pré-saison, conférence, et tournois de conférence (tout ce qui est joué avant le Selection Monday, jour 133)."
     columns:
       - name: season
+        description: "Année de la saison."
         data_tests: [not_null]
+      - name: day_num
+        description: "Numéro du jour du match (0 à 132). Aucune équipe ne joue deux matchs le même jour, donc (season, day_num, w_team_id) est une clé unique."
       - name: w_team_id
-        data_tests: [not_null]
-      - name: l_team_id
+        description: "Identifiant de l'équipe gagnante (toujours le gagnant, quel que soit le lieu)."
         data_tests: [not_null]
       - name: w_score
+        description: "Points marqués par l'équipe gagnante. Toujours supérieur à l_score."
+        data_tests: [not_null]
+      - name: l_team_id
+        description: "Identifiant de l'équipe perdante."
         data_tests: [not_null]
       - name: l_score
+        description: "Points marqués par l'équipe perdante."
         data_tests: [not_null]
       - name: w_loc
+        description: "Lieu du match du point de vue du gagnant. H = domicile, A = extérieur, N = terrain neutre."
         data_tests:
           - not_null
           - accepted_values:
               values: ['H', 'A', 'N']
+      - name: num_ot
+        description: "Nombre de prolongations (0 = temps réglementaire)."
 
   - name: stg_regular_season_detailed_results
-    description: "Résultats de saison régulière avec statistiques complètes (box score)."
+    description: "Résultats de saison régulière avec box score complet par équipe (depuis 2010). Mêmes matchs que stg_regular_season_compact_results pour les saisons 2010+."
     columns:
       - name: season
+        description: "Année de la saison."
         data_tests: [not_null]
+      - name: day_num
+        description: "Numéro du jour du match (0 à 132)."
       - name: w_team_id
+        description: "Identifiant de l'équipe gagnante."
         data_tests: [not_null]
+      - name: w_score
+        description: "Points marqués par l'équipe gagnante."
       - name: l_team_id
+        description: "Identifiant de l'équipe perdante."
         data_tests: [not_null]
+      - name: l_score
+        description: "Points marqués par l'équipe perdante."
+      - name: w_loc
+        description: "Lieu du match du point de vue du gagnant (H/A/N)."
+      - name: num_ot
+        description: "Nombre de prolongations."
+      - name: w_fgm
+        description: "Field goals réussis par le gagnant (2pts + 3pts combinés)."
+      - name: w_fga
+        description: "Field goals tentés par le gagnant."
+      - name: w_fgm3
+        description: "Tirs à 3 points réussis par le gagnant."
+      - name: w_fga3
+        description: "Tirs à 3 points tentés par le gagnant."
+      - name: w_ftm
+        description: "Lancers francs réussis par le gagnant."
+      - name: w_fta
+        description: "Lancers francs tentés par le gagnant."
+      - name: w_or
+        description: "Rebonds offensifs du gagnant."
+      - name: w_dr
+        description: "Rebonds défensifs du gagnant."
+      - name: w_ast
+        description: "Passes décisives du gagnant."
+      - name: w_to
+        description: "Balles perdues (turnovers) du gagnant."
+      - name: w_stl
+        description: "Interceptions (steals) du gagnant."
+      - name: w_blk
+        description: "Contres (blocks) du gagnant."
+      - name: w_pf
+        description: "Fautes personnelles du gagnant."
+      - name: l_fgm
+        description: "Field goals réussis par le perdant."
+      - name: l_fga
+        description: "Field goals tentés par le perdant."
+      - name: l_fgm3
+        description: "Tirs à 3 points réussis par le perdant."
+      - name: l_fga3
+        description: "Tirs à 3 points tentés par le perdant."
+      - name: l_ftm
+        description: "Lancers francs réussis par le perdant."
+      - name: l_fta
+        description: "Lancers francs tentés par le perdant."
+      - name: l_or
+        description: "Rebonds offensifs du perdant."
+      - name: l_dr
+        description: "Rebonds défensifs du perdant."
+      - name: l_ast
+        description: "Passes décisives du perdant."
+      - name: l_to
+        description: "Balles perdues du perdant."
+      - name: l_stl
+        description: "Interceptions du perdant."
+      - name: l_blk
+        description: "Contres du perdant."
+      - name: l_pf
+        description: "Fautes personnelles du perdant."

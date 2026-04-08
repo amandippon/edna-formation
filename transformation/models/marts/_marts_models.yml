@@ -5,91 +5,319 @@ models:
     description: "Dimension équipes NCAA Women avec état d'origine déduit des matchs à domicile."
     columns:
       - name: team_id
-        description: "Identifiant unique de l'équipe (PK)."
+        description: "Identifiant unique de l'équipe (PK). 4 chiffres, 3000–3999."
         data_tests: [unique, not_null]
       - name: team_name
+        description: "Nom court de l'équipe (16 caractères max)."
         data_tests: [not_null]
       - name: team_state
-        description: "Code état US déduit de la ville où l'équipe joue le plus à domicile (ex: NC, CT)."
+        description: "Code état US à 2 lettres déduit de la ville où l'équipe joue le plus souvent à domicile (ex: NC, CT). Null si aucun match à domicile trouvé dans les données géographiques (avant 2010)."
       - name: team_state_iso
-        description: "Code ISO 3166-2:US pour les cartes Superset (ex: US-NC, US-CT)."
+        description: "Code ISO 3166-2:US pour les cartes Superset (ex: US-NC, US-CT). Null si team_state est null."
 
   - name: dim_seasons
-    description: "Dimension saisons avec date de référence et labels lisibles."
+    description: "Dimension saisons NCAA (1998–2019) avec date de référence, labels lisibles et régions du tournoi."
     columns:
       - name: season
-        description: "Année de la saison (PK)."
+        description: "Année de la saison (PK). Par convention, l'année où le tournoi a lieu (ex: 2019 = saison 2018-19)."
         data_tests: [unique, not_null]
       - name: day_zero
+        description: "Date de référence (jour 0) de la saison. game_date = day_zero + day_num jours."
         data_tests: [not_null]
       - name: season_label
+        description: "Label lisible de la saison (ex: 'Season 2019')."
         data_tests: [not_null]
+      - name: season_year
+        description: "Année de la saison (identique à season, pour usage dans les axes de graphiques)."
+      - name: seasons_since_start
+        description: "Nombre de saisons depuis le début du dataset (season - 1998). Utile pour les régressions et tendances."
+      - name: region_w
+        description: "Nom de la région W du tournoi (1ère alphabétiquement)."
+      - name: region_x
+        description: "Nom de la région X du tournoi (joue contre W en demi-finale)."
+      - name: region_y
+        description: "Nom de la région Y du tournoi (1ère alphabétiquement des deux restantes)."
+      - name: region_z
+        description: "Nom de la région Z du tournoi (dernière alphabétiquement)."
 
   - name: dim_cities
-    description: "Dimension villes hôtes avec label combiné ville+état."
+    description: "Dimension villes hôtes avec label combiné ville+état. 435 villes."
     columns:
       - name: city_id
         description: "Identifiant unique de la ville (PK)."
         data_tests: [unique, not_null]
+      - name: city
+        description: "Nom de la ville."
+      - name: state
+        description: "Code état US à 2 lettres."
       - name: city_state
+        description: "Label combiné 'ville, état' (ex: 'Durham, NC'). Pratique pour les tooltips Superset."
         data_tests: [not_null]
 
   - name: fct_regular_season_games
-    description: "Table de faits des matchs de saison régulière. 107k+ matchs, 1998-2019."
+    description: "Table de faits des matchs de saison régulière. 107k+ matchs, 1998–2019. Inclut scores, lieu, prolongations et box score détaillé (nullable, disponible depuis 2010)."
     columns:
       - name: game_id
-        description: "Clé surrogate du match (PK)."
+        description: "Clé surrogate du match (PK). Format : season_daynum_wteamid_lteamid."
         data_tests: [unique, not_null]
+      - name: game_type
+        description: "Type de match. Toujours 'Regular' dans cette table."
       - name: season
+        description: "Année de la saison (FK vers dim_seasons)."
         data_tests:
           - not_null
           - relationships:
               to: ref('dim_seasons')
               field: season
+      - name: day_num
+        description: "Numéro du jour du match (0–132, offset depuis DayZero)."
+      - name: game_date
+        description: "Date réelle du match, calculée comme day_zero + day_num jours."
+        data_tests: [not_null]
       - name: w_team_id
+        description: "Identifiant de l'équipe gagnante (FK vers dim_teams)."
         data_tests:
           - not_null
           - relationships:
               to: ref('dim_teams')
               field: team_id
       - name: l_team_id
+        description: "Identifiant de l'équipe perdante (FK vers dim_teams)."
         data_tests:
           - not_null
           - relationships:
               to: ref('dim_teams')
               field: team_id
-      - name: game_date
-        data_tests: [not_null]
       - name: w_score
+        description: "Points marqués par l'équipe gagnante."
         data_tests: [not_null]
       - name: l_score
+        description: "Points marqués par l'équipe perdante."
         data_tests: [not_null]
+      - name: score_margin
+        description: "Écart de score (w_score - l_score). Toujours positif."
+      - name: total_points
+        description: "Total des points du match (w_score + l_score)."
+      - name: w_loc
+        description: "Lieu brut du match du point de vue du gagnant (H/A/N)."
       - name: game_location
+        description: "Lieu du match en clair : Home, Away ou Neutral."
         data_tests:
           - not_null
           - accepted_values:
               values: ['Home', 'Away', 'Neutral']
+      - name: num_ot
+        description: "Nombre de prolongations (0 = temps réglementaire)."
+      - name: has_overtime
+        description: "Booléen : true si le match a eu au moins une prolongation."
+      - name: is_close_game
+        description: "Booléen : true si l'écart de score est de 5 points ou moins."
+      - name: city_id
+        description: "Identifiant de la ville hôte (FK vers dim_cities). Null avant 2010."
+      - name: w_fgm
+        description: "Field goals réussis par le gagnant (2pts + 3pts). Null avant 2010."
+      - name: w_fga
+        description: "Field goals tentés par le gagnant. Null avant 2010."
+      - name: w_fg_pct
+        description: "Pourcentage de réussite aux field goals du gagnant (w_fgm / w_fga). Null avant 2010."
+      - name: w_fgm3
+        description: "Tirs à 3 points réussis par le gagnant. Null avant 2010."
+      - name: w_fga3
+        description: "Tirs à 3 points tentés par le gagnant. Null avant 2010."
+      - name: w_fg3_pct
+        description: "Pourcentage de réussite à 3 points du gagnant. Null avant 2010."
+      - name: w_ftm
+        description: "Lancers francs réussis par le gagnant. Null avant 2010."
+      - name: w_fta
+        description: "Lancers francs tentés par le gagnant. Null avant 2010."
+      - name: w_ft_pct
+        description: "Pourcentage de réussite aux lancers francs du gagnant. Null avant 2010."
+      - name: w_reb
+        description: "Rebonds totaux du gagnant (offensifs + défensifs). Null avant 2010."
+      - name: w_or
+        description: "Rebonds offensifs du gagnant. Null avant 2010."
+      - name: w_dr
+        description: "Rebonds défensifs du gagnant. Null avant 2010."
+      - name: w_ast
+        description: "Passes décisives du gagnant. Null avant 2010."
+      - name: w_to
+        description: "Balles perdues (turnovers) du gagnant. Null avant 2010."
+      - name: w_stl
+        description: "Interceptions (steals) du gagnant. Null avant 2010."
+      - name: w_blk
+        description: "Contres (blocks) du gagnant. Null avant 2010."
+      - name: w_pf
+        description: "Fautes personnelles du gagnant. Null avant 2010."
+      - name: l_fgm
+        description: "Field goals réussis par le perdant. Null avant 2010."
+      - name: l_fga
+        description: "Field goals tentés par le perdant. Null avant 2010."
+      - name: l_fg_pct
+        description: "Pourcentage de réussite aux field goals du perdant. Null avant 2010."
+      - name: l_fgm3
+        description: "Tirs à 3 points réussis par le perdant. Null avant 2010."
+      - name: l_fga3
+        description: "Tirs à 3 points tentés par le perdant. Null avant 2010."
+      - name: l_fg3_pct
+        description: "Pourcentage de réussite à 3 points du perdant. Null avant 2010."
+      - name: l_ftm
+        description: "Lancers francs réussis par le perdant. Null avant 2010."
+      - name: l_fta
+        description: "Lancers francs tentés par le perdant. Null avant 2010."
+      - name: l_ft_pct
+        description: "Pourcentage de réussite aux lancers francs du perdant. Null avant 2010."
+      - name: l_reb
+        description: "Rebonds totaux du perdant (offensifs + défensifs). Null avant 2010."
+      - name: l_or
+        description: "Rebonds offensifs du perdant. Null avant 2010."
+      - name: l_dr
+        description: "Rebonds défensifs du perdant. Null avant 2010."
+      - name: l_ast
+        description: "Passes décisives du perdant. Null avant 2010."
+      - name: l_to
+        description: "Balles perdues du perdant. Null avant 2010."
+      - name: l_stl
+        description: "Interceptions du perdant. Null avant 2010."
+      - name: l_blk
+        description: "Contres du perdant. Null avant 2010."
+      - name: l_pf
+        description: "Fautes personnelles du perdant. Null avant 2010."
+      - name: has_box_score
+        description: "Booléen : true si les statistiques détaillées (box score) sont disponibles pour ce match. False avant 2010."
 
   - name: fct_tourney_games
-    description: "Table de faits des matchs du tournoi NCAA. 1323 matchs, 1998-2018."
+    description: "Table de faits des matchs du tournoi NCAA. 1323 matchs, 1998–2018. 63 matchs par saison (bracket 64 équipes, pas de play-in games). Inclut seeds, analyse d'upsets et box score détaillé (nullable, depuis 2010)."
     columns:
       - name: game_id
-        description: "Clé surrogate du match de tournoi (PK)."
+        description: "Clé surrogate du match de tournoi (PK). Format : T_season_daynum_wteamid_lteamid."
         data_tests: [unique, not_null]
+      - name: game_type
+        description: "Type de match. Toujours 'Tournament' dans cette table."
       - name: season
+        description: "Année de la saison du tournoi (FK vers dim_seasons)."
         data_tests:
           - not_null
           - relationships:
               to: ref('dim_seasons')
               field: season
+      - name: day_num
+        description: "Numéro du jour du match. Permet de déduire le round (137-138 = R1, 139-140 = R2, 144-145 = Sweet 16, 146-147 = Elite 8, 151+ = Final Four/Finale)."
+      - name: game_date
+        description: "Date réelle du match, calculée comme day_zero + day_num jours."
+        data_tests: [not_null]
       - name: w_team_id
+        description: "Identifiant de l'équipe gagnante (FK vers dim_teams)."
         data_tests: [not_null]
       - name: l_team_id
+        description: "Identifiant de l'équipe perdante (FK vers dim_teams)."
         data_tests: [not_null]
-      - name: game_date
-        data_tests: [not_null]
+      - name: w_score
+        description: "Points marqués par l'équipe gagnante."
+      - name: l_score
+        description: "Points marqués par l'équipe perdante."
+      - name: score_margin
+        description: "Écart de score (w_score - l_score). Toujours positif."
+      - name: total_points
+        description: "Total des points du match (w_score + l_score)."
+      - name: w_loc
+        description: "Lieu brut du match du point de vue du gagnant (H/A/N)."
       - name: game_location
+        description: "Lieu du match en clair : Home, Away ou Neutral."
         data_tests:
           - not_null
           - accepted_values:
               values: ['Home', 'Away', 'Neutral']
+      - name: num_ot
+        description: "Nombre de prolongations."
+      - name: has_overtime
+        description: "Booléen : true si le match a eu au moins une prolongation."
+      - name: is_close_game
+        description: "Booléen : true si l'écart de score est de 5 points ou moins."
+      - name: city_id
+        description: "Identifiant de la ville hôte (FK vers dim_cities). Null avant 2010."
+      - name: w_seed_raw
+        description: "Seed brut de l'équipe gagnante (ex: W01, X16)."
+      - name: w_seed_region
+        description: "Région du bracket de l'équipe gagnante (W, X, Y ou Z)."
+      - name: w_seed_number
+        description: "Numéro du seed de l'équipe gagnante (1–16, 1 = meilleur)."
+      - name: l_seed_raw
+        description: "Seed brut de l'équipe perdante."
+      - name: l_seed_region
+        description: "Région du bracket de l'équipe perdante."
+      - name: l_seed_number
+        description: "Numéro du seed de l'équipe perdante."
+      - name: is_upset
+        description: "Booléen : true si le gagnant avait un seed plus élevé (moins bien classé) que le perdant. Ex: un seed 12 bat un seed 5."
+      - name: seed_difference
+        description: "Écart de seed (w_seed_number - l_seed_number). Positif = upset (le moins bien classé a gagné), négatif = résultat attendu, 0 = même seed."
+      - name: w_fgm
+        description: "Field goals réussis par le gagnant. Null avant 2010."
+      - name: w_fga
+        description: "Field goals tentés par le gagnant. Null avant 2010."
+      - name: w_fg_pct
+        description: "Pourcentage de réussite aux field goals du gagnant. Null avant 2010."
+      - name: w_fgm3
+        description: "Tirs à 3 points réussis par le gagnant. Null avant 2010."
+      - name: w_fga3
+        description: "Tirs à 3 points tentés par le gagnant. Null avant 2010."
+      - name: w_fg3_pct
+        description: "Pourcentage de réussite à 3 points du gagnant. Null avant 2010."
+      - name: w_ftm
+        description: "Lancers francs réussis par le gagnant. Null avant 2010."
+      - name: w_fta
+        description: "Lancers francs tentés par le gagnant. Null avant 2010."
+      - name: w_ft_pct
+        description: "Pourcentage de réussite aux lancers francs du gagnant. Null avant 2010."
+      - name: w_reb
+        description: "Rebonds totaux du gagnant (offensifs + défensifs). Null avant 2010."
+      - name: w_or
+        description: "Rebonds offensifs du gagnant. Null avant 2010."
+      - name: w_dr
+        description: "Rebonds défensifs du gagnant. Null avant 2010."
+      - name: w_ast
+        description: "Passes décisives du gagnant. Null avant 2010."
+      - name: w_to
+        description: "Balles perdues du gagnant. Null avant 2010."
+      - name: w_stl
+        description: "Interceptions du gagnant. Null avant 2010."
+      - name: w_blk
+        description: "Contres du gagnant. Null avant 2010."
+      - name: w_pf
+        description: "Fautes personnelles du gagnant. Null avant 2010."
+      - name: l_fgm
+        description: "Field goals réussis par le perdant. Null avant 2010."
+      - name: l_fga
+        description: "Field goals tentés par le perdant. Null avant 2010."
+      - name: l_fg_pct
+        description: "Pourcentage de réussite aux field goals du perdant. Null avant 2010."
+      - name: l_fgm3
+        description: "Tirs à 3 points réussis par le perdant. Null avant 2010."
+      - name: l_fga3
+        description: "Tirs à 3 points tentés par le perdant. Null avant 2010."
+      - name: l_fg3_pct
+        description: "Pourcentage de réussite à 3 points du perdant. Null avant 2010."
+      - name: l_ftm
+        description: "Lancers francs réussis par le perdant. Null avant 2010."
+      - name: l_fta
+        description: "Lancers francs tentés par le perdant. Null avant 2010."
+      - name: l_ft_pct
+        description: "Pourcentage de réussite aux lancers francs du perdant. Null avant 2010."
+      - name: l_reb
+        description: "Rebonds totaux du perdant. Null avant 2010."
+      - name: l_or
+        description: "Rebonds offensifs du perdant. Null avant 2010."
+      - name: l_dr
+        description: "Rebonds défensifs du perdant. Null avant 2010."
+      - name: l_ast
+        description: "Passes décisives du perdant. Null avant 2010."
+      - name: l_to
+        description: "Balles perdues du perdant. Null avant 2010."
+      - name: l_stl
+        description: "Interceptions du perdant. Null avant 2010."
+      - name: l_blk
+        description: "Contres du perdant. Null avant 2010."
+      - name: l_pf
+        description: "Fautes personnelles du perdant. Null avant 2010."
+      - name: has_box_score
+        description: "Booléen : true si les statistiques détaillées sont disponibles. False avant 2010."

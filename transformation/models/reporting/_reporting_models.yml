@@ -2,60 +2,129 @@ version: 2
 
 models:
   - name: rpt_games
-    description: "Tous les matchs (saison régulière + tournoi) dénormalisés. Table principale pour les dashboards Superset."
+    description: "Tous les matchs (saison régulière + tournoi) dénormalisés avec noms d'équipes, ville hôte et analyse d'upsets. Table principale pour les dashboards Superset. ~108k lignes."
     columns:
       - name: game_id
-        description: "Identifiant unique du match (PK)."
+        description: "Identifiant unique du match (PK). Préfixé 'T_' pour les matchs de tournoi."
         data_tests: [unique, not_null]
       - name: game_type
-        description: "Type de match : Regular ou Tournament."
+        description: "Type de match : 'Regular' (saison régulière) ou 'Tournament' (tournoi NCAA)."
         data_tests:
           - not_null
           - accepted_values:
               values: ['Regular', 'Tournament']
-      - name: w_team_name
-        data_tests: [not_null]
-      - name: l_team_name
+      - name: season
+        description: "Année de la saison."
+      - name: season_label
+        description: "Label lisible de la saison (ex: 'Season 2019')."
         data_tests: [not_null]
       - name: game_date
+        description: "Date réelle du match."
         data_tests: [not_null]
-      - name: season_label
+      - name: w_team_name
+        description: "Nom de l'équipe gagnante (ex: Connecticut, Tennessee)."
         data_tests: [not_null]
+      - name: l_team_name
+        description: "Nom de l'équipe perdante."
+        data_tests: [not_null]
+      - name: w_score
+        description: "Points marqués par l'équipe gagnante."
+      - name: l_score
+        description: "Points marqués par l'équipe perdante."
+      - name: score_margin
+        description: "Écart de score (w_score - l_score). Toujours positif."
       - name: game_location
+        description: "Lieu du match en clair : Home, Away ou Neutral."
         data_tests:
           - not_null
           - accepted_values:
               values: ['Home', 'Away', 'Neutral']
+      - name: has_overtime
+        description: "Booléen : true si le match a eu au moins une prolongation."
+      - name: is_close_game
+        description: "Booléen : true si l'écart de score est de 5 points ou moins."
+      - name: city
+        description: "Nom de la ville hôte. Null si pas de données géographiques (avant 2010 ou données manquantes)."
+      - name: state
+        description: "Code état US de la ville hôte (ex: TX, CT). Null si pas de données géographiques."
       - name: state_iso
-        description: "Code ISO 3166-2:US de la ville hôte (ex: US-TX). Pour les cartes Superset."
+        description: "Code ISO 3166-2:US de la ville hôte (ex: US-TX). Compatible avec le chart type 'Country Map' de Superset (scope USA)."
+      - name: w_seed_number
+        description: "Seed de l'équipe gagnante au tournoi (1–16). Null pour les matchs de saison régulière."
+      - name: l_seed_number
+        description: "Seed de l'équipe perdante au tournoi. Null pour les matchs de saison régulière."
+      - name: is_upset
+        description: "Booléen : true si le gagnant avait un seed moins bon (plus élevé) que le perdant. Null pour la saison régulière."
+      - name: upset_label
+        description: "Catégorie d'upset basée sur l'écart de seed : 'Cinderella (10+ seeds)', 'Major Upset (5-9 seeds)', 'Upset (1-4 seeds)', 'Same Seed', 'Expected Result'. Null pour la saison régulière."
 
   - name: rpt_team_season_stats
-    description: "Statistiques agrégées par équipe et par saison. Table clé pour les classements et tendances."
+    description: "Statistiques agrégées par équipe et par saison (saison régulière uniquement). Table clé pour les classements, tendances et cartes par état."
     columns:
       - name: team_name
+        description: "Nom de l'équipe."
         data_tests: [not_null]
-      - name: season
-        data_tests: [not_null]
+      - name: team_state
+        description: "Code état US de l'équipe (ex: CT, TN). Déduit des matchs à domicile."
       - name: team_state_iso
         description: "Code ISO 3166-2:US de l'état de l'équipe (ex: US-CT). Pour les cartes Superset."
+      - name: season
+        description: "Année de la saison."
+        data_tests: [not_null]
+      - name: season_label
+        description: "Label lisible de la saison (ex: 'Season 2019')."
       - name: games_played
+        description: "Nombre total de matchs joués dans la saison (victoires + défaites)."
         data_tests: [not_null]
+      - name: wins
+        description: "Nombre de victoires en saison régulière."
+      - name: losses
+        description: "Nombre de défaites en saison régulière."
       - name: win_pct
+        description: "Pourcentage de victoires (wins / games_played), arrondi à 3 décimales. Ex: 0.875 = 87.5%."
         data_tests: [not_null]
+      - name: avg_pts_scored
+        description: "Moyenne de points marqués par match, arrondie à 1 décimale."
+      - name: avg_pts_allowed
+        description: "Moyenne de points encaissés par match, arrondie à 1 décimale."
+      - name: avg_pt_diff
+        description: "Différence moyenne de points par match (pts marqués - pts encaissés). Positif = l'équipe marque plus qu'elle n'encaisse."
+      - name: made_tourney
+        description: "Booléen : true si l'équipe a été sélectionnée pour le tournoi NCAA cette saison."
+      - name: tourney_seed_number
+        description: "Numéro du seed au tournoi (1–16). Null si l'équipe n'a pas participé au tournoi."
 
   - name: rpt_tourney_runs
-    description: "Parcours au tournoi NCAA par équipe et saison. Championnats, brackets, avancement."
+    description: "Parcours au tournoi NCAA par équipe et saison. Permet d'analyser les champions, Cinderella stories et la performance par seed."
     columns:
       - name: team_name
+        description: "Nom de l'équipe."
         data_tests: [not_null]
-      - name: season
-        data_tests: [not_null]
+      - name: team_state
+        description: "Code état US de l'équipe."
       - name: team_state_iso
         description: "Code ISO 3166-2:US de l'état de l'équipe. Pour les cartes Superset."
+      - name: season
+        description: "Année de la saison du tournoi."
+        data_tests: [not_null]
+      - name: season_label
+        description: "Label lisible de la saison."
+      - name: seed_number
+        description: "Numéro du seed de l'équipe au tournoi (1–16)."
+      - name: tourney_wins
+        description: "Nombre de victoires au tournoi (0 à 6). 6 = champion."
+      - name: tourney_losses
+        description: "Nombre de défaites au tournoi (0 ou 1, sauf pour le champion qui a 0)."
+      - name: avg_pts_scored_tourney
+        description: "Moyenne de points marqués par match au tournoi."
+      - name: avg_pts_allowed_tourney
+        description: "Moyenne de points encaissés par match au tournoi."
+      - name: is_champion
+        description: "Booléen : true si l'équipe a remporté le tournoi (6 victoires)."
+        data_tests: [not_null]
       - name: tournament_result
+        description: "Étape atteinte au tournoi : 'Champion' (6 wins), 'Runner-Up' (5), 'Final Four' (4), 'Elite Eight' (3), 'Sweet Sixteen' (2), 'Second Round' (1), 'First Round Exit' (0)."
         data_tests:
           - not_null
           - accepted_values:
               values: ['Champion', 'Runner-Up', 'Final Four', 'Elite Eight', 'Sweet Sixteen', 'Second Round', 'First Round Exit']
-      - name: is_champion
-        data_tests: [not_null]
