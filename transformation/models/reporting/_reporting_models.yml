@@ -94,6 +94,89 @@ models:
       - name: tourney_seed_number
         description: "Numéro du seed au tournoi (1–16). Null si l'équipe n'a pas participé au tournoi."
 
+  - name: rpt_grp4_regular_season_rankings
+    description: "Groupe 4 — Classement de toutes les équipes par saison régulière. Rang calculé sur win_pct puis avg_pt_diff. Pour line charts d'évolution du classement et tables de ranking."
+    columns:
+      - name: team_name
+        description: "Nom de l'équipe."
+        data_tests: [not_null]
+      - name: team_state
+        description: "Code état US."
+      - name: team_state_iso
+        description: "Code ISO 3166-2:US."
+      - name: season_label
+        description: "Label lisible de la saison."
+      - name: season
+        description: "Année de la saison."
+        data_tests: [not_null]
+      - name: season_rank
+        description: "Classement de l'équipe dans la saison (1 = meilleure). Départage par win_pct puis avg_pt_diff."
+        data_tests: [not_null]
+      - name: games_played
+        description: "Nombre de matchs joués."
+        data_tests: [not_null]
+      - name: wins
+        description: "Nombre de victoires."
+      - name: losses
+        description: "Nombre de défaites."
+      - name: win_pct
+        description: "Pourcentage de victoires."
+      - name: total_pts_scored
+        description: "Total de points marqués."
+      - name: total_pts_allowed
+        description: "Total de points encaissés."
+      - name: avg_pts_scored
+        description: "Moyenne de points marqués par match."
+      - name: avg_pts_allowed
+        description: "Moyenne de points encaissés par match."
+      - name: avg_pt_diff
+        description: "Différence moyenne de points par match."
+
+  - name: rpt_grp4_tourney_rankings
+    description: "Groupe 4 — Classement des équipes par tournoi NCAA. Rang calculé sur tourney_wins, seed et avg_pt_diff. Inclut le résultat final (Champion, Final Four, etc.) et les upsets."
+    columns:
+      - name: team_name
+        description: "Nom de l'équipe."
+        data_tests: [not_null]
+      - name: team_state
+        description: "Code état US."
+      - name: team_state_iso
+        description: "Code ISO 3166-2:US."
+      - name: season_label
+        description: "Label lisible de la saison."
+      - name: season
+        description: "Année de la saison du tournoi."
+        data_tests: [not_null]
+      - name: seed_number
+        description: "Seed au tournoi (1-16)."
+      - name: seed_region
+        description: "Région du bracket (W, X, Y, Z)."
+      - name: tourney_games
+        description: "Nombre de matchs joués au tournoi."
+      - name: tourney_wins
+        description: "Nombre de victoires au tournoi (0-6)."
+      - name: tourney_losses
+        description: "Nombre de défaites au tournoi."
+      - name: avg_pts_scored
+        description: "Moyenne de points marqués au tournoi."
+      - name: avg_pts_allowed
+        description: "Moyenne de points encaissés au tournoi."
+      - name: avg_pt_diff
+        description: "Différence moyenne de points au tournoi."
+      - name: upsets_involved
+        description: "Nombre d'upsets impliquant cette équipe."
+      - name: tournament_result
+        description: "Étape finale : Champion, Runner-Up, Final Four, Elite Eight, Sweet Sixteen, Second Round, First Round Exit."
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['Champion', 'Runner-Up', 'Final Four', 'Elite Eight', 'Sweet Sixteen', 'Second Round', 'First Round Exit']
+      - name: is_champion
+        description: "Booléen : true si champion."
+        data_tests: [not_null]
+      - name: tourney_rank
+        description: "Classement final au tournoi (1 = champion). Départage par tourney_wins, seed_number, avg_pt_diff."
+        data_tests: [not_null]
   - name: rpt_tourney_runs
     description: "Parcours au tournoi NCAA par équipe et saison. Permet d'analyser les champions, Cinderella stories et la performance par seed."
     columns:
