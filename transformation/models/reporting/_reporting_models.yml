@@ -94,6 +94,52 @@ models:
       - name: tourney_seed_number
         description: "Numéro du seed au tournoi (1–16). Null si l'équipe n'a pas participé au tournoi."
 
+  - name: rpt_grp3_home_away_stats
+    description: "Groupe 3 — Win rate Home/Away/Neutral par équipe et par saison (saison régulière). Toutes les équipes NCAA. Pour line charts d'évolution et comparaisons entre lieux de jeu."
+    columns:
+      - name: team_name
+        description: "Nom de l'équipe."
+        data_tests: [not_null]
+      - name: team_state
+        description: "Code état US de l'équipe."
+      - name: team_state_iso
+        description: "Code ISO 3166-2:US."
+      - name: season_label
+        description: "Label lisible de la saison."
+      - name: season
+        description: "Année de la saison."
+        data_tests: [not_null]
+      - name: games_played
+        description: "Nombre total de matchs joués."
+        data_tests: [not_null]
+      - name: wins
+        description: "Nombre total de victoires."
+      - name: losses
+        description: "Nombre total de défaites."
+      - name: win_pct
+        description: "Pourcentage de victoires global."
+      - name: avg_pts_scored
+        description: "Moyenne de points marqués par match."
+      - name: avg_pts_allowed
+        description: "Moyenne de points encaissés par match."
+      - name: home_games
+        description: "Nombre de matchs à domicile."
+      - name: home_wins
+        description: "Victoires à domicile."
+      - name: home_win_pct
+        description: "Win rate à domicile. Null si aucun match à domicile."
+      - name: away_games
+        description: "Nombre de matchs à l'extérieur."
+      - name: away_wins
+        description: "Victoires à l'extérieur."
+      - name: away_win_pct
+        description: "Win rate à l'extérieur. Null si aucun match à l'extérieur."
+      - name: neutral_games
+        description: "Nombre de matchs en terrain neutre."
+      - name: neutral_wins
+        description: "Victoires en terrain neutre."
+      - name: neutral_win_pct
+        description: "Win rate en terrain neutre. Null si aucun match en terrain neutre."
   - name: rpt_tourney_runs
     description: "Parcours au tournoi NCAA par équipe et saison. Permet d'analyser les champions, Cinderella stories et la performance par seed."
     columns:
