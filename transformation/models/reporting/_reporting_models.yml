@@ -94,6 +94,55 @@ models:
       - name: tourney_seed_number
         description: "Numéro du seed au tournoi (1–16). Null si l'équipe n'a pas participé au tournoi."
 
+  - name: rpt_grp6_tourney_budget_vs_performance
+    description: "Groupe 6 — Budget estimé vs performance au tournoi NCAA par équipe et saison. Budgets approximatifs basés sur données EADA publiques pour les top programmes, et estimation par seed pour les autres. Croissance annuelle ~5%."
+    columns:
+      - name: team_name
+        description: "Nom de l'équipe."
+        data_tests: [not_null]
+      - name: team_state
+        description: "Code état US."
+      - name: team_state_iso
+        description: "Code ISO 3166-2:US."
+      - name: season_label
+        description: "Label lisible de la saison."
+      - name: season
+        description: "Année de la saison du tournoi."
+        data_tests: [not_null]
+      - name: seed_number
+        description: "Seed au tournoi (1-16)."
+      - name: seed_region
+        description: "Région du bracket."
+      - name: estimated_budget_k
+        description: "Budget estimé en milliers de dollars (ex: 8000 = 8M$)."
+        data_tests: [not_null]
+      - name: estimated_budget_m
+        description: "Budget estimé en millions de dollars (ex: 8.0)."
+      - name: tourney_games
+        description: "Nombre de matchs joués au tournoi."
+      - name: tourney_wins
+        description: "Victoires au tournoi (0-6)."
+      - name: tourney_losses
+        description: "Défaites au tournoi."
+      - name: avg_pts_scored
+        description: "Moyenne de points marqués au tournoi."
+      - name: avg_pts_allowed
+        description: "Moyenne de points encaissés au tournoi."
+      - name: avg_pt_diff
+        description: "Différence moyenne de points au tournoi."
+      - name: upsets_involved
+        description: "Nombre d'upsets impliquant cette équipe."
+      - name: tournament_result
+        description: "Étape finale atteinte au tournoi."
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['Champion', 'Runner-Up', 'Final Four', 'Elite Eight', 'Sweet Sixteen', 'Second Round', 'First Round Exit']
+      - name: is_champion
+        description: "Booléen : true si champion."
+        data_tests: [not_null]
+      - name: wins_per_million
+        description: "ROI simplifié : nombre de victoires tournoi par million $ de budget estimé."
   - name: rpt_tourney_runs
     description: "Parcours au tournoi NCAA par équipe et saison. Permet d'analyser les champions, Cinderella stories et la performance par seed."
     columns:
