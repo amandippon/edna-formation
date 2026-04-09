@@ -94,6 +94,36 @@ models:
       - name: tourney_seed_number
         description: "Numéro du seed au tournoi (1–16). Null si l'équipe n'a pas participé au tournoi."
 
+  - name: rpt_grp5_team_travel
+    description: "Groupe 5 — Distance parcourue et empreinte carbone estimée par équipe et par saison. Basé sur la distance Haversine entre l'état d'origine et l'état du match (centroïdes). Données depuis 2010 uniquement."
+    columns:
+      - name: team_name
+        description: "Nom de l'équipe."
+        data_tests: [not_null]
+      - name: team_state
+        description: "Code état d'origine de l'équipe."
+      - name: team_state_iso
+        description: "Code ISO 3166-2:US."
+      - name: season_label
+        description: "Label lisible de la saison."
+      - name: season
+        description: "Année de la saison."
+        data_tests: [not_null]
+      - name: games_with_location
+        description: "Nombre de matchs avec données de localisation."
+        data_tests: [not_null]
+      - name: games_traveled
+        description: "Nombre de matchs nécessitant un déplacement (hors état d'origine)."
+      - name: total_travel_km
+        description: "Distance totale parcourue (aller-retour) en km sur la saison."
+      - name: avg_round_trip_km
+        description: "Distance moyenne aller-retour par match en km."
+      - name: max_one_way_km
+        description: "Plus long déplacement aller simple en km."
+      - name: away_travel_km
+        description: "Distance parcourue uniquement pour les matchs Away et Neutral en km."
+      - name: estimated_co2_kg
+        description: "Empreinte CO2 estimée en kg (hypothèse : bus, 0.03 kg CO2/km/passager, 25 personnes)."
   - name: rpt_tourney_runs
     description: "Parcours au tournoi NCAA par équipe et saison. Permet d'analyser les champions, Cinderella stories et la performance par seed."
     columns:
