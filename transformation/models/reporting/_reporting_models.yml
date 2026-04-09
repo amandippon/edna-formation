@@ -94,6 +94,108 @@ models:
       - name: tourney_seed_number
         description: "Numéro du seed au tournoi (1–16). Null si l'équipe n'a pas participé au tournoi."
 
+  - name: rpt_grp1_yale_harvard_stats
+    description: "Groupe 1 — Statistiques par saison pour Yale et Harvard (saison régulière + tournoi). KPIs victoires, points, moyennes et détail box score (3pts, 2pts, rebonds, etc.). Pour les charts KPI, bar charts et line charts de comparaison annuelle."
+    columns:
+      - name: team_name
+        description: "Nom de l'équipe : Yale ou Harvard."
+        data_tests: [not_null]
+      - name: team_state
+        description: "Code état US de l'équipe (CT pour Yale, MA pour Harvard)."
+      - name: team_state_iso
+        description: "Code ISO 3166-2:US (US-CT, US-MA). Pour les cartes Superset."
+      - name: season_label
+        description: "Label lisible de la saison (ex: 'Season 2019')."
+      - name: season
+        description: "Année de la saison."
+        data_tests: [not_null]
+      - name: games_played
+        description: "Nombre total de matchs joués dans la saison."
+        data_tests: [not_null]
+      - name: wins
+        description: "Nombre de victoires."
+      - name: losses
+        description: "Nombre de défaites."
+      - name: win_pct
+        description: "Pourcentage de victoires (arrondi à 3 décimales)."
+      - name: total_pts_scored
+        description: "Total de points marqués dans la saison."
+      - name: total_pts_allowed
+        description: "Total de points encaissés dans la saison."
+      - name: avg_pts_scored
+        description: "Moyenne de points marqués par match."
+      - name: avg_pts_allowed
+        description: "Moyenne de points encaissés par match."
+      - name: avg_pt_diff
+        description: "Différence moyenne de points par match."
+      - name: avg_fgm
+        description: "Moyenne de field goals réussis par match (2pts + 3pts). Null avant 2010."
+      - name: avg_fga
+        description: "Moyenne de field goals tentés par match. Null avant 2010."
+      - name: fg_pct
+        description: "Pourcentage de réussite aux field goals sur la saison."
+      - name: avg_fgm3
+        description: "Moyenne de tirs à 3 points réussis par match. Null avant 2010."
+      - name: avg_fga3
+        description: "Moyenne de tirs à 3 points tentés par match. Null avant 2010."
+      - name: fg3_pct
+        description: "Pourcentage de réussite aux 3 points sur la saison."
+      - name: avg_fgm2
+        description: "Moyenne de tirs à 2 points réussis par match (fgm - fgm3). Null avant 2010."
+      - name: avg_fga2
+        description: "Moyenne de tirs à 2 points tentés par match (fga - fga3). Null avant 2010."
+      - name: avg_ftm
+        description: "Moyenne de lancers francs réussis par match. Null avant 2010."
+      - name: avg_fta
+        description: "Moyenne de lancers francs tentés par match. Null avant 2010."
+      - name: ft_pct
+        description: "Pourcentage de réussite aux lancers francs sur la saison."
+      - name: avg_reb
+        description: "Moyenne de rebonds totaux par match. Null avant 2010."
+      - name: avg_off_reb
+        description: "Moyenne de rebonds offensifs par match. Null avant 2010."
+      - name: avg_def_reb
+        description: "Moyenne de rebonds défensifs par match. Null avant 2010."
+      - name: avg_ast
+        description: "Moyenne de passes décisives par match. Null avant 2010."
+      - name: avg_tov
+        description: "Moyenne de turnovers par match. Null avant 2010."
+      - name: avg_stl
+        description: "Moyenne de interceptions par match. Null avant 2010."
+      - name: avg_blk
+        description: "Moyenne de contres par match. Null avant 2010."
+      - name: avg_pf
+        description: "Moyenne de fautes personnelles par match. Null avant 2010."
+
+  - name: rpt_grp1_yale_harvard_map
+    description: "Groupe 1 — Coordonnées géographiques des campus de Yale et Harvard. Pour afficher un chart deck.gl Scatter Plot ou Country Map sur Superset."
+    columns:
+      - name: team_name
+        description: "Nom de l'équipe : Yale ou Harvard."
+        data_tests: [unique, not_null]
+      - name: team_state
+        description: "Code état US."
+      - name: team_state_iso
+        description: "Code ISO 3166-2:US. Pour Country Map Superset."
+      - name: campus_city
+        description: "Ville du campus (Cambridge, MA ou New Haven, CT)."
+      - name: latitude
+        description: "Latitude du campus."
+      - name: longitude
+        description: "Longitude du campus."
+
+  - name: rpt_grp1_harvard_enrollment
+    description: "Groupe 1 — Nombre d'étudiants inscrits à Harvard par année (1998-2019). Données approximatives (source: NCES IPEDS). Pour un line chart d'évolution des effectifs."
+    columns:
+      - name: year
+        description: "Année académique."
+        data_tests: [unique, not_null]
+      - name: total_enrollment
+        description: "Nombre total d'étudiants inscrits (undergraduate + graduate)."
+        data_tests: [not_null]
+      - name: undergraduate_enrollment
+        description: "Nombre d'étudiants undergraduate uniquement."
+        data_tests: [not_null]
   - name: rpt_tourney_runs
     description: "Parcours au tournoi NCAA par équipe et saison. Permet d'analyser les champions, Cinderella stories et la performance par seed."
     columns:
