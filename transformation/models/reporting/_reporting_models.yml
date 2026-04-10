@@ -1,130 +1,438 @@
 version: 2
 
 models:
-  - name: rpt_games
-    description: "Tous les matchs (saison régulière + tournoi) dénormalisés avec noms d'équipes, ville hôte et analyse d'upsets. Table principale pour les dashboards Superset. ~108k lignes."
-    columns:
-      - name: game_id
-        description: "Identifiant unique du match (PK). Préfixé 'T_' pour les matchs de tournoi."
-        data_tests: [unique, not_null]
-      - name: game_type
-        description: "Type de match : 'Regular' (saison régulière) ou 'Tournament' (tournoi NCAA)."
-        data_tests:
-          - not_null
-          - accepted_values:
-              values: ['Regular', 'Tournament']
-      - name: season
-        description: "Année de la saison."
-      - name: season_label
-        description: "Label lisible de la saison (ex: 'Season 2019')."
-        data_tests: [not_null]
-      - name: game_date
-        description: "Date réelle du match."
-        data_tests: [not_null]
-      - name: w_team_name
-        description: "Nom de l'équipe gagnante (ex: Connecticut, Tennessee)."
-        data_tests: [not_null]
-      - name: l_team_name
-        description: "Nom de l'équipe perdante."
-        data_tests: [not_null]
-      - name: w_score
-        description: "Points marqués par l'équipe gagnante."
-      - name: l_score
-        description: "Points marqués par l'équipe perdante."
-      - name: score_margin
-        description: "Écart de score (w_score - l_score). Toujours positif."
-      - name: game_location
-        description: "Lieu du match en clair : Home, Away ou Neutral."
-        data_tests:
-          - not_null
-          - accepted_values:
-              values: ['Home', 'Away', 'Neutral']
-      - name: has_overtime
-        description: "Booléen : true si le match a eu au moins une prolongation."
-      - name: is_close_game
-        description: "Booléen : true si l'écart de score est de 5 points ou moins."
-      - name: city
-        description: "Nom de la ville hôte. Null si pas de données géographiques (avant 2010 ou données manquantes)."
-      - name: state
-        description: "Code état US de la ville hôte (ex: TX, CT). Null si pas de données géographiques."
-      - name: state_iso
-        description: "Code ISO 3166-2:US de la ville hôte (ex: US-TX). Compatible avec le chart type 'Country Map' de Superset (scope USA)."
-      - name: w_seed_number
-        description: "Seed de l'équipe gagnante au tournoi (1–16). Null pour les matchs de saison régulière."
-      - name: l_seed_number
-        description: "Seed de l'équipe perdante au tournoi. Null pour les matchs de saison régulière."
-      - name: is_upset
-        description: "Booléen : true si le gagnant avait un seed moins bon (plus élevé) que le perdant. Null pour la saison régulière."
-      - name: upset_label
-        description: "Catégorie d'upset basée sur l'écart de seed : 'Cinderella (10+ seeds)', 'Major Upset (5-9 seeds)', 'Upset (1-4 seeds)', 'Same Seed', 'Expected Result'. Null pour la saison régulière."
-
-  - name: rpt_team_season_stats
-    description: "Statistiques agrégées par équipe et par saison (saison régulière uniquement). Table clé pour les classements, tendances et cartes par état."
+  - name: rpt_uconn_tennessee_stats
+    description: "Statistiques par saison pour Connecticut (UConn) et Tennessee (saison régulière + tournoi). Win rate global et par lieu, box score détaillé, participation au tournoi NCAA. Pour charts de comparaison annuelle entre les deux grandes rivales."
     columns:
       - name: team_name
-        description: "Nom de l'équipe."
+        description: "Nom de l'équipe : Connecticut ou Tennessee."
         data_tests: [not_null]
       - name: team_state
-        description: "Code état US de l'équipe (ex: CT, TN). Déduit des matchs à domicile."
+        description: "Code état US (CT ou TN)."
       - name: team_state_iso
-        description: "Code ISO 3166-2:US de l'état de l'équipe (ex: US-CT). Pour les cartes Superset."
+        description: "Code ISO 3166-2:US (US-CT, US-TN)."
+      - name: season_label
+        description: "Label lisible de la saison (ex: 'Season 2019')."
       - name: season
         description: "Année de la saison."
         data_tests: [not_null]
-      - name: season_label
-        description: "Label lisible de la saison (ex: 'Season 2019')."
       - name: games_played
-        description: "Nombre total de matchs joués dans la saison (victoires + défaites)."
+        description: "Nombre total de matchs joués (régulier + tournoi)."
         data_tests: [not_null]
       - name: wins
-        description: "Nombre de victoires en saison régulière."
+        description: "Nombre de victoires."
       - name: losses
-        description: "Nombre de défaites en saison régulière."
+        description: "Nombre de défaites."
       - name: win_pct
-        description: "Pourcentage de victoires (wins / games_played), arrondi à 3 décimales. Ex: 0.875 = 87.5%."
-        data_tests: [not_null]
+        description: "Pourcentage de victoires global."
+      - name: total_pts_scored
+        description: "Total de points marqués dans la saison."
+      - name: total_pts_allowed
+        description: "Total de points encaissés dans la saison."
       - name: avg_pts_scored
-        description: "Moyenne de points marqués par match, arrondie à 1 décimale."
+        description: "Moyenne de points marqués par match."
       - name: avg_pts_allowed
-        description: "Moyenne de points encaissés par match, arrondie à 1 décimale."
+        description: "Moyenne de points encaissés par match."
       - name: avg_pt_diff
-        description: "Différence moyenne de points par match (pts marqués - pts encaissés). Positif = l'équipe marque plus qu'elle n'encaisse."
+        description: "Différence moyenne de points par match."
+      - name: home_games
+        description: "Nombre de matchs à domicile."
+      - name: home_wins
+        description: "Victoires à domicile."
+      - name: home_win_pct
+        description: "Win rate à domicile."
+      - name: away_games
+        description: "Nombre de matchs à l'extérieur."
+      - name: away_wins
+        description: "Victoires à l'extérieur."
+      - name: away_win_pct
+        description: "Win rate à l'extérieur."
+      - name: neutral_games
+        description: "Nombre de matchs en terrain neutre."
+      - name: neutral_wins
+        description: "Victoires en terrain neutre."
+      - name: neutral_win_pct
+        description: "Win rate en terrain neutre."
+      - name: avg_fgm
+        description: "Moyenne de field goals réussis par match. Null avant 2010."
+      - name: avg_fga
+        description: "Moyenne de field goals tentés par match. Null avant 2010."
+      - name: fg_pct
+        description: "Pourcentage de réussite aux field goals."
+      - name: avg_fgm3
+        description: "Moyenne de tirs à 3 points réussis par match. Null avant 2010."
+      - name: avg_fga3
+        description: "Moyenne de tirs à 3 points tentés par match. Null avant 2010."
+      - name: fg3_pct
+        description: "Pourcentage de réussite aux 3 points."
+      - name: avg_fgm2
+        description: "Moyenne de tirs à 2 points réussis par match. Null avant 2010."
+      - name: avg_fga2
+        description: "Moyenne de tirs à 2 points tentés par match. Null avant 2010."
+      - name: avg_ftm
+        description: "Moyenne de lancers francs réussis par match. Null avant 2010."
+      - name: avg_fta
+        description: "Moyenne de lancers francs tentés par match. Null avant 2010."
+      - name: ft_pct
+        description: "Pourcentage de réussite aux lancers francs."
+      - name: avg_reb
+        description: "Moyenne de rebonds totaux par match. Null avant 2010."
+      - name: avg_off_reb
+        description: "Moyenne de rebonds offensifs par match. Null avant 2010."
+      - name: avg_def_reb
+        description: "Moyenne de rebonds défensifs par match. Null avant 2010."
+      - name: avg_ast
+        description: "Moyenne de passes décisives par match. Null avant 2010."
+      - name: avg_tov
+        description: "Moyenne de turnovers par match. Null avant 2010."
+      - name: avg_stl
+        description: "Moyenne d'interceptions par match. Null avant 2010."
+      - name: avg_blk
+        description: "Moyenne de contres par match. Null avant 2010."
+      - name: avg_pf
+        description: "Moyenne de fautes personnelles par match. Null avant 2010."
+      - name: tourney_games_played
+        description: "Nombre de matchs joués au tournoi NCAA cette saison."
       - name: made_tourney
-        description: "Booléen : true si l'équipe a été sélectionnée pour le tournoi NCAA cette saison."
+        description: "Booléen : l'équipe a participé au tournoi NCAA."
       - name: tourney_seed_number
-        description: "Numéro du seed au tournoi (1–16). Null si l'équipe n'a pas participé au tournoi."
+        description: "Seed au tournoi (1-16). Null si non qualifiée."
 
-  - name: rpt_tourney_runs
-    description: "Parcours au tournoi NCAA par équipe et saison. Permet d'analyser les champions, Cinderella stories et la performance par seed."
+  - name: rpt_uconn_tennessee_games
+    description: "Tous les matchs (régulier + tournoi) impliquant Connecticut ou Tennessee. Détail match par match avec scores, lieu, box score complet, upsets et flags de victoire/confrontation directe. Table principale pour l'analyse de la rivalité."
+    columns:
+      - name: game_id
+        description: "Identifiant unique du match."
+        data_tests: [unique, not_null]
+      - name: game_type
+        description: "Type de match : 'Regular' ou 'Tournament'."
+        data_tests: [not_null]
+      - name: season
+        description: "Année de la saison."
+      - name: season_label
+        description: "Label lisible de la saison."
+      - name: game_date
+        description: "Date du match."
+      - name: w_team_name
+        description: "Nom de l'équipe gagnante."
+      - name: w_team_state
+        description: "État de l'équipe gagnante."
+      - name: l_team_name
+        description: "Nom de l'équipe perdante."
+      - name: l_team_state
+        description: "État de l'équipe perdante."
+      - name: w_score
+        description: "Points de l'équipe gagnante."
+      - name: l_score
+        description: "Points de l'équipe perdante."
+      - name: score_margin
+        description: "Écart de score."
+      - name: game_location
+        description: "Lieu : Home, Away ou Neutral."
+      - name: has_overtime
+        description: "Booléen : match avec prolongation."
+      - name: is_close_game
+        description: "Booléen : écart de 5 points ou moins."
+      - name: city
+        description: "Ville hôte. Null avant 2010."
+      - name: game_state
+        description: "État de la ville hôte."
+      - name: w_seed_number
+        description: "Seed du gagnant (tournoi uniquement)."
+      - name: l_seed_number
+        description: "Seed du perdant (tournoi uniquement)."
+      - name: is_upset
+        description: "Booléen : upset au tournoi."
+      - name: upset_label
+        description: "Catégorie d'upset."
+      - name: rival_team
+        description: "Nom de l'équipe rivale (Connecticut ou Tennessee) impliquée dans le match."
+        data_tests: [not_null]
+      - name: rival_team_won
+        description: "1 si l'équipe rivale a gagné, 0 sinon."
+        data_tests: [not_null]
+      - name: is_head_to_head
+        description: "Booléen : true si le match oppose directement Connecticut et Tennessee."
+        data_tests: [not_null]
+      - name: has_box_score
+        description: "Booléen : données box score disponibles (depuis 2010)."
+      - name: w_fgm
+        description: "Field goals réussis par le gagnant."
+      - name: w_fga
+        description: "Field goals tentés par le gagnant."
+      - name: w_fg_pct
+        description: "% FG du gagnant."
+      - name: w_fgm3
+        description: "3-points réussis par le gagnant."
+      - name: w_fga3
+        description: "3-points tentés par le gagnant."
+      - name: w_fg3_pct
+        description: "% 3-points du gagnant."
+      - name: w_ftm
+        description: "Lancers francs réussis par le gagnant."
+      - name: w_fta
+        description: "Lancers francs tentés par le gagnant."
+      - name: w_ft_pct
+        description: "% LF du gagnant."
+      - name: w_reb
+        description: "Rebonds totaux du gagnant."
+      - name: w_or
+        description: "Rebonds offensifs du gagnant."
+      - name: w_dr
+        description: "Rebonds défensifs du gagnant."
+      - name: w_ast
+        description: "Passes décisives du gagnant."
+      - name: w_to
+        description: "Turnovers du gagnant."
+      - name: w_stl
+        description: "Interceptions du gagnant."
+      - name: w_blk
+        description: "Contres du gagnant."
+      - name: w_pf
+        description: "Fautes personnelles du gagnant."
+      - name: l_fgm
+        description: "Field goals réussis par le perdant."
+      - name: l_fga
+        description: "Field goals tentés par le perdant."
+      - name: l_fg_pct
+        description: "% FG du perdant."
+      - name: l_fgm3
+        description: "3-points réussis par le perdant."
+      - name: l_fga3
+        description: "3-points tentés par le perdant."
+      - name: l_fg3_pct
+        description: "% 3-points du perdant."
+      - name: l_ftm
+        description: "Lancers francs réussis par le perdant."
+      - name: l_fta
+        description: "Lancers francs tentés par le perdant."
+      - name: l_ft_pct
+        description: "% LF du perdant."
+      - name: l_reb
+        description: "Rebonds totaux du perdant."
+      - name: l_or
+        description: "Rebonds offensifs du perdant."
+      - name: l_dr
+        description: "Rebonds défensifs du perdant."
+      - name: l_ast
+        description: "Passes décisives du perdant."
+      - name: l_to
+        description: "Turnovers du perdant."
+      - name: l_stl
+        description: "Interceptions du perdant."
+      - name: l_blk
+        description: "Contres du perdant."
+      - name: l_pf
+        description: "Fautes personnelles du perdant."
+
+  - name: rpt_uconn_tennessee_head_to_head
+    description: "Confrontations directes entre Connecticut et Tennessee. Chaque match avec scores, box score, ville hôte et compteurs cumulés de victoires pour suivre l'évolution de la rivalité dans le temps."
+    columns:
+      - name: game_id
+        description: "Identifiant unique du match."
+        data_tests: [unique, not_null]
+      - name: game_type
+        description: "Type de match : 'Regular' ou 'Tournament'."
+        data_tests: [not_null]
+      - name: season
+        description: "Année de la saison."
+      - name: season_label
+        description: "Label lisible de la saison."
+      - name: game_date
+        description: "Date du match."
+      - name: w_team_name
+        description: "Nom de l'équipe gagnante (Connecticut ou Tennessee)."
+      - name: l_team_name
+        description: "Nom de l'équipe perdante (Connecticut ou Tennessee)."
+      - name: w_score
+        description: "Points du gagnant."
+      - name: l_score
+        description: "Points du perdant."
+      - name: score_margin
+        description: "Écart de score."
+      - name: total_points
+        description: "Total de points dans le match (w_score + l_score)."
+      - name: game_location
+        description: "Lieu : Home, Away ou Neutral."
+      - name: has_overtime
+        description: "Booléen : match avec prolongation."
+      - name: num_ot
+        description: "Nombre de prolongations."
+      - name: is_close_game
+        description: "Booléen : écart de 5 points ou moins."
+      - name: city
+        description: "Ville hôte. Null avant 2010."
+      - name: game_state
+        description: "État de la ville hôte."
+      - name: w_seed_number
+        description: "Seed du gagnant (tournoi uniquement)."
+      - name: l_seed_number
+        description: "Seed du perdant (tournoi uniquement)."
+      - name: uconn_cumulative_wins
+        description: "Nombre cumulé de victoires de UConn dans la rivalité (running total chronologique)."
+      - name: tennessee_cumulative_wins
+        description: "Nombre cumulé de victoires de Tennessee dans la rivalité (running total chronologique)."
+      - name: has_box_score
+        description: "Booléen : données box score disponibles."
+      - name: w_fgm
+        description: "Field goals réussis par le gagnant."
+      - name: w_fga
+        description: "Field goals tentés par le gagnant."
+      - name: w_fg_pct
+        description: "% FG du gagnant."
+      - name: w_fgm3
+        description: "3-points réussis par le gagnant."
+      - name: w_fga3
+        description: "3-points tentés par le gagnant."
+      - name: w_fg3_pct
+        description: "% 3-points du gagnant."
+      - name: w_ftm
+        description: "Lancers francs réussis par le gagnant."
+      - name: w_fta
+        description: "Lancers francs tentés par le gagnant."
+      - name: w_ft_pct
+        description: "% LF du gagnant."
+      - name: w_reb
+        description: "Rebonds totaux du gagnant."
+      - name: w_or
+        description: "Rebonds offensifs du gagnant."
+      - name: w_dr
+        description: "Rebonds défensifs du gagnant."
+      - name: w_ast
+        description: "Passes décisives du gagnant."
+      - name: w_to
+        description: "Turnovers du gagnant."
+      - name: w_stl
+        description: "Interceptions du gagnant."
+      - name: w_blk
+        description: "Contres du gagnant."
+      - name: w_pf
+        description: "Fautes personnelles du gagnant."
+      - name: l_fgm
+        description: "Field goals réussis par le perdant."
+      - name: l_fga
+        description: "Field goals tentés par le perdant."
+      - name: l_fg_pct
+        description: "% FG du perdant."
+      - name: l_fgm3
+        description: "3-points réussis par le perdant."
+      - name: l_fga3
+        description: "3-points tentés par le perdant."
+      - name: l_fg3_pct
+        description: "% 3-points du perdant."
+      - name: l_ftm
+        description: "Lancers francs réussis par le perdant."
+      - name: l_fta
+        description: "Lancers francs tentés par le perdant."
+      - name: l_ft_pct
+        description: "% LF du perdant."
+      - name: l_reb
+        description: "Rebonds totaux du perdant."
+      - name: l_or
+        description: "Rebonds offensifs du perdant."
+      - name: l_dr
+        description: "Rebonds défensifs du perdant."
+      - name: l_ast
+        description: "Passes décisives du perdant."
+      - name: l_to
+        description: "Turnovers du perdant."
+      - name: l_stl
+        description: "Interceptions du perdant."
+      - name: l_blk
+        description: "Contres du perdant."
+      - name: l_pf
+        description: "Fautes personnelles du perdant."
+
+  - name: rpt_uconn_tennessee_tourney
+    description: "Performance au tournoi NCAA de Connecticut et Tennessee par saison. Seed, résultat final (Champion, Final Four, etc.), stats et box score détaillé. Pour comparer les parcours des deux rivales au tournoi."
     columns:
       - name: team_name
-        description: "Nom de l'équipe."
+        description: "Nom de l'équipe : Connecticut ou Tennessee."
         data_tests: [not_null]
       - name: team_state
-        description: "Code état US de l'équipe."
+        description: "Code état US (CT ou TN)."
       - name: team_state_iso
-        description: "Code ISO 3166-2:US de l'état de l'équipe. Pour les cartes Superset."
+        description: "Code ISO 3166-2:US."
+      - name: season_label
+        description: "Label lisible de la saison."
       - name: season
         description: "Année de la saison du tournoi."
         data_tests: [not_null]
-      - name: season_label
-        description: "Label lisible de la saison."
       - name: seed_number
-        description: "Numéro du seed de l'équipe au tournoi (1–16)."
+        description: "Seed au tournoi (1-16)."
+      - name: seed_region
+        description: "Région du bracket (W, X, Y, Z)."
+      - name: tourney_games
+        description: "Nombre de matchs joués au tournoi."
       - name: tourney_wins
-        description: "Nombre de victoires au tournoi (0 à 6). 6 = champion."
+        description: "Victoires au tournoi (0-6)."
       - name: tourney_losses
-        description: "Nombre de défaites au tournoi (0 ou 1, sauf pour le champion qui a 0)."
-      - name: avg_pts_scored_tourney
-        description: "Moyenne de points marqués par match au tournoi."
-      - name: avg_pts_allowed_tourney
-        description: "Moyenne de points encaissés par match au tournoi."
-      - name: is_champion
-        description: "Booléen : true si l'équipe a remporté le tournoi (6 victoires)."
-        data_tests: [not_null]
+        description: "Défaites au tournoi."
       - name: tournament_result
-        description: "Étape atteinte au tournoi : 'Champion' (6 wins), 'Runner-Up' (5), 'Final Four' (4), 'Elite Eight' (3), 'Sweet Sixteen' (2), 'Second Round' (1), 'First Round Exit' (0)."
+        description: "Étape finale : Champion, Runner-Up, Final Four, Elite Eight, Sweet Sixteen, Second Round, First Round Exit."
         data_tests:
           - not_null
           - accepted_values:
               values: ['Champion', 'Runner-Up', 'Final Four', 'Elite Eight', 'Sweet Sixteen', 'Second Round', 'First Round Exit']
+      - name: is_champion
+        description: "Booléen : true si champion."
+        data_tests: [not_null]
+      - name: avg_pts_scored
+        description: "Moyenne de points marqués au tournoi."
+      - name: avg_pts_allowed
+        description: "Moyenne de points encaissés au tournoi."
+      - name: avg_pt_diff
+        description: "Différence moyenne de points au tournoi."
+      - name: upsets_involved
+        description: "Nombre d'upsets impliquant cette équipe."
+      - name: avg_fgm
+        description: "Moyenne de field goals réussis par match au tournoi. Null avant 2010."
+      - name: avg_fga
+        description: "Moyenne de field goals tentés par match au tournoi. Null avant 2010."
+      - name: fg_pct
+        description: "% FG au tournoi."
+      - name: avg_fgm3
+        description: "Moyenne de 3-points réussis par match au tournoi. Null avant 2010."
+      - name: avg_fga3
+        description: "Moyenne de 3-points tentés par match au tournoi. Null avant 2010."
+      - name: fg3_pct
+        description: "% 3-points au tournoi."
+      - name: avg_ftm
+        description: "Moyenne de lancers francs réussis par match au tournoi. Null avant 2010."
+      - name: avg_fta
+        description: "Moyenne de lancers francs tentés par match au tournoi. Null avant 2010."
+      - name: ft_pct
+        description: "% LF au tournoi."
+      - name: avg_reb
+        description: "Moyenne de rebonds totaux par match au tournoi. Null avant 2010."
+      - name: avg_off_reb
+        description: "Moyenne de rebonds offensifs par match au tournoi. Null avant 2010."
+      - name: avg_def_reb
+        description: "Moyenne de rebonds défensifs par match au tournoi. Null avant 2010."
+      - name: avg_ast
+        description: "Moyenne de passes décisives par match au tournoi. Null avant 2010."
+      - name: avg_tov
+        description: "Moyenne de turnovers par match au tournoi. Null avant 2010."
+      - name: avg_stl
+        description: "Moyenne d'interceptions par match au tournoi. Null avant 2010."
+      - name: avg_blk
+        description: "Moyenne de contres par match au tournoi. Null avant 2010."
+      - name: avg_pf
+        description: "Moyenne de fautes personnelles par match au tournoi. Null avant 2010."
+
+  - name: rpt_uconn_tennessee_map
+    description: "Coordonnées géographiques des campus de Connecticut (UConn, Storrs) et Tennessee (Knoxville). Pour chart deck.gl Scatter Plot ou Country Map sur Superset."
+    columns:
+      - name: team_name
+        description: "Nom de l'équipe : Connecticut ou Tennessee."
+        data_tests: [unique, not_null]
+      - name: team_state
+        description: "Code état US (CT ou TN)."
+      - name: team_state_iso
+        description: "Code ISO 3166-2:US."
+      - name: campus_city
+        description: "Ville du campus (Storrs, CT ou Knoxville, TN)."
+      - name: latitude
+        description: "Latitude du campus."
+      - name: longitude
+        description: "Longitude du campus."
