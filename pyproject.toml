@@ -1,8 +1,8 @@
 [project]
 name = "edna-formation"
 version = "0.1.0"
-description = "Pipeline de données pédagogique — Jeux Olympiques"
-requires-python = "~=3.12"
+description = "Pipeline de données pédagogique : NCAA Women's Basketball (CSV -> Parquet -> dbt/DuckDB -> Superset)"
+requires-python = ">=3.12,<3.13"
 
 dependencies = [
     "dbt-duckdb>=1.8.0",
@@ -11,11 +11,13 @@ dependencies = [
     "dbt-colibri>=0.1.0",
 ]
 
-[tool.uv]
-link-mode = "copy"
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "ruff>=0.8.0",
 ]
+
+[tool.uv]
+link-mode = "copy"
 
 [tool.ruff]
 line-length = 100
