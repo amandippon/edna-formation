@@ -67,8 +67,9 @@ models:
         data_tests:
           - not_null
           - relationships:
-              to: ref('dim_seasons')
-              field: season
+              arguments:
+                to: ref('dim_seasons')
+                field: season
       - name: day_num
         description: "Numéro du jour du match (0–132, offset depuis DayZero)."
       - name: game_date
@@ -79,15 +80,17 @@ models:
         data_tests:
           - not_null
           - relationships:
-              to: ref('dim_teams')
-              field: team_id
+              arguments:
+                to: ref('dim_teams')
+                field: team_id
       - name: l_team_id
         description: "Identifiant de l'équipe perdante (FK vers dim_teams)."
         data_tests:
           - not_null
           - relationships:
-              to: ref('dim_teams')
-              field: team_id
+              arguments:
+                to: ref('dim_teams')
+                field: team_id
       - name: w_score
         description: "Points marqués par l'équipe gagnante."
         data_tests: [not_null]
@@ -105,7 +108,8 @@ models:
         data_tests:
           - not_null
           - accepted_values:
-              values: ['Home', 'Away', 'Neutral']
+              arguments:
+                values: ['Home', 'Away', 'Neutral']
       - name: num_ot
         description: "Nombre de prolongations (0 = temps réglementaire)."
       - name: has_overtime
@@ -198,8 +202,9 @@ models:
         data_tests:
           - not_null
           - relationships:
-              to: ref('dim_seasons')
-              field: season
+              arguments:
+                to: ref('dim_seasons')
+                field: season
       - name: day_num
         description: "Numéro du jour du match. Permet de déduire le round (137-138 = R1, 139-140 = R2, 144-145 = Sweet 16, 146-147 = Elite 8, 151+ = Final Four/Finale)."
       - name: game_date
@@ -226,7 +231,8 @@ models:
         data_tests:
           - not_null
           - accepted_values:
-              values: ['Home', 'Away', 'Neutral']
+              arguments:
+                values: ['Home', 'Away', 'Neutral']
       - name: num_ot
         description: "Nombre de prolongations."
       - name: has_overtime
