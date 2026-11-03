@@ -63,7 +63,7 @@ There is no `dbt deps` step: the project has no dbt packages.
              values: ['Regular', 'Tournament']
    ```
 
-3. Run `task superset:refresh` (or `task dbt:build` if Superset is not running). In Superset: Datasets > + Dataset for a new table, or Edit dataset > Sync columns from source for a changed one.
+3. Run `task superset:refresh` (or `task dbt:build` if Superset is not running); it also flushes the Redis chart cache. In Superset: Datasets > + Dataset for a new table, or Edit dataset > Sync columns from source for a changed one.
 4. Keep data coverage in mind: box score and cities only from 2010, tournament until 2018, seeds null for regular season.
 
 ## Dev environment

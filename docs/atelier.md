@@ -45,7 +45,7 @@ Les descriptions complètes sont dans `transformation/models/reporting/_reportin
 - **Couverture temporelle** : saison régulière de 1998 à 2019, tournoi de 1998 à **2018** (la compétition Kaggle portait sur 2019). Box score détaillé et villes des matchs seulement **à partir de 2010** : filtrez `has_box_score` ou `season >= 2010` pour ces colonnes.
 - **Seeds** : `team_seed`, `opponent_seed`, `is_upset*` et `upset_label` sont nuls en saison régulière.
 - **Saison** : `season = 2019` désigne la saison 2018-2019.
-- **État d'une équipe** : `team_state` est déduit de l'état où l'équipe joue le plus à domicile (sur 2010-2019). Il est nul pour 14 équipes sans match localisé.
+- **État d'une équipe** : `team_state` est déduit de l'état où l'équipe joue le plus à domicile (sur 2010-2019). Il est nul pour 4 équipes des tables reporting (14 dans `dim_teams`), faute de match localisé.
 - **`rpt_team_games` compte chaque match deux fois** : pour compter des matchs, filtrez `is_win = true` ou comptez les `game_id` distincts.
 - **`rpt_team_season_stats` ne couvre que la saison régulière** : les matchs de tournoi n'y sont pas.
 - **Pourcentages entre 0 et 1** (`fg_pct`, `win_pct`…) : réglez le format d'affichage en `%` dans Superset.
@@ -60,14 +60,14 @@ Les chiffres d'accroche ont été calculés sur la base du projet ; les requête
 ### 1. L'avantage du terrain existe-t-il ?
 
 - **Table** : `rpt_team_games` (filtre `game_type = 'Regular'`).
-- **Charts** : Big Number du taux de victoire à domicile ; bar chart du taux de victoire par `team_location` ; line chart par `season` ; table des équipes les plus fortes à domicile vs à l'extérieur.
-- **Accroche** : en saison régulière, les équipes gagnent **61,6 %** de leurs matchs à domicile contre **38,4 %** à l'extérieur.
+- **Charts** : Big Number du taux de victoire à domicile ; line chart de ce taux par `season` ; table des équipes les plus fortes à domicile vs à l'extérieur.
+- **Accroche** : en saison régulière, l'équipe qui reçoit gagne **61,6 %** des matchs non neutres (les deux taux Home/Away sont complémentaires par construction : comparez plutôt les saisons ou les équipes).
 
 ### 2. Le tir à 3 points prend-il le pouvoir ?
 
 - **Table** : `rpt_team_games` (filtre `has_box_score`, saisons 2010 à 2019).
-- **Charts** : line chart de la part des tirs tentés à 3 points (`SUM(fga3) / SUM(fga)`) et de l'adresse à 3 points par saison ; scatter plot équipes (tentatives à 3 points vs `win_pct`).
-- **Accroche** : la part des tirs tentés à 3 points passe de **28,3 %** en 2010 à **32,5 %** en 2019, alors que l'adresse à 3 points reste stable autour de **31-32 %**.
+- **Charts** : line chart de la part des tirs tentés à 3 points (`SUM(fga3) / SUM(fga)`) et de l'adresse à 3 points par saison ; scatter plot équipes (tentatives à 3 points vs `win_pct`, via une requête SQL Lab qui joint `rpt_team_games` et `rpt_team_season_stats` sur `team_name` et `season`).
+- **Accroche** : la part des tirs tentés à 3 points passe de **28,3 %** en 2010 à **32,5 %** en 2019, alors que l'adresse à 3 points reste stable autour de **31 %**.
 
 ### 3. Les surprises du tournoi
 
@@ -90,7 +90,7 @@ Les chiffres d'accroche ont été calculés sur la base du projet ; les requête
 ### 6. Matchs serrés et prolongations
 
 - **Tables** : `rpt_games`, `rpt_team_games`.
-- **Charts** : Big Number de la part de matchs serrés ; histogramme de `score_margin` ; bar chart des équipes au meilleur bilan dans les matchs serrés ; table des matchs à plusieurs prolongations.
+- **Charts** : Big Number de la part de matchs serrés ; histogramme de `score_margin` ; bar chart des équipes au meilleur bilan dans les matchs serrés ; table des matchs à plusieurs prolongations (`num_ot`, disponible dans `rpt_team_games`).
 - **Accroche** : en saison régulière, **21,4 %** des matchs se jouent à 5 points ou moins et **3,1 %** vont en prolongation (jusqu'à 5 prolongations dans un même match).
 
 ## Restitution : 4 minutes par équipe

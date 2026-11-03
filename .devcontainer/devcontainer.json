@@ -35,7 +35,7 @@
       }
     }
   },
-  "workspaceFolder": "/workspaces/edna-formation",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
   "postCreateCommand": "bash .devcontainer/post-create.sh",
   "remoteUser": "vscode",
   "forwardPorts": [8088],

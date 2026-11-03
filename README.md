@@ -86,7 +86,7 @@ uv télécharge Python 3.12 si besoin. Le CLI `duckdb` et les extensions VS Code
 3. Dans le terminal du devcontainer :
 
    ```bash
-   task pipeline       # facultatif si la base existe déjà (~10 s)
+   task pipeline       # facultatif si la base existe déjà (~15-20 s)
    task superset:up    # ~1 à 2 min
    ```
 
@@ -95,7 +95,7 @@ uv télécharge Python 3.12 si besoin. Le CLI `duckdb` et les extensions VS Code
 
 En cas de doute : `task doctor`.
 
-> Dans les menus déroulants de Superset, les schémas s'affichent sous la forme `"edna-sports-data".reporting`. C'est normal (le préfixe est le nom du fichier DuckDB) : choisis celui qui finit par `reporting`.
+> Dans les menus déroulants de Superset, les schémas s'affichent sous la forme `"edna-sports-data".reporting`. C'est normal (le préfixe est le nom du fichier DuckDB) : choisis celui qui finit par `reporting` et ignore les autres (`system.main`, `temp.main`, etc.).
 
 Une seule machine par équipe a besoin de faire tourner Superset.
 
@@ -201,7 +201,7 @@ Le code des modèles est dans `transformation/models/<couche>/`, leur documentat
 |---|---|
 | « Docker is not running » ou `❌ Docker ne répond pas` | Démarre Docker Desktop et attends que l'icône soit immobile. |
 | `❌ Base edna-sports-data.duckdb introuvable` | `task pipeline` |
-| Superset ne voit pas mon nouveau modèle | `task superset:refresh`, puis **Datasets > + Dataset** (ou **Sync columns from source** pour une table modifiée). |
+| Superset ne voit pas mon nouveau modèle | `task superset:refresh` (il vide aussi le cache des charts), puis **Datasets > + Dataset** (ou **Sync columns from source** pour une table modifiée). Si un chart affiche encore d'anciennes valeurs : **Force refresh** dans le menu du chart ou du dashboard. |
 | La page http://localhost:8089 ne répond pas | `task doctor`. Si Superset démarre encore, patiente ; sinon `task superset:logs`. Ouvre l'URL dans le navigateur de ta machine, pas via la notification de port de VS Code. |
 | Port 8089 déjà utilisé | Change `"8089:8088"` en `"8090:8088"` dans `visualization/docker-compose.yml`, relance `task superset:up` et ouvre http://localhost:8090. |
 | Erreur `EOF` ou `failed to do request` au build | Erreur réseau temporaire : relance **Dev Containers: Reopen in Container** ou `task superset:up`. |

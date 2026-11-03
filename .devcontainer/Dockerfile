@@ -13,7 +13,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=/usr/local/bin sh
 
 # Install DuckDB CLI
-RUN curl https://install.duckdb.org | DUCKDB_VERSION=1.5.1 sh
+# (le script installe dans ~/.duckdb/cli/<version>/ sans toucher au PATH : on copie le binaire dans /usr/local/bin)
+RUN curl https://install.duckdb.org | DUCKDB_VERSION=1.5.1 sh \
+    && install -m 755 "$(find /root/.duckdb/cli -name duckdb -type f | head -n 1)" /usr/local/bin/duckdb \
+    && duckdb --version
 
 # Install Task runner
 RUN sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b /usr/local/bin

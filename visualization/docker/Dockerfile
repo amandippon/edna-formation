@@ -9,9 +9,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 RUN /app/.venv/bin/python -m ensurepip && \
     /app/.venv/bin/python -m pip install --no-cache-dir \
-    "psycopg2-binary" \
+    "psycopg2-binary==2.9.13" \
     "duckdb==1.5.1" \
-    "duckdb-engine"
+    "duckdb-engine==0.17.0"
 
 COPY superset_config.py /app/pythonpath/superset_config.py
 

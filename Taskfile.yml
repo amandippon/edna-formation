@@ -144,6 +144,7 @@ tasks:
     cmds:
       - task: dbt:build
       - docker cp {{.PROJECT_DIR}}/{{.DB_FILE}} {{.SUPERSET_CONTAINER}}:{{.SUPERSET_DB_PATH}}
+      - docker exec superset_cache redis-cli FLUSHALL > /dev/null  # vide le cache des charts
       - 'echo "✅ Base mise à jour dans Superset. Nouvelle table : Datasets > + Dataset. Colonnes modifiées : Edit dataset > Sync columns from source."'
 
   superset:down:

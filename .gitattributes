@@ -1,0 +1,6 @@
+* text=auto eol=lf
+# Données sources : laissées telles quelles
+*.csv -text
+*.duckdb binary
+*.parquet binary
+*.png binary
