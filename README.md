@@ -187,7 +187,7 @@ Toutes les tables vivent dans `edna-sports-data.duckdb`, en trois schémas.
 | Schéma | Rôle | Tables |
 |---|---|---|
 | `staging` | Copie fidèle des CSV, colonnes renommées en snake_case, aucune règle métier | 11 tables `stg_*` |
-| `marts` | Dimensions et faits nettoyés et enrichis | `dim_teams`, `dim_seasons`, `dim_cities`, `fct_regular_season_games`, `fct_tourney_games` |
+| `marts` | Dimensions et faits nettoyés et enrichis | `dim_teams`, `dim_seasons`, `dim_cities`, `dim_tourney_seeds`, `fct_regular_season_games`, `fct_tourney_games` |
 | `reporting` | Tables larges prêtes pour Superset | `rpt_team_games`, `rpt_games`, `rpt_team_season_stats`, `rpt_tourney_runs` |
 | `reporting` (exemples) | Une question métier = un modèle | `rpt_uconn_tennessee_*` (5 tables) |
 

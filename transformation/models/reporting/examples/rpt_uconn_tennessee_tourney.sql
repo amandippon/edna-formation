@@ -9,7 +9,7 @@ seasons as (
 ),
 tourney_seeds as (
     select season, team_id, seed_number, seed_region
-    from {{ ref('stg_tourney_seeds') }}
+    from {{ ref('dim_tourney_seeds') }}
 ),
 -- Connecticut = 3163, Tennessee = 3397
 rival_ids as (

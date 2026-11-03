@@ -5,7 +5,7 @@ detailed as (
     select * from {{ ref('stg_tourney_detailed_results') }}
 ),
 seeds as (
-    select * from {{ ref('stg_tourney_seeds') }}
+    select * from {{ ref('dim_tourney_seeds') }}
 ),
 game_cities as (
     select * from {{ ref('stg_game_cities') }}

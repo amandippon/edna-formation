@@ -1,6 +1,38 @@
 version: 2
 
 models:
+
+  - name: dim_tourney_seeds
+    description: "Seeds du tournoi NCAA : une ligne par saison et par équipe qualifiée, avec le nom de la région du bracket. Point d'entrée unique des seeds pour fct_tourney_games et la couche reporting."
+    columns:
+      - name: season
+        description: "Année de la saison."
+        data_tests: [not_null]
+      - name: team_id
+        description: "Identifiant de l'équipe qualifiée."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_teams')
+                field: team_id
+      - name: team_name
+        description: "Nom de l'équipe."
+        data_tests: [not_null]
+      - name: seed_raw
+        description: "Seed brut tel que fourni (ex : W01, X16)."
+        data_tests: [not_null]
+      - name: seed_region
+        description: "Lettre de la région du bracket (W, X, Y, Z)."
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['W', 'X', 'Y', 'Z']
+      - name: seed_number
+        description: "Numéro de seed (1 = favori, 16 = outsider)."
+        data_tests: [not_null]
+      - name: region_name
+        description: "Nom de la région du bracket pour cette saison (issu de dim_seasons.region_w à region_z)."
   - name: dim_teams
     description: "Dimension équipes NCAA Women avec état d'origine déduit des matchs à domicile."
     columns:

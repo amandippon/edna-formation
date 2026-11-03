@@ -30,7 +30,7 @@ tourney_seeds as (
         team_id,
         seed_number as tourney_seed_number,
         true        as made_tourney
-    from {{ ref('stg_tourney_seeds') }}
+    from {{ ref('dim_tourney_seeds') }}
 ),
 teams as (
     select team_id, team_name, team_state, team_state_iso from {{ ref('dim_teams') }}

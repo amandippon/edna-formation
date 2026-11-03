@@ -22,7 +22,7 @@ team_tourney_stats as (
     group by season, team_id
 ),
 seeds as (
-    select * from {{ ref('stg_tourney_seeds') }}
+    select * from {{ ref('dim_tourney_seeds') }}
 ),
 final as (
     select

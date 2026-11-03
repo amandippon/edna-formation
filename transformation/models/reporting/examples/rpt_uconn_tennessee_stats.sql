@@ -39,7 +39,7 @@ seasons as (
 ),
 tourney_seeds as (
     select season, team_id, seed_number as tourney_seed_number, true as made_tourney
-    from {{ ref('stg_tourney_seeds') }}
+    from {{ ref('dim_tourney_seeds') }}
 ),
 -- Connecticut (3163) and Tennessee (3397)
 rival_ids as (

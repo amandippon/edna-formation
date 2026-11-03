@@ -36,7 +36,8 @@ There is no `dbt deps` step: the project has no dbt packages.
 - **Transformation** (`transformation/`): dbt-duckdb, output `edna-sports-data.duckdb` at the repo root (`profiles.yml` path `../edna-sports-data.duckdb`, so dbt must run from `transformation/`; the Taskfile handles it).
   - `macros/generate_schema_name.sql`: custom schemas are used as-is, so schemas are `staging`, `marts`, `reporting` (no `main_` prefix).
   - `models/staging/` (schema `staging`, **materialized as tables**): one `stg_*` per CSV, reads Parquet with `read_parquet('../processed-resources/...')`, renames to snake_case, no business logic. Tables, not views, because the relative Parquet path breaks when the DB is opened from elsewhere (Superset, DBeaver, repo root).
-  - `models/marts/` (schema `marts`, tables): `dim_teams` (team_state inferred from home games, 2010+), `dim_seasons`, `dim_cities`, `fct_regular_season_games`, `fct_tourney_games` (winner/loser format, game_id, game_date, box score, seeds and upsets for tournament).
+  - Layering rule: reporting models only `ref()` marts, never staging.
+  - `models/marts/` (schema `marts`, tables): `dim_teams` (team_state inferred from home games, 2010+), `dim_seasons`, `dim_cities`, `dim_tourney_seeds` (one row per season and seeded team, with bracket region name), `fct_regular_season_games`, `fct_tourney_games` (winner/loser format, game_id, game_date, box score, seeds and upsets for tournament).
   - `models/reporting/` (schema `reporting`, tables): wide, denormalized tables meant as Superset datasets:
     - `rpt_team_games`: one row per team per game (regular + tournament), team point of view, signed `pt_diff`, `team_location`, seeds, upset flags, team box score + a few opponent stats. PK `team_game_id`. Most flexible table.
     - `rpt_games`: one row per game, winner/loser names, city/state, upset label.
