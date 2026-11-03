@@ -38,12 +38,8 @@
   "workspaceFolder": "/workspaces/edna-formation",
   "postCreateCommand": "bash .devcontainer/post-create.sh",
   "remoteUser": "vscode",
-  "forwardPorts": [8088, 8089],
+  "forwardPorts": [8088],
   "portsAttributes": {
-    "8089": {
-      "label": "Superset",
-      "onAutoForward": "notify"
-    },
     "8088": {
       "label": "Colibri (lineage)",
       "onAutoForward": "notify"
