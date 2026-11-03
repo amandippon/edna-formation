@@ -10,7 +10,6 @@ import time
 import pyarrow.csv as pa_csv
 import pyarrow.parquet as pq
 
-
 RESOURCES_DIR = os.path.join(os.path.dirname(__file__), "..", "resources")
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "..", "processed-resources")
 
