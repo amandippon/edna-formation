@@ -1,518 +1,253 @@
-# edna-formation — Pipeline de données NCAA Women's Basketball
+# edna-formation : du CSV au dashboard
 
+Pipeline de données 100 % local sur le basketball universitaire féminin américain (NCAA Women's Basketball, saisons 1998 à 2019). Les fichiers CSV sont convertis en Parquet, transformés avec dbt dans une base DuckDB, puis explorés dans Superset.
 
-Projet pédagogique pour découvrir les métiers de la data, de l'ingestion jusqu'à la visualisation — **aucune connaissance en code requise.**
+```
+resources/*.csv                    11 fichiers bruts (Kaggle)
+      │  task ingest               PyArrow
+      ▼
+processed-resources/*/*.parquet    un fichier Parquet par table
+      │  task dbt:build            dbt + DuckDB (modèles + tests)
+      ▼
+edna-sports-data.duckdb            schémas staging -> marts -> reporting
+      │  task superset:up          copie de la base dans le conteneur
+      ▼
+Superset (http://localhost:8089)   datasets, charts, dashboards, SQL Lab
+```
 
+**Stack** (versions épinglées dans le repo) : Python 3.12 et uv, PyArrow, DuckDB 1.5.1, dbt-core 1.11 avec dbt-duckdb, dbt-colibri (lineage), Superset 6.0.0 (+ PostgreSQL 16 et Redis 7 pour ses métadonnées), Task pour les commandes, le tout dans un devcontainer VS Code. Aucun service cloud.
 
 ---
 
+## 1. À faire avant l'atelier (20 à 30 min, une seule fois)
 
-## Installation des outils
+Le jour J, le Wi-Fi ne suffira pas à télécharger les images Docker de toute la salle. Fais ces étapes chez toi.
 
+### Installer les outils
 
-Avant de commencer, tu dois installer quelques outils sur ton ordinateur. Suis le guide correspondant à ton système.
+| Outil | macOS | Windows |
+|---|---|---|
+| Docker Desktop | [docker.com](https://www.docker.com/products/docker-desktop/), version **Apple Silicon** (M1 à M4) ou **Intel** | D'abord `wsl --install` dans un PowerShell administrateur puis redémarrage, ensuite Docker Desktop avec l'option **Use WSL 2** |
+| Git | `xcode-select --install` | [git-scm.com](https://git-scm.com/download/win), options par défaut (fournit Git Bash) |
+| VS Code | [code.visualstudio.com](https://code.visualstudio.com) | idem |
+| Extension VS Code | **Dev Containers** (éditeur : Microsoft) | idem |
 
+Lance Docker Desktop et attends que l'icône de la baleine soit immobile.
 
-> Les outils listés ici sont gratuits et open source. Une fois installés, tu n'auras plus à t'en occuper — le projet se configure automatiquement.
+### Préparer le projet
 
+1. Clone le repo (Terminal sur macOS, Git Bash sur Windows) et ouvre-le dans VS Code :
 
----
+   ```bash
+   git clone https://github.com/amandippon/edna-formation
+   cd edna-formation
+   code .
+   ```
 
+   VS Code doit être ouvert **sur le dossier `edna-formation` lui-même**, sinon le devcontainer n'est pas détecté.
 
-### macOS
+2. `Cmd+Shift+P` (macOS) ou `Ctrl+Shift+P` (Windows), puis **Dev Containers: Reopen in Container**. Le premier build prend 5 à 10 minutes. À la fin, le script de post-création installe les dépendances Python (`uv sync`) et construit la base avec `task pipeline` : attends le message « ✅ Environnement prêt ! » dans le terminal.
 
+3. Dans le terminal VS Code (donc dans le devcontainer), télécharge et construis la stack Superset une première fois :
 
-#### 1. Git
+   ```bash
+   task superset:up
+   task doctor
+   ```
 
+   `task doctor` doit afficher quatre lignes ✅ (Docker, base, conteneur, Superset). Ouvre http://localhost:8089 pour vérifier, connecte-toi avec `admin` / `admin`, puis arrête la stack :
 
-Git est l'outil qui permet de télécharger et versionner le projet.
+   ```bash
+   task superset:down
+   ```
 
+Tu es prêt : les images sont en cache et la base existe.
 
-Ouvre le **Terminal** (cherche "Terminal" dans Spotlight avec `Cmd+Espace`) et colle cette commande :
+<details>
+<summary>Sans devcontainer (pour les habitués)</summary>
 
+Le Taskfile fonctionne aussi directement sur ta machine si tu as installé [uv](https://docs.astral.sh/uv/), [Task](https://taskfile.dev) et Docker. Depuis la racine du repo :
 
 ```bash
-xcode-select --install
-```
-
-
-Une fenêtre s'ouvre, clique sur **Installer**. Git sera installé automatiquement.
-
-
-#### 2. Visual Studio Code
-
-
-VSCode est l'éditeur de code dans lequel tu vas travailler.
-
-
-- Télécharge VSCode sur [code.visualstudio.com](https://code.visualstudio.com)
-- Ouvre le fichier `.dmg` téléchargé
-- Glisse l'icône VSCode dans ton dossier **Applications**
-
-
-#### 3. Docker Desktop
-
-
-Docker permet de faire tourner des outils isolés sur ta machine (Superset dans notre cas), sans rien installer manuellement.
-
-
-- Télécharge Docker Desktop sur [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop/)
-- Choisis la version **Mac Apple Silicon** (puce M1/M2/M3/M4) ou **Mac Intel** selon ton modèle
-- Ouvre le fichier `.dmg` et glisse Docker dans **Applications**
-- Lance Docker Desktop et accepte les conditions d'utilisation
-- Attends que l'icône Docker en haut de l'écran soit stable (plus animée)
-
-
-> Pour savoir quelle puce tu as : menu Pomme → **À propos de ce Mac**. Si tu vois "Apple M..." c'est Apple Silicon, sinon c'est Intel.
-
-
-#### 4. Extension Dev Containers dans VSCode
-
-
-- Ouvre VSCode
-- Clique sur l'icône Extensions dans la barre de gauche (ou `Cmd+Shift+X`)
-- Cherche **Dev Containers**
-- Installe l'extension publiée par **Microsoft**
-
-
-#### 5. DBeaver
-
-
-DBeaver permet d'explorer visuellement la base de données.
-
-
-- Télécharge DBeaver Community sur [dbeaver.io](https://dbeaver.io/download/)
-- Choisis la version **macOS** (`.dmg`)
-- Installe-le comme n'importe quelle application macOS
-
-
----
-
-
-### Windows
-
-
-#### 1. Git
-
-
-- Télécharge Git sur [git-scm.com](https://git-scm.com/download/win)
-- Lance l'installateur et laisse toutes les options par défaut
-- À la fin, tu auras accès à **Git Bash** (un terminal)
-
-
-#### 2. Visual Studio Code
-
-
-- Télécharge VSCode sur [code.visualstudio.com](https://code.visualstudio.com)
-- Lance l'installateur `.exe`
-
-#### 3. WSL2 (Windows Subsystem for Linux)
-
-
-WSL2 est requis pour faire tourner Docker sur Windows. C'est un Linux léger intégré à Windows.
-
-
-Ouvre le **PowerShell en tant qu'administrateur** (clic droit sur le menu Démarrer → Windows PowerShell (admin)) et tape :
-
-
-```powershell
-wsl --install
-```
-
-
-Redémarre ton ordinateur quand c'est demandé.
-
-
-#### 4. Docker Desktop
-
-
-- Télécharge Docker Desktop sur [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop/)
-- Lance l'installateur et coche **"Use WSL 2 instead of Hyper-V"**
-- Redémarre si demandé
-- Lance Docker Desktop et attends que l'icône dans la barre des tâches soit stable
-
-
-#### 5. Extension Dev Containers dans VSCode
-
-
-- Ouvre VSCode
-- Clique sur l'icône Extensions dans la barre de gauche (ou `Ctrl+Shift+X`)
-- Cherche **Dev Containers**
-- Installe l'extension publiée par **Microsoft**
-
-
-#### 6. DBeaver
-
-
-- Télécharge DBeaver Community sur [dbeaver.io](https://dbeaver.io/download/)
-- Choisis la version **Windows** (`.exe`)
-- Lance l'installateur et laisse les options par défaut
-
-
----
-
-
-### Créer un compte GitHub (si tu n'en as pas)
-
-
-GitHub est la plateforme où le projet est hébergé. Tu as besoin d'un compte pour télécharger le projet.
-
-
-1. Va sur [github.com](https://github.com)
-2. Clique sur **Sign up** en haut à droite
-3. Suis les étapes : adresse e-mail, mot de passe, nom d'utilisateur
-4. Vérifie ton adresse e-mail en cliquant sur le lien reçu
-
-
-> Si tu as déjà un compte, clique sur **Sign in** et connecte-toi.
-
-
----
-
-
-### Télécharger le projet
-
-
-Une fois les outils installés et ton compte GitHub créé, récupère le projet sur ton ordinateur.
-
-
-**Sur macOS**, ouvre le Terminal.
-**Sur Windows**, ouvre **Git Bash** (installé avec Git — cherche "Git Bash" dans le menu Démarrer).
-
-
-Choisis un dossier où tu veux mettre le projet (par exemple ton bureau ou tes documents), puis tape :
-
-
-```bash
-git clone https://github.com/amandippon/edna-formation
-cd edna-formation
-```
-
-
-Ouvre ensuite le dossier dans VSCode :
-
-
-```bash
-code .
-```
-
-
-> **Important :** VSCode doit être ouvert **sur le dossier `edna-formation`** — pas sur un autre dossier, pas sur le bureau. Si ce n'est pas le cas, le devcontainer ne fonctionnera pas. Vérifie en haut à gauche de VSCode que tu vois bien `edna-formation` comme nom de projet.
-
-
----
-
-
-## C'est quoi ce projet ?
-
-
-Tu vas simuler le travail d'une équipe data sur des données réelles du basketball universitaire féminin américain (NCAA Women's Basketball, 1998–2019).
-
-
-La donnée part de simples fichiers CSV et arrive jusqu'à des tableaux de bord interactifs, en passant par des étapes de nettoyage et d'organisation — exactement comme dans une vraie équipe data.
-
-
-```
-Fichiers CSV (données brutes)
-    ↓  Ingestion : on lit et range les fichiers
-Fichiers Parquet (données organisées)
-    ↓  Transformation : on nettoie et enrichit les données
-Base de données (données prêtes à explorer)
-    ↓  Visualisation
-Superset (tableaux de bord)  ·  DBeaver (exploration SQL)
-```
-
-
----
-
-
-## Workflow étudiant
-
-
-Suis ces 4 étapes dans l'ordre. Tu n'as pas besoin de comprendre le code — juste de lancer les commandes et d'observer ce qui se passe.
-
-
----
-
-
-### Étape 0 — Ouvrir l'environnement de travail
-
-
-#### 1. Démarre Docker Desktop
-
-
-**Docker Desktop doit être allumé avant de lancer le devcontainer.** Sans lui, rien ne fonctionne.
-
-
-- Cherche **Docker Desktop** dans le menu Démarrer (Windows) ou dans tes Applications (Mac) et ouvre-le
-- Attends que l'icône Docker dans la barre des tâches (Windows) ou la barre du menu (Mac) soit **stable** — une baleine avec des conteneurs qui ne bougent plus
-- Ça peut prendre 30 secondes à 1 minute au démarrage
-
-
-> Si tu vois une erreur "Docker is not running" dans VSCode, c'est que Docker Desktop n'est pas encore démarré ou pas encore prêt.
-
-
-#### 2. Ouvre le bon dossier dans VSCode
-
-
-Le devcontainer ne fonctionne **que si VSCode est ouvert sur le dossier `edna-formation`** directement.
-
-
-Si tu viens de faire le `git clone`, tu as déjà tapé `code .` dans le terminal — VSCode s'est ouvert sur le bon dossier.
-
-
-Si tu as ouvert VSCode autrement (double-clic sur l'icône, etc.), utilise **Fichier → Ouvrir le dossier** (`Ctrl+K Ctrl+O` sur Windows, `Cmd+K Cmd+O` sur Mac) et sélectionne le dossier `edna-formation`.
-
-
-> Pour vérifier : en haut à gauche dans l'explorateur de VSCode, tu dois voir `EDNA-FORMATION` comme nom de dossier racine.
-
-
-#### 3. Lance le devcontainer
-
-
-Une fois le bon dossier ouvert, lance le devcontainer :
-
-
-- Appuie sur `Ctrl+Shift+P` (Windows) ou `Cmd+Shift+P` (Mac)
-- Tape **Dev Containers** et choisis **Dev Containers: Reopen in Container**
-
-
-VSCode prépare automatiquement tout l'environnement (Python, outils data, base de données). **La première fois, ça peut prendre 5 à 10 minutes** car Docker télécharge et construit l'image.
-
-
-Une barre de progression apparaît en bas à droite. Une fois terminé, un terminal s'ouvre automatiquement dans le container — tu es prêt.
-
-
-> **Sur Windows uniquement :** si tu vois une erreur "No space left on device", voir la section [Dépannage Windows](#dépannage-windows) en bas de ce README.
-
-
----
-
-
-### Étape 1 — Lancer le pipeline
-
-
-Dans le terminal VSCode, tape :
-
-
-```bash
+uv sync
 task pipeline
-```
-
-
-Cette commande fait tout le travail data en une fois :
-- Elle lit les fichiers CSV du dossier `resources/` (équipes, saisons, résultats de matchs…)
-- Elle les transforme et les range dans une base de données prête à explorer : `edna-sports-data.duckdb`
-
-
-Tu verras défiler des logs dans le terminal — c'est normal, c'est le pipeline qui tourne.
-
-
----
-
-
-### Étape 2 — Explorer les données dans DBeaver
-
-
-DBeaver te permet de naviguer dans la base de données et d'écrire des requêtes SQL, comme on formulerait des questions à la donnée.
-
-
-1. Ouvre **DBeaver**
-2. Crée une nouvelle connexion de type **DuckDB**
-3. Indique ce fichier : `edna-sports-data.duckdb` (à la racine du projet)
-4. Explore les deux schémas disponibles :
-   - `staging` : les données telles qu'elles arrivent des CSV, sans transformation
-   - `marts` : les tables enrichies et prêtes pour l'analyse (équipes, saisons, villes, matchs, tournoi)
-
-
----
-
-
-### Étape 3 — Visualiser avec Superset
-
-
-Superset est un outil de création de tableaux de bord, similaire à Tableau ou Power BI.
-
-
-```bash
 task superset:up
 ```
 
-
-Une fois démarré, VSCode affiche une notification **"Open in Browser"** en bas à droite — clique dessus, ou ouvre http://localhost:8089 directement dans ton navigateur.
-Connecte-toi avec : **admin** / **admin**
-
-
-**Connecter la base de données à Superset (à faire une seule fois) :**
-1. Va dans **Settings → Database Connections → + Database**
-2. Fais défiler jusqu'en bas et choisis **Other**
-3. Dans le champ **SQLAlchemy URI**, colle exactement ce texte :
-   `duckdb:////app/superset_home/edna-sports-data.duckdb`
-4. Clique sur **Test Connection** pour vérifier, puis **Connect**
-
-
-Tu peux ensuite créer des graphiques et des dashboards à partir des tables `reporting`.
-
+uv télécharge Python 3.12 si besoin. Le CLI `duckdb` et les extensions VS Code du devcontainer ne sont alors pas installés pour toi.
+</details>
 
 ---
 
+## 2. Le jour J : setup en 15 minutes
 
-### Étape 4 — Explorer la documentation du pipeline
+1. Démarre Docker Desktop.
+2. Ouvre le projet dans VS Code, puis **Dev Containers: Reopen in Container** (quelques secondes, l'image est déjà construite).
+3. Dans le terminal du devcontainer :
 
+   ```bash
+   task pipeline       # facultatif si la base existe déjà (~10 s)
+   task superset:up    # ~1 à 2 min
+   ```
 
-Le projet inclut une documentation interactive générée automatiquement : **`colibri-docs/index.html`**
+4. Ouvre **http://localhost:8089 dans le navigateur de ta machine**, et pas via la notification de port de VS Code : Superset tourne sur le Docker de ta machine, pas dans le devcontainer. Identifiants : `admin` / `admin`.
+5. La base est **déjà connectée** sous le nom **NCAA Basketball (DuckDB)**, en lecture seule. Rien à configurer.
 
+En cas de doute : `task doctor`.
 
-Elle te montre visuellement comment les données circulent d'une table à l'autre (le "lineage"), quelles colonnes existent, et quels tests de qualité ont été définis.
+> Dans les menus déroulants de Superset, les schémas s'affichent sous la forme `"edna-sports-data".reporting`. C'est normal (le préfixe est le nom du fichier DuckDB) : choisis celui qui finit par `reporting`.
 
+Une seule machine par équipe a besoin de faire tourner Superset.
 
-**Option A — Ouvrir directement le fichier** (le plus simple) :
+---
 
+## 3. Construire un dashboard
 
-Dans l'explorateur de fichiers de VSCode, double-clique sur `colibri-docs/index.html` → clique sur **Open with Live Preview** ou **Open in Default Browser**.
+La fiche [docs/atelier.md](docs/atelier.md) détaille les tables, leurs pièges et six idées de dashboards.
 
+**Chemin rapide : une table existante**
 
-**Option B — Via le terminal** :
+1. **Datasets > + Dataset** : base `NCAA Basketball (DuckDB)`, schéma `reporting`, une table (par exemple `rpt_team_games`).
+2. **Create chart** depuis le dataset, choisis un type de graphique, glisse colonnes et métriques, **Save** en l'ajoutant à un dashboard.
+3. Les booléens (`is_win`, `is_close_game`…) s'agrègent avec une métrique SQL personnalisée, par exemple `AVG(CASE WHEN is_win THEN 1 ELSE 0 END)`.
 
+**Chemin SQL : dataset virtuel**
+
+**SQL > SQL Lab**, écris ta requête sur n'importe quel schéma (`staging`, `marts`, `reporting`), exécute-la, puis **Save > Save dataset**. Le résultat devient un dataset utilisable dans les charts, sans toucher au projet dbt.
+
+**Niveau 2 : un nouveau modèle dbt**
+
+1. Crée `transformation/models/reporting/rpt_<ton_sujet>.sql`, construit à partir des tables `marts` avec `{{ ref('...') }}`. Les modèles de `transformation/models/reporting/examples/` (rivalité UConn vs Tennessee) montrent comment traduire une question en table.
+2. Documente-le dans un fichier YAML du même dossier (description, colonnes, tests).
+3. Lance :
+
+   ```bash
+   task superset:refresh
+   ```
+
+   La commande reconstruit les modèles dbt (avec les tests) et recopie la base dans Superset, sans redémarrage. Une nouvelle table apparaît dans **Datasets > + Dataset** ; pour une table modifiée, **Edit dataset > Sync columns from source**.
+
+Un assistant IA (Claude Code ou équivalent) peut écrire le modèle : le fichier `CLAUDE.md` à la racine lui décrit l'architecture et les conventions.
+
+---
+
+## 4. Explorer la base hors Superset
+
+**CLI DuckDB** (installé dans le devcontainer) :
 
 ```bash
-task documentation
+duckdb -readonly edna-sports-data.duckdb
 ```
 
+```sql
+SHOW ALL TABLES;
+SELECT team_name, count(*) AS titres
+FROM reporting.rpt_tourney_runs
+WHERE is_champion
+GROUP BY team_name
+ORDER BY titres DESC;
+```
 
-VSCode affiche une notification **"Open in Browser"**, ou ouvre http://localhost:8088 dans ton navigateur.
+**DuckDB UI** (facultatif, non testé dans le devcontainer) : `duckdb -ui edna-sports-data.duckdb` ouvre une interface notebook sur http://localhost:4213. L'extension télécharge son interface depuis internet, et dans le devcontainer il faut transférer le port 4213 depuis l'onglet **Ports** de VS Code.
 
+**DBeaver** (facultatif) : nouvelle connexion **DuckDB**, fichier `edna-sports-data.duckdb` à la racine du repo cloné sur ta machine. Coche une connexion en lecture seule, ou ferme DBeaver avant `task pipeline` : DuckDB n'accepte qu'un seul processus en écriture.
 
----
-
-
-## Toutes les commandes disponibles
-
-
-Ces commandes se tapent dans le terminal VSCode.
-
-
-### Commandes principales
-
-
-| Commande | Ce que ça fait |
-|---|---|
-| `task pipeline` | Lance tout le pipeline d'un coup : ingestion + transformation |
-| `task ingest` | Relit les fichiers CSV et les convertit en Parquet (1ère étape) |
-| `task dbt:run` | Transforme les données Parquet en tables analytiques (2ème étape) |
-
-
-### Documentation & exploration
-
-
-| Commande | Ce que ça fait |
-|---|---|
-| `task documentation` | Génère et ouvre la documentation Colibri du pipeline dans le navigateur (port 8088) |
-| `task dbt:test` | Vérifie la qualité des données (valeurs manquantes, doublons, etc.) |
-
-
-### Superset (tableaux de bord)
-
-
-| Commande | Ce que ça fait |
-|---|---|
-| `task superset:up` | Démarre Superset et ouvre le navigateur (port 8089) |
-| `task superset:down` | Arrête Superset proprement |
-| `task superset:logs` | Affiche les logs de Superset (utile en cas de problème) |
-| `task superset:reset` | Remet Superset à zéro (efface tous les dashboards créés) |
-
-
-### Maintenance
-
-
-| Commande | Ce que ça fait |
-|---|---|
-| `task clean` | Supprime les fichiers temporaires générés par le pipeline |
-
+**Lineage** : `task documentation` génère la documentation Colibri (lineage au niveau des colonnes, descriptions, tests) et la sert sur le port 8088, transféré automatiquement par VS Code. Le fichier `colibri-docs/index.html` s'ouvre aussi directement dans un navigateur.
 
 ---
 
+## 5. Commandes
 
-## Les données
+À lancer dans le terminal du devcontainer. `task` seul affiche la liste.
 
+| Commande | Effet |
+|---|---|
+| `task pipeline` | Ingestion puis `dbt build` (modèles + tests) |
+| `task ingest` | CSV de `resources/` -> Parquet dans `processed-resources/` |
+| `task dbt:build` | Construit tous les modèles dbt et lance les tests |
+| `task dbt:run` | Construit les modèles, sans les tests |
+| `task dbt:test` | Lance uniquement les tests de qualité |
+| `task documentation` | Génère et sert le lineage Colibri (port 8088) |
+| `task colibri:generate` | Génère seulement `colibri-docs/` |
+| `task colibri:open` | Sert ou ouvre `colibri-docs/index.html` |
+| `task superset:up` | Construit et démarre Superset, copie la base, crée l'admin et connecte la base |
+| `task superset:refresh` | `dbt build` puis recopie la base dans Superset (Superset doit tourner) |
+| `task superset:down` | Arrête Superset (dashboards conservés) |
+| `task superset:logs` | Affiche les logs de Superset |
+| `task superset:reset` | Supprime toutes les données Superset (dashboards compris) puis redémarre |
+| `task doctor` | Vérifie Docker, la base et Superset |
+| `task clean` | Supprime les fichiers générés par dbt et les caches Python |
 
-Le projet utilise des données du NCAA Women's Basketball (1998–2019) :
+---
 
+## 6. Modèle de données
+
+Toutes les tables vivent dans `edna-sports-data.duckdb`, en trois schémas.
+
+| Schéma | Rôle | Tables |
+|---|---|---|
+| `staging` | Copie fidèle des CSV, colonnes renommées en snake_case, aucune règle métier | 11 tables `stg_*` |
+| `marts` | Dimensions et faits nettoyés et enrichis | `dim_teams`, `dim_seasons`, `dim_cities`, `fct_regular_season_games`, `fct_tourney_games` |
+| `reporting` | Tables larges prêtes pour Superset | `rpt_team_games`, `rpt_games`, `rpt_team_season_stats`, `rpt_tourney_runs` |
+| `reporting` (exemples) | Une question métier = un modèle | `rpt_uconn_tennessee_*` (5 tables) |
+
+Le code des modèles est dans `transformation/models/<couche>/`, leur documentation dans les fichiers `_*_models.yml`. Le dictionnaire des tables `reporting` est dans [docs/atelier.md](docs/atelier.md).
+
+---
+
+## 7. Dépannage
+
+| Symptôme | Solution |
+|---|---|
+| « Docker is not running » ou `❌ Docker ne répond pas` | Démarre Docker Desktop et attends que l'icône soit immobile. |
+| `❌ Base edna-sports-data.duckdb introuvable` | `task pipeline` |
+| Superset ne voit pas mon nouveau modèle | `task superset:refresh`, puis **Datasets > + Dataset** (ou **Sync columns from source** pour une table modifiée). |
+| La page http://localhost:8089 ne répond pas | `task doctor`. Si Superset démarre encore, patiente ; sinon `task superset:logs`. Ouvre l'URL dans le navigateur de ta machine, pas via la notification de port de VS Code. |
+| Port 8089 déjà utilisé | Change `"8089:8088"` en `"8090:8088"` dans `visualization/docker-compose.yml`, relance `task superset:up` et ouvre http://localhost:8090. |
+| Erreur `EOF` ou `failed to do request` au build | Erreur réseau temporaire : relance **Dev Containers: Reopen in Container** ou `task superset:up`. |
+| « No space left on device » (Windows) | Le disque virtuel de Docker (WSL2) est plein : Docker Desktop > **Settings > Resources > Disk image > Clean / Purge data**, ou `docker system prune -a` (supprime aussi les images des autres projets). |
+| `Could not set lock on file` dans DuckDB | Un autre processus (DBeaver, CLI `duckdb`) tient la base en écriture : ferme-le ou ouvre-le en lecture seule, puis relance. |
+| Superset dans un état incohérent | `task superset:reset` (efface dashboards et charts). |
+
+---
+
+## Données
+
+Source : [Kaggle, Women's Machine Learning Competition 2019](https://www.kaggle.com/competitions/womens-machine-learning-competition-2019/data). Le tournoi s'arrête en 2018 car le but de la compétition était de prédire celui de 2019.
 
 | Fichier | Contenu |
 |---|---|
-| `resources/WTeams.csv` | 366 équipes universitaires féminines (Division I) |
-| `resources/WSeasons.csv` | 22 saisons (1998–2019) avec date de référence et régions du bracket |
-| `resources/WCities.csv` | 435 villes hôtes de matchs (ville + état US) |
-| `resources/WRegularSeasonCompactResults.csv` | 107 133 matchs de saison régulière avec scores (1998–2019) |
-| `resources/WRegularSeasonDetailedResults.csv` | 51 582 matchs de saison régulière avec box score détaillé (2010–2019) |
-| `resources/WNCAATourneyCompactResults.csv` | 1 323 matchs du tournoi NCAA avec scores (1998–2018) |
-| `resources/WNCAATourneyDetailedResults.csv` | 567 matchs du tournoi avec box score détaillé (2010–2018) |
-| `resources/WNCAATourneySeeds.csv` | 1 408 seeds (classements) des équipes au tournoi par saison |
-| `resources/WNCAATourneySlots.csv` | 63 slots définissant la structure des brackets du tournoi |
-| `resources/WGameCities.csv` | 52 082 matchs associés à leur ville hôte (2010–2019) |
-| `resources/WTeamSpellings.csv` | 1 141 variantes orthographiques des noms d'équipes |
-
-> Source : [Kaggle — Women's Machine Learning Competition 2019](https://www.kaggle.com/competitions/womens-machine-learning-competition-2019/data). Les données de tournoi s'arrêtent à 2018 car le but de la compétition était de prédire le tournoi 2019.
-
-
----
-
+| `WTeams.csv` | 366 équipes de Division I |
+| `WSeasons.csv` | 22 saisons (1998 à 2019), date de référence et régions du bracket |
+| `WCities.csv` | 435 villes hôtes |
+| `WRegularSeasonCompactResults.csv` | 107 133 matchs de saison régulière (scores) |
+| `WRegularSeasonDetailedResults.csv` | 51 582 matchs de saison régulière avec box score (2010 à 2019) |
+| `WNCAATourneyCompactResults.csv` | 1 323 matchs du tournoi NCAA (1998 à 2018) |
+| `WNCAATourneyDetailedResults.csv` | 567 matchs du tournoi avec box score (2010 à 2018) |
+| `WNCAATourneySeeds.csv` | 1 408 seeds (têtes de série) par saison |
+| `WNCAATourneySlots.csv` | 63 slots décrivant le bracket |
+| `WGameCities.csv` | 52 082 matchs associés à leur ville (2010 à 2019) |
+| `WTeamSpellings.csv` | 1 141 variantes orthographiques des noms d'équipes |
 
 ## Structure du projet
 
-
 ```
 edna-formation/
-├── resources/               # Données sources (CSV) — point de départ
-├── processed-resources/     # Données intermédiaires (Parquet) — généré automatiquement
-├── ingestion/               # Code de l'étape d'ingestion
-├── transformation/          # Code de l'étape de transformation
+├── .devcontainer/           # Image et post-création du devcontainer
+├── resources/               # CSV sources
+├── ingestion/pipeline.py    # CSV -> Parquet (PyArrow)
+├── processed-resources/     # Parquet générés (ignorés par git)
+├── transformation/          # Projet dbt
+│   ├── macros/              # generate_schema_name : schémas sans préfixe
 │   └── models/
-│       ├── staging/         # Tables brutes issues des CSV
-│       └── marts/           # Tables analytiques enrichies (pour Superset et DBeaver)
-├── visualization/           # Configuration de Superset
-├── edna-sports-data.duckdb  # Base de données finale — générée automatiquement
-└── Taskfile.yml             # Définition de toutes les commandes
+│       ├── staging/         # stg_* : CSV renommés
+│       ├── marts/           # dim_* et fct_*
+│       └── reporting/       # rpt_* pour Superset
+│           └── examples/    # rpt_uconn_tennessee_* (modèles d'exemple)
+├── visualization/           # docker-compose et image Superset
+├── colibri-docs/            # Lineage généré par Colibri
+├── docs/atelier.md          # Fiche atelier : tables et idées de dashboards
+├── edna-sports-data.duckdb  # Base générée (ignorée par git)
+├── Taskfile.yml             # Toutes les commandes
+└── CLAUDE.md                # Contexte pour les assistants IA
 ```
-
-
----
-
-
-## Dépannage Windows
-
-
-### Erreur "No space left on device" au lancement du devcontainer
-
-
-Cette erreur signifie que le disque virtuel utilisé par Docker Desktop (WSL2) est plein. C'est indépendant de l'espace disponible sur ton disque Windows — c'est un disque virtuel interne à Docker.
-
-
-**Solution : libérer de l'espace dans Docker Desktop**
-
-
-1. Ouvre **Docker Desktop**
-2. Va dans **Settings** (icône engrenage en haut à droite)
-3. Clique sur **Resources** → **Disk image**
-4. Clique sur **Clean / Purge data** pour supprimer les images et conteneurs inutilisés
-
-
-Ou depuis un terminal PowerShell :
-
-
-```powershell
-docker system prune -a
-```
-
-
-> Attention : cette commande supprime toutes les images Docker non utilisées. Si tu as d'autres projets Docker, leurs images seront re-téléchargées au prochain démarrage.
-
-
-Ensuite, relance le devcontainer avec `Ctrl+Shift+P` → **Dev Containers: Reopen in Container**.
-
-
-### Erreur réseau lors du téléchargement de l'image
-
-
-Si tu vois une erreur comme `EOF` ou `failed to do request` lors du démarrage du devcontainer, c'est une erreur réseau temporaire. Réessaie simplement avec `Ctrl+Shift+P` → **Dev Containers: Reopen in Container**.
