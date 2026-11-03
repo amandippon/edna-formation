@@ -18,7 +18,7 @@ clean-targets:
 models:
   transformation:
     staging:
-      +materialized: view
+      +materialized: table
       +schema: staging
     marts:
       +materialized: table
