@@ -19,13 +19,15 @@ having count(*) <> 1408
 
 union all
 
-select 'seed mal découpé : ' || seed_raw,
-       coalesce(seed_region, 'null') || ' / ' || coalesce(seed_number::varchar, 'null')
+select 'seeds mal découpés : ' || count(*) || ' sur ' || (select count(*) from {{ ref('stg_tourney_seeds') }}),
+       'ex. ' || min(seed_raw) || ' -> ' || coalesce(arg_min(seed_region, seed_raw), 'null')
+              || ' / ' || coalesce(arg_min(seed_number, seed_raw)::varchar, 'null')
 from {{ ref('stg_tourney_seeds') }}
 where seed_region is null
    or seed_number is null
    or seed_number not between 1 and 16
    or seed_raw <> seed_region || lpad(seed_number::varchar, 2, '0')
+having count(*) > 0
 {%- for colonne, test in attendus if (colonne, test) not in declares %}
 
 union all

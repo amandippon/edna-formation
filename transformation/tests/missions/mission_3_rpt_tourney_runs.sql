@@ -13,10 +13,14 @@ having count(*) <> 1344
 
 union all
 
-select 'champions de la saison ' || season, count(*)::varchar
-from {{ ref('rpt_tourney_runs') }}
-group by season
-having count(*) filter (where is_champion) <> 1
+select 'saisons sans champion unique : ' || count(*), 'ex. ' || min(season)
+from (
+    select season
+    from {{ ref('rpt_tourney_runs') }}
+    group by season
+    having count(*) filter (where is_champion) <> 1
+)
+having count(*) > 0
 
 union all
 

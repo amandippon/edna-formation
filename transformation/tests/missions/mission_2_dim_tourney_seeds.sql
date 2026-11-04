@@ -13,9 +13,10 @@ having count(*) <> 1408
 
 union all
 
-select 'seed hors de 1 à 16', seed_raw
+select 'seeds hors de 1 à 16 : ' || count(*), 'ex. ' || min(seed_raw)
 from {{ ref('dim_tourney_seeds') }}
-where seed_number not between 1 and 16
+where seed_number is null or seed_number not between 1 and 16
+having count(*) > 0
 
 union all
 
