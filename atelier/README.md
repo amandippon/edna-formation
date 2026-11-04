@@ -18,6 +18,8 @@ Avant de commencer : `task doctor` doit afficher ✅ pour Docker et pour la base
 
 > **Le piège du verrou DuckDB.** DuckDB verrouille le fichier `edna-sports-data.duckdb` dès qu'un programme l'ouvre, même en lecture seule. Si DBeaver ou un terminal `duckdb` lancé à la main est ouvert sur ce fichier, `dbt` échoue avec `Could not set lock on file`. Ferme-le, ou passe par `task sql`, qui ouvre une copie de la base.
 
+> **dbt ne fait pas le ménage.** À chaque `task build`, dbt recrée les tables de tes modèles : modifier un modèle et relancer suffit. En revanche, il ne supprime jamais une table ou un schéma dont le modèle a disparu : si tu renommes ou supprimes un modèle, l'ancienne table reste dans la base, et dans Superset après `task superset:sync`. Pour repartir d'une base propre : `rm edna-sports-data.duckdb` puis `task build`. `task step` repart toujours d'une base vide.
+
 ## Ex. 1 : interroger des fichiers Parquet avec DuckDB (10 min)
 
 But : voir qu'un moteur SQL analytique lit directement des fichiers, sans rien charger.

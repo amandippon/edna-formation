@@ -60,6 +60,7 @@ There is no `dbt deps` step: the project has no dbt packages.
 - Skeletons compile and return NULL placeholders, so generic tests (YAML) and the singular tests in `transformation/tests/missions/` fail until the mission is done. Every mission test passes on the final project.
 - `atelier/sujets/<sujet>/`: free-topic skeleton + YAML + singular test for mission 3 option B, copied by `task topic` to `transformation/models/reporting/atelier/` and `transformation/tests/atelier/` (both git-ignored). Solutions in `atelier/solutions/`; `ex1.sql` is the SQL warm-up.
 - DuckDB locks the file for any open connection, even read-only: an open DuckDB CLI or DBeaver session makes `dbt` fail with `Could not set lock on file`. `task sql` works on a copy for that reason.
+- dbt never drops relations whose model was renamed or deleted (tables are only replaced on rebuild). Orphans stay in the DuckDB file and in Superset after sync; the fix is `rm edna-sports-data.duckdb && task build`. `task step` always starts from an empty DB.
 
 ## Adding a reporting model
 

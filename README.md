@@ -202,6 +202,7 @@ Le code des modèles est dans `transformation/models/<couche>/`, leur documentat
 | Erreur `EOF` ou `failed to do request` au build | Erreur réseau temporaire : relance **Dev Containers: Reopen in Container** ou `task superset:up`. |
 | « No space left on device » (Windows) | Le disque virtuel de Docker (WSL2) est plein : Docker Desktop > **Settings > Resources > Disk image > Clean / Purge data**, ou `docker system prune -a` (supprime aussi les images des autres projets). |
 | `Could not set lock on file` dans DuckDB | Un autre programme a ouvert la base (DBeaver, terminal `duckdb`), même en lecture seule : ferme-le ou déconnecte-le, puis relance. Pour explorer sans bloquer dbt : `task sql`. |
+| Une ancienne table reste dans la base (ou dans Superset) après avoir renommé ou supprimé un modèle | dbt recrée les tables de ses modèles à chaque build, mais ne supprime jamais une table ou un schéma dont le modèle a disparu. Pour repartir d'une base propre : `rm edna-sports-data.duckdb` puis `task build` (et `task superset:sync` si Superset tourne). `task step` le fait déjà à chaque changement d'étape. |
 | Une mission de l'atelier ne passe pas | `task step N=<étape suivante>` pour repartir de la solution ; tout est cassé : `git restore transformation/` puis `task build`. |
 | Superset dans un état incohérent | `docker compose -f visualization/docker-compose.yml down -v` (efface dashboards et charts), puis `task superset:up`. |
 
