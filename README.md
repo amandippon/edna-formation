@@ -92,9 +92,9 @@ La suite se passe dans le **[guide de l'atelier](atelier/README.md)** :
 | Étape | Ce que tu fais | Couche |
 |---|---|---|
 | Ex. 1 | Interroger les fichiers Parquet en SQL avec DuckDB | Fichiers sources |
-| Mission 1 | Écrire `stg_tourney_seeds` (branche `atelier/etape-1-bronze`) | Bronze (`staging`) |
-| Mission 2 | Écrire `dim_tourney_seeds` (branche `atelier/etape-2-silver`) | Silver (`marts`) |
-| Mission 3 | Écrire `rpt_tourney_runs` ou un sujet libre (branche `atelier/etape-3-gold`) | Gold (`reporting`) |
+| Mission 1 | Écrire `stg_tourney_seeds` (branche `atelier/etape-1-staging`) | `staging` |
+| Mission 2 | Écrire `dim_tourney_seeds` (branche `atelier/etape-2-marts`) | `marts` |
+| Mission 3 | Écrire `rpt_tourney_runs` ou un sujet libre (branche `atelier/etape-3-reporting`) | `reporting` |
 | Ex. 4 | Construire un dashboard Superset sur ta table | Visualisation |
 
 Chaque mission a ses tests déjà écrits, et sa solution est dans la branche de l'étape suivante : `task step N=2` y passe en rangeant ton travail.
@@ -177,11 +177,13 @@ Pour le reste, les commandes d'origine restent disponibles : `cd transformation 
 
 Toutes les tables vivent dans `edna-sports-data.duckdb`, en trois schémas.
 
+En vocabulaire médaillon : les fichiers Parquet de `processed-resources/` tiennent lieu de Bronze, `staging` correspond au Silver, `marts` au Gold, et `reporting` est une couche d'exposition construite sur le Gold.
+
 | Schéma | Rôle | Tables |
 |---|---|---|
-| `staging` (Bronze) | Copie fidèle des CSV, colonnes renommées en snake_case, aucune règle métier | 11 tables `stg_*` |
-| `marts` (Silver) | Dimensions et faits nettoyés et enrichis | `dim_teams`, `dim_seasons`, `dim_cities`, `dim_tourney_seeds`, `fct_regular_season_games`, `fct_tourney_games` |
-| `reporting` (Gold) | Tables larges prêtes pour Superset | `rpt_team_games`, `rpt_games`, `rpt_team_season_stats`, `rpt_tourney_runs` |
+| `staging` | Copie fidèle des CSV, colonnes renommées en snake_case, aucune règle métier | 11 tables `stg_*` |
+| `marts` | Dimensions et faits nettoyés et enrichis | `dim_teams`, `dim_seasons`, `dim_cities`, `dim_tourney_seeds`, `fct_regular_season_games`, `fct_tourney_games` |
+| `reporting` | Tables larges prêtes pour Superset | `rpt_team_games`, `rpt_games`, `rpt_team_season_stats`, `rpt_tourney_runs` |
 | `reporting` (exemples) | Une question métier = un modèle | `rpt_uconn_tennessee_*` (5 tables) |
 
 Le code des modèles est dans `transformation/models/<couche>/`, leur documentation dans les fichiers `_*_models.yml`. Le dictionnaire des tables `reporting` est dans [atelier/donnees.md](atelier/donnees.md).

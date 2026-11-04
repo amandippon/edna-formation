@@ -1,4 +1,4 @@
--- Mission 3 (Gold) : vérifie rpt_tourney_runs. 0 ligne renvoyée = test vert.
+-- Mission 3 (reporting) : vérifie rpt_tourney_runs. 0 ligne renvoyée = test vert.
 -- Une ligne par équipe et par tournoi (1 344), un seul champion par saison,
 -- et Connecticut championne en 2016.
 select 'nombre de lignes' as probleme, count(*)::varchar as obtenu

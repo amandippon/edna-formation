@@ -46,9 +46,9 @@ Le projet dbt est découpé en étapes, une par couche. Chaque étape est une **
 
 | Étape | Branche | Ta mission | Couche |
 |---|---|---|---|
-| 1 | `atelier/etape-1-bronze` | `stg_tourney_seeds` : découper le seed brut en région et numéro | Bronze (`staging`) |
-| 2 | `atelier/etape-2-silver` | `dim_tourney_seeds` : joindre seeds, équipes et régions | Silver (`marts`) |
-| 3 | `atelier/etape-3-gold` | `rpt_tourney_runs` : le parcours de chaque équipe au tournoi, ou un sujet libre | Gold (`reporting`) |
+| 1 | `atelier/etape-1-staging` | `stg_tourney_seeds` : découper le seed brut en région et numéro | `staging` |
+| 2 | `atelier/etape-2-marts` | `dim_tourney_seeds` : joindre seeds, équipes et régions | `marts` |
+| 3 | `atelier/etape-3-reporting` | `rpt_tourney_runs` : le parcours de chaque équipe au tournoi, ou un sujet libre | `reporting` |
 | 4 | `atelier/etape-4-solution` | Le projet complet | |
 
 **La solution d'une mission, c'est l'étape suivante.** `task step N=2` range ton travail en cours dans `git stash`, passe sur la branche de l'étape 2 (qui contient la solution de la mission 1) et reconstruit la base. Tu ne restes donc jamais bloqué.
@@ -56,13 +56,13 @@ Le projet dbt est découpé en étapes, une par couche. Chaque étape est une **
 Pour voir ce qu'une étape a ajouté :
 
 ```bash
-git diff origin/atelier/etape-1-bronze origin/atelier/etape-2-silver --stat
-git show origin/atelier/etape-2-silver:transformation/models/staging/stg_tourney_seeds.sql   # la solution de la mission 1
+git diff origin/atelier/etape-1-staging origin/atelier/etape-2-marts --stat
+git show origin/atelier/etape-2-marts:transformation/models/staging/stg_tourney_seeds.sql   # la solution de la mission 1
 ```
 
 Pour retrouver ton propre travail rangé : `git stash list`, puis `git stash show -p stash@{0}`.
 
-### Mission 1 : Bronze, `stg_tourney_seeds` (15 min)
+### Mission 1 : staging, `stg_tourney_seeds` (15 min)
 
 ```bash
 task step N=1
@@ -75,7 +75,7 @@ task step N=1
 
 Compare avec `stg_teams.sql`, déjà écrit : c'est la même structure.
 
-### Mission 2 : Silver, `dim_tourney_seeds` (15 min)
+### Mission 2 : marts, `dim_tourney_seeds` (15 min)
 
 ```bash
 task step N=2
@@ -87,7 +87,7 @@ task step N=2
 
 Bonus : ajoute une colonne `is_blowout` (écart d'au moins 20 points) à `fct_regular_season_games.sql`, documente-la et ajoute-lui un test `not_null`.
 
-### Mission 3 : Gold, ta table de reporting (25 min)
+### Mission 3 : reporting, ta table (25 min)
 
 ```bash
 task step N=3
@@ -115,7 +115,7 @@ Fini en avance : fais l'autre option.
 
 ## Ex. 4 : le dashboard (30 min)
 
-But : brancher Superset sur ta table Gold et en tirer un dashboard.
+But : brancher Superset sur ta table de reporting et en tirer un dashboard.
 
 1. Superset a été lancé avant la pause (`task superset:up`). Sinon, lance-le maintenant (1 à 2 minutes).
 2. `task superset:sync` : recopie ta base (avec ta table de la mission 3) dans Superset.

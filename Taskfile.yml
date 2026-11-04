@@ -60,10 +60,10 @@ tasks:
 
   # ─────────────────────────────────────────────
   # Atelier
-  #   task step N=1   -> branche atelier/etape-1-bronze   (mission 1 : stg_seasons)
-  #   task step N=2   -> branche atelier/etape-2-silver   (mission 2 : dim_tourney_seeds)
-  #   task step N=3   -> branche atelier/etape-3-gold     (mission 3 : rpt_tourney_runs)
-  #   task step N=4   -> branche atelier/etape-4-solution (projet complet)
+  #   task step N=1   -> branche atelier/etape-1-staging    (mission 1 : stg_tourney_seeds)
+  #   task step N=2   -> branche atelier/etape-2-marts      (mission 2 : dim_tourney_seeds)
+  #   task step N=3   -> branche atelier/etape-3-reporting  (mission 3 : rpt_tourney_runs)
+  #   task step N=4   -> branche atelier/etape-4-solution   (projet complet)
   # ─────────────────────────────────────────────
 
   step:
@@ -77,9 +77,9 @@ tasks:
     cmds:
       - |
         case "{{.N}}" in
-          1) B=atelier/etape-1-bronze ;;
-          2) B=atelier/etape-2-silver ;;
-          3) B=atelier/etape-3-gold ;;
+          1) B=atelier/etape-1-staging ;;
+          2) B=atelier/etape-2-marts ;;
+          3) B=atelier/etape-3-reporting ;;
           4) B=atelier/etape-4-solution ;;
         esac
         if [ -n "$(git status --porcelain)" ]; then

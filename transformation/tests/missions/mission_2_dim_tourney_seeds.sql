@@ -1,4 +1,4 @@
--- Mission 2 (Silver) : vérifie dim_tourney_seeds. 0 ligne renvoyée = test vert.
+-- Mission 2 (marts) : vérifie dim_tourney_seeds. 0 ligne renvoyée = test vert.
 -- Une ligne par équipe qualifiée et par saison (1 408), seeds de 1 à 16,
 -- et en 2019 Connecticut est tête de série n°2 de la région d'Albany.
 select 'nombre de lignes' as probleme, count(*)::varchar as obtenu

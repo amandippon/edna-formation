@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) and other AI assista
 
 ## Project
 
-Local, hands-on data pipeline used for workshops (originally a course for design students, now also a 3-hour meetup workshop for data/dev profiles). Participants work individually: SQL on Parquet, then three dbt missions (one per layer, on dedicated git branches, against pre-written tests), lineage, then a Superset dashboard on their own Gold table. Everything is driven by `task` commands.
+Local, hands-on data pipeline used for workshops (originally a course for design students, now also a 3-hour meetup workshop for data/dev profiles). Participants work individually: SQL on Parquet, then three dbt missions (one per layer, on dedicated git branches, against pre-written tests), lineage, then a Superset dashboard on their own reporting table. Everything is driven by `task` commands.
 
 **Theme**: NCAA Women's Basketball (Kaggle 2019): teams, seasons, regular season games 1998-2019, NCAA tournament 1998-2018. Box scores and game cities only from season 2010.
 
@@ -52,9 +52,9 @@ There is no `dbt deps` step: the project has no dbt packages.
 ## Workshop (`atelier/` and `atelier/etape-*` branches)
 
 - Step branches, each created from the final state by removing what comes later and replacing the mission model by a skeleton:
-  - `atelier/etape-1-bronze`: staging only; `stg_tourney_seeds.sql` is a skeleton.
-  - `atelier/etape-2-silver`: staging + `dim_teams`, `dim_seasons`, `dim_cities`, `fct_regular_season_games`; `dim_tourney_seeds.sql` is a skeleton (`fct_tourney_games` and reporting are absent because they depend on it).
-  - `atelier/etape-3-gold`: everything; `rpt_tourney_runs.sql` is a skeleton.
+  - `atelier/etape-1-staging`: staging only; `stg_tourney_seeds.sql` is a skeleton.
+  - `atelier/etape-2-marts`: staging + `dim_teams`, `dim_seasons`, `dim_cities`, `fct_regular_season_games`; `dim_tourney_seeds.sql` is a skeleton (`fct_tourney_games` and reporting are absent because they depend on it).
+  - `atelier/etape-3-reporting`: everything; `rpt_tourney_runs.sql` is a skeleton.
   - `atelier/etape-4-solution`: the complete project.
   The solution of mission N is the file in step N+1. YAML entries of absent models are removed on each branch. When the final project changes, rebuild the step branches.
 - Skeletons compile and return NULL placeholders, so generic tests (YAML) and the singular tests in `transformation/tests/missions/` fail until the mission is done. Every mission test passes on the final project.
