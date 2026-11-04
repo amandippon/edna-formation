@@ -243,6 +243,15 @@ tasks:
           git stash push --include-untracked -m "atelier : mon travail avant l'étape {{.N}}" > /dev/null
           echo "💾 Ton travail en cours est rangé (git stash list pour le retrouver)."
         fi
+        # Les fichiers des sujets libres (ignorés par git) dépendent de la couche Gold :
+        # avant les étapes 1 et 2, on les met de côté pour ne pas casser le build.
+        if [ "{{.N}}" -le 2 ] && [ -d {{.DBT_DIR}}/models/reporting/atelier -o -d {{.DBT_DIR}}/tests/atelier ]; then
+          D=.atelier-sauvegarde/$(date +%H%M%S)
+          mkdir -p "$D"
+          mv {{.DBT_DIR}}/models/reporting/atelier "$D/models" 2>/dev/null || true
+          mv {{.DBT_DIR}}/tests/atelier "$D/tests" 2>/dev/null || true
+          echo "💾 Ton sujet libre est mis de côté dans $D"
+        fi
         git fetch --quiet origin 2>/dev/null || echo "ℹ️  Pas de réseau : on utilise les branches déjà téléchargées."
         git switch "$B" 2>/dev/null || git switch --track "origin/$B"
         echo "🧭 Étape {{.N}} : branche $B"

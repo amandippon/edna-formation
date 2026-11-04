@@ -56,8 +56,8 @@ Le projet dbt est découpé en étapes, une par couche. Chaque étape est une **
 Pour voir ce qu'une étape a ajouté :
 
 ```bash
-git diff atelier/etape-1-bronze atelier/etape-2-silver --stat
-git show atelier/etape-2-silver:transformation/models/staging/stg_seasons.sql   # la solution de la mission 1
+git diff origin/atelier/etape-1-bronze origin/atelier/etape-2-silver --stat
+git show origin/atelier/etape-2-silver:transformation/models/staging/stg_seasons.sql   # la solution de la mission 1
 ```
 
 Pour retrouver ton propre travail rangé : `git stash list`, puis `git stash show -p stash@{0}`.
