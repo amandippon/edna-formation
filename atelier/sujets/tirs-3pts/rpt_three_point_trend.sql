@@ -1,4 +1,4 @@
--- Atelier ex. 3 : le tir à 3 points prend-il le pouvoir ?
+-- Mission 3, sujet libre : le tir à 3 points prend-il le pouvoir ?
 -- Objectif : une ligne par saison avec les tirs à 3 points tentés et réussis,
 -- leur part dans tous les tirs tentés et l'adresse à 3 points.
 -- Source : marts.fct_regular_season_games (une ligne par match)

@@ -1,4 +1,4 @@
--- Atelier ex. 3 : les surprises du tournoi NCAA
+-- Mission 3, sujet libre : les surprises du tournoi NCAA
 -- Objectif : une ligne par affiche (ex : '8 vs 9') avec le nombre de matchs
 -- et le nombre gagnés par l'outsider (l'équipe au plus grand numéro de seed).
 -- Source : marts.fct_tourney_games (une ligne par match de tournoi)

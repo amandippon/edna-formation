@@ -89,13 +89,13 @@ uv télécharge Python 3.12 si besoin. Le CLI `duckdb` et les extensions VS Code
 
 La suite se passe dans le **[guide de l'atelier](atelier/README.md)** :
 
-| Étape | Ce que tu fais | Couche |
+| Étape | Ce que tu fais | Ce que tu pratiques |
 |---|---|---|
-| Ex. 1 | Interroger les fichiers Parquet en SQL avec DuckDB | Fichiers sources |
-| Mission 1 | Écrire `stg_tourney_seeds` (branche `atelier/etape-1-staging`) | `staging` |
-| Mission 2 | Écrire `dim_tourney_seeds` (branche `atelier/etape-2-marts`) | `marts` |
-| Mission 3 | Écrire `rpt_tourney_runs` ou un sujet libre (branche `atelier/etape-3-reporting`) | `reporting` |
-| Ex. 4 | Construire un dashboard Superset sur ta table | Visualisation |
+| Échauffement (facultatif) | Interroger les fichiers Parquet en SQL avec DuckDB | SQL sur fichiers |
+| Mission 1 | Terminer `stg_tourney_seeds` (branche `atelier/etape-1-staging`) | Tests dans le YAML |
+| Mission 2 | Terminer `dim_tourney_seeds` (branche `atelier/etape-2-marts`) | `ref()` et le DAG |
+| Mission 3 | Terminer `rpt_tourney_runs` (branche `atelier/etape-3-reporting`) | Documentation et lineage |
+| Dashboard | Construire un dashboard Superset sur ta table | Visualisation |
 
 Chaque mission a ses tests déjà écrits, et sa solution est dans la branche de l'étape suivante : `task step N=2` y passe en rangeant ton travail.
 
@@ -161,6 +161,7 @@ ORDER BY titres DESC;
 | `task ingest` | CSV de `resources/` -> Parquet dans `processed-resources/` |
 | `task build` | `dbt build` : construit les modèles et lance les tests |
 | `task docs` | Génère la documentation dbt-colibri et la sert sur le port 8088 |
+| `task show M=…` | Affiche les 10 premières lignes d'un modèle ou d'un test dbt, sans rien écrire dans la base |
 | `task sql` | Ouvre une copie de la base dans le terminal DuckDB (ne bloque pas dbt) |
 | `task step N=…` | Atelier : passe à l'étape 1 à 4 (met le travail en cours dans `git stash`, change de branche, reconstruit la base) |
 | `task topic NAME=…` | Atelier, mission 3 : copie le squelette d'un sujet libre (`domicile`, `tirs-3pts`, `upsets`) |
@@ -203,7 +204,7 @@ Le code des modèles est dans `transformation/models/<couche>/`, leur documentat
 | « No space left on device » (Windows) | Le disque virtuel de Docker (WSL2) est plein : Docker Desktop > **Settings > Resources > Disk image > Clean / Purge data**, ou `docker system prune -a` (supprime aussi les images des autres projets). |
 | `Could not set lock on file` dans DuckDB | Un autre programme a ouvert la base (DBeaver, terminal `duckdb`), même en lecture seule : ferme-le ou déconnecte-le, puis relance. Pour explorer sans bloquer dbt : `task sql`. |
 | Une ancienne table reste dans la base (ou dans Superset) après avoir renommé ou supprimé un modèle | dbt recrée les tables de ses modèles à chaque build, mais ne supprime jamais une table ou un schéma dont le modèle a disparu. Pour repartir d'une base propre : `rm edna-sports-data.duckdb` puis `task build` (et `task superset:sync` si Superset tourne). `task step` le fait déjà à chaque changement d'étape. |
-| Une mission de l'atelier ne passe pas | `task step N=<étape suivante>` pour repartir de la solution ; tout est cassé : `git restore transformation/` puis `task build`. |
+| Une mission de l'atelier ne passe pas | `task show M=mission_<n>_<modèle>` liste les problèmes ; `task step N=<étape suivante>` pour repartir de la solution ; tout est cassé : `git restore transformation/` puis `task build`. |
 | Superset dans un état incohérent | `docker compose -f visualization/docker-compose.yml down -v` (efface dashboards et charts), puis `task superset:up`. |
 
 ---

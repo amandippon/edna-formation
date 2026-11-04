@@ -2,7 +2,7 @@ version: 2
 
 models:
   - name: rpt_home_advantage_by_season
-    description: "Atelier ex. 3 : avantage du terrain par saison (saison régulière, matchs non neutres). Une ligne par saison."
+    description: "Mission 3, sujet libre : avantage du terrain par saison (saison régulière, matchs non neutres). Une ligne par saison."
     columns:
       - name: season
         description: "Année de la saison (clé de la table)."

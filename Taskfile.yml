@@ -46,6 +46,39 @@ tasks:
       - 'echo "📖 Documentation : http://localhost:8088 (dans VS Code : onglet PORTS)"'
       - python3 -m http.server 8088 --directory {{.PROJECT_DIR}}/colibri-docs
 
+  show:
+    desc: "🔎 Aperçu d'un modèle ou d'un test dbt, sans rien écrire dans la base (M=stg_tourney_seeds)"
+    dir: "{{.DBT_DIR}}"
+    silent: true
+    vars:
+      M: '{{.M | default ""}}'
+    preconditions:
+      - sh: '[ -n "{{.M}}" ]'
+        msg: "❌ Usage : task show M=stg_tourney_seeds (un modèle) ou M=mission_1_stg_tourney_seeds (un test)"
+    cmds:
+      # Sortie JSON reformatée en tableau : l'affichage natif de dbt show coupe les textes à 20 caractères.
+      - |
+        uv run dbt show --select {{.M}} --limit 10 --quiet --output json | python3 -c '
+        import json, sys
+        raw = sys.stdin.read()
+        if not raw.strip():
+            print("❌ Rien à afficher pour {{.M}} : vérifie le nom du modèle ou du test (sans .sql)."); sys.exit(1)
+        try:
+            rows = json.loads(raw)["show"]
+        except Exception:
+            print(raw); sys.exit(1)
+        if not rows:
+            print("0 ligne."); sys.exit(0)
+        cols = list(rows[0])
+        val = lambda v: "null" if v is None else str(v)
+        w = {c: max(len(c), *(len(val(r[c])) for r in rows)) for c in cols}
+        print(" | ".join(c.ljust(w[c]) for c in cols))
+        print("-+-".join("-" * w[c] for c in cols))
+        for r in rows:
+            print(" | ".join(val(r[c]).ljust(w[c]) for c in cols))
+        print(f"({len(rows)} lignes affichées, 10 au plus)")
+        '
+
   sql:
     desc: "🦆 Ouvre une copie de la base dans le terminal DuckDB (ne bloque pas dbt)"
     interactive: true

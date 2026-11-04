@@ -16,6 +16,7 @@ User-facing docs are in French: `README.md` (setup), `docs/prerequis.md` (to sen
 task ingest            # PyArrow: resources/*.csv -> processed-resources/<table>/<table>.parquet
 task build             # dbt build (models + tests) -> edna-sports-data.duckdb; prints a hint and exits 1 on failure
 task docs              # dbt docs generate + colibri generate, then serves colibri-docs/ on port 8088
+task show M=stg_teams  # dbt show of a model or test, reformatted (native output truncates text at 20 chars)
 task sql               # copy the DB to /tmp and open it in the DuckDB CLI (never locks the real file)
 task step N=2          # workshop: stash local work, switch to branch atelier/etape-N-..., rebuild the DB
 task topic NAME=domicile  # workshop mission 3 option B: copy a free-topic skeleton (domicile|tirs-3pts|upsets)
@@ -57,7 +58,8 @@ There is no `dbt deps` step: the project has no dbt packages.
   - `atelier/etape-3-reporting`: everything; `rpt_tourney_runs.sql` is a skeleton.
   - `atelier/etape-4-solution`: the complete project.
   The solution of mission N is the file in step N+1. YAML entries of absent models are removed on each branch. When the final project changes, rebuild the step branches.
-- Skeletons compile and return NULL placeholders, so generic tests (YAML) and the singular tests in `transformation/tests/missions/` fail until the mission is done. Every mission test passes on the final project.
+- Each mission pairs SQL with one dbt mechanism: mission 1 declares the YAML tests of `seed_region`/`seed_number` (removed from the YAML on step 1), mission 2 writes the `ref()` CTEs for `stg_teams`/`stg_seasons`, mission 3 writes three column descriptions (blanked in the YAML on step 3).
+- Skeletons compile and return NULL placeholders, so generic tests (YAML) and the singular tests in `transformation/tests/missions/` fail until the mission is done. The mission tests also inspect the dbt `graph` (declared tests, `depends_on`, column descriptions) and return one row per problem, readable with `task show M=mission_<n>_<model>`. Every mission test passes on the final project.
 - `atelier/sujets/<sujet>/`: free-topic skeleton + YAML + singular test for mission 3 option B, copied by `task topic` to `transformation/models/reporting/atelier/` and `transformation/tests/atelier/` (both git-ignored). Solutions in `atelier/solutions/`; `ex1.sql` is the SQL warm-up.
 - DuckDB locks the file for any open connection, even read-only: an open DuckDB CLI or DBeaver session makes `dbt` fail with `Could not set lock on file`. `task sql` works on a copy for that reason.
 - dbt never drops relations whose model was renamed or deleted (tables are only replaced on rebuild). Orphans stay in the DuckDB file and in Superset after sync; the fix is `rm edna-sports-data.duckdb && task build`. `task step` always starts from an empty DB.

@@ -2,7 +2,7 @@ version: 2
 
 models:
   - name: rpt_upsets_by_seed
-    description: "Atelier ex. 3 : upsets du tournoi NCAA par affiche (seed du favori contre seed de l'outsider). Une ligne par affiche ; les matchs entre deux équipes de même seed sont exclus."
+    description: "Mission 3, sujet libre : upsets du tournoi NCAA par affiche (seed du favori contre seed de l'outsider). Une ligne par affiche ; les matchs entre deux équipes de même seed sont exclus."
     columns:
       - name: matchup
         description: "Affiche lisible, ex : '8 vs 9' (clé de la table)."

@@ -1,6 +1,6 @@
 # Les données de l'atelier
 
-Le dictionnaire des tables `reporting`, les pièges à connaître et des idées de dashboards pour l'[ex. 4](README.md#ex-4--le-dashboard-35-min) ou pour aller plus loin.
+Le dictionnaire des tables `reporting`, les pièges à connaître et des idées de dashboards pour le [dashboard](README.md#le-dashboard-40-min) ou pour aller plus loin.
 
 ## Les tables `reporting`
 
@@ -11,7 +11,7 @@ Le dictionnaire des tables `reporting`, les pièges à connaître et des idées 
 | `rpt_team_season_stats` | une équipe sur une saison régulière | 7 364 | Classements, bilans victoires/défaites, qualification au tournoi, carte par état |
 | `rpt_tourney_runs` | une équipe sur un tournoi NCAA | 1 344 | Parcours au tournoi, titres, résultats par seed |
 | `rpt_uconn_tennessee_*` | variable (5 tables d'exemple) | 2 à 1 574 | Rivalité Connecticut vs Tennessee, modèle à copier pour votre propre question |
-| Vos tables de l'ex. 3 | une saison ou une affiche | 10 à 45 | `rpt_home_advantage_by_season`, `rpt_three_point_trend`, `rpt_upsets_by_seed` |
+| Vos sujets libres (mission 3) | une saison ou une affiche | 10 à 45 | `rpt_home_advantage_by_season`, `rpt_three_point_trend`, `rpt_upsets_by_seed` |
 
 ### Colonnes clés
 
@@ -38,7 +38,7 @@ Les descriptions complètes sont dans `transformation/models/reporting/_reportin
 - **Cartes** : le chart **Country Map** (pays `usa`) attend des codes ISO comme `US-TX` : utilisez `team_state_iso` ou `state_iso`.
 - **Temps** : `game_date` est la colonne temporelle pour les séries chronologiques ; `season` pour des agrégats par saison.
 
-## Six idées de dashboards (ex. 4 ou bonus)
+## Six idées de dashboards
 
 Les chiffres d'accroche ont été calculés sur la base du projet ; les requêtes sont en annexe.
 

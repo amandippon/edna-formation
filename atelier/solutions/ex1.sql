@@ -1,4 +1,4 @@
--- Solutions de l'ex. 1 (à lancer depuis la racine du projet, dans : duckdb)
+-- Solutions de l'échauffement (à lancer depuis la racine du projet, dans : duckdb)
 
 -- 1. Combien de matchs de saison régulière par saison ?
 select Season, count(*) as matchs

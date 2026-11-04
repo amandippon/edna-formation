@@ -1,6 +1,12 @@
 -- Mission 2 (marts) : vérifie dim_tourney_seeds. 0 ligne renvoyée = test vert.
 -- Une ligne par équipe qualifiée et par saison (1 408), seeds de 1 à 16,
 -- et en 2019 Connecticut est tête de série n°2 de la région d'Albany.
+-- Vérifie aussi que le modèle lit stg_teams et stg_seasons avec ref().
+-- Détail des problèmes : task show M=mission_2_dim_tourney_seeds
+{%- set parents = [] %}
+{%- if execute %}
+  {%- set parents = graph.nodes['model.transformation.dim_tourney_seeds'].depends_on.nodes %}
+{%- endif %}
 select 'nombre de lignes' as probleme, count(*)::varchar as obtenu
 from {{ ref('dim_tourney_seeds') }}
 having count(*) <> 1408
@@ -21,3 +27,9 @@ where d.season = 2019 and t.team_name = 'Connecticut'
   and (d.team_name is distinct from 'Connecticut'
        or d.seed_number is distinct from 2
        or d.region_name is distinct from 'Albany')
+{%- for parent in ['stg_teams', 'stg_seasons'] if 'model.transformation.' ~ parent not in parents %}
+
+union all
+
+select 'ref absent : {{ parent }}', null
+{%- endfor %}

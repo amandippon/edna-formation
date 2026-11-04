@@ -1,4 +1,4 @@
--- Atelier ex. 3 : avantage du terrain par saison
+-- Mission 3, sujet libre : avantage du terrain par saison
 -- Objectif : une ligne par saison avec le nombre de matchs joués chez une équipe,
 -- le nombre gagnés par l'équipe qui reçoit, et l'écart de score moyen pour elle.
 -- Source : marts.fct_regular_season_games (une ligne par match, format gagnant / perdant)
