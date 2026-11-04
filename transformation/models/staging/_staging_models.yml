@@ -22,12 +22,16 @@ models:
         data_tests: [not_null]
       - name: region_w
         description: "Nom de la région W du tournoi (1ère alphabétiquement). Ex: East, Bridgeport, Albany."
+        data_tests: [not_null]
       - name: region_x
         description: "Nom de la région X du tournoi (joue contre la région W en demi-finale nationale)."
+        data_tests: [not_null]
       - name: region_y
         description: "Nom de la région Y du tournoi (1ère alphabétiquement parmi les deux restantes)."
+        data_tests: [not_null]
       - name: region_z
         description: "Nom de la région Z du tournoi (dernière alphabétiquement)."
+        data_tests: [not_null]
 
   - name: stg_cities
     description: "Référentiel des 435 villes hôtes de matchs NCAA (depuis 2010)."

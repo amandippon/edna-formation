@@ -33,6 +33,7 @@ models:
         data_tests: [not_null]
       - name: region_name
         description: "Nom de la région du bracket pour cette saison (issu de dim_seasons.region_w à region_z)."
+        data_tests: [not_null]
   - name: dim_teams
     description: "Dimension équipes NCAA Women avec état d'origine déduit des matchs à domicile."
     columns:

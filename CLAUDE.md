@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) and other AI assista
 
 ## Project
 
-Local, hands-on data pipeline used for workshops (originally a course for design students, now also a 3-hour meetup workshop for data/dev profiles). Participants work individually through four exercises (SQL on Parquet, edit a Silver dbt model, write a Gold dbt model against pre-written tests, Superset dashboard), driven by `task` commands.
+Local, hands-on data pipeline used for workshops (originally a course for design students, now also a 3-hour meetup workshop for data/dev profiles). Participants work individually: SQL on Parquet, then three dbt missions (one per layer, on dedicated git branches, against pre-written tests), lineage, then a Superset dashboard on their own Gold table. Everything is driven by `task` commands.
 
 **Theme**: NCAA Women's Basketball (Kaggle 2019): teams, seasons, regular season games 1998-2019, NCAA tournament 1998-2018. Box scores and game cities only from season 2010.
 
@@ -26,10 +26,11 @@ task superset:logs     # follow Superset logs
 task superset:reset    # wipe Superset volumes and restart
 task doctor            # check Docker, DuckDB file, Superset container + /health
 task sql               # copy the DB to /tmp and open it in the DuckDB CLI (never locks the real file)
-task atelier:start EX=2            # set up an exercise (EX=3 needs SUJET=domicile|tirs-3pts|upsets)
-task atelier:check                 # dbt build on fct_regular_season_games + models/reporting/atelier
-task atelier:solution EX=3 SUJET=domicile  # install the solution, then check
-task atelier:reset                 # git checkout transformation/models, remove atelier working files
+task etape N=2         # stash local work, switch to branch atelier/etape-N-..., rebuild the DB
+task atelier:check     # dbt build, never fails the task (red tests are expected at the start of a mission)
+task atelier:start SUJET=domicile     # mission 3 option B: copy a free-topic skeleton (domicile|tirs-3pts|upsets)
+task atelier:solution SUJET=domicile  # install that topic's solution, then check
+task atelier:reset     # git checkout transformation/models and tests, remove free-topic working files
 task clean             # remove transformation/target, logs, dbt_packages, __pycache__
 ```
 
@@ -55,11 +56,16 @@ There is no `dbt deps` step: the project has no dbt packages.
   - `superset:up` registers the connection automatically: `superset set-database-uri -d "NCAA Basketball (DuckDB)" -u "duckdb:////app/superset_home/edna-sports-data.duckdb?access_mode=read_only"`. Read-only so several processes can open the file.
   - The Superset schema dropdown shows schemas as `"edna-sports-data".reporting` (catalog prefix from the file name); datasets created on `reporting` also work.
 
-## Workshop exercises (`atelier/`)
+## Workshop (`atelier/` and `atelier/etape-*` branches)
 
-- `atelier/ex2/`: singular test copied to `transformation/tests/atelier/`; participants add `is_blowout` and `game_month` to `fct_regular_season_games`.
-- `atelier/ex3/<sujet>/`: skeleton model with numbered `TODO`s (compiles, returns NULLs so tests fail), YAML with tests, and a singular result test. `atelier:start` copies them to `transformation/models/reporting/atelier/` and `transformation/tests/atelier/` (both git-ignored).
-- `atelier/solutions/`: `ex1.sql`, full replacement files for ex2, solution models for ex3. Keep skeletons, solutions and tests consistent: every solution must pass `task atelier:check`.
+- Step branches, each created from the final state by removing what comes later and replacing the mission model by a skeleton:
+  - `atelier/etape-1-bronze`: staging only; `stg_seasons.sql` is a skeleton.
+  - `atelier/etape-2-silver`: staging + `dim_teams`, `dim_seasons`, `dim_cities`, `fct_regular_season_games`; `dim_tourney_seeds.sql` is a skeleton (`fct_tourney_games` and reporting are absent because they depend on it).
+  - `atelier/etape-3-gold`: everything; `rpt_tourney_runs.sql` is a skeleton.
+  - `atelier/etape-4-solution`: the complete project.
+  The solution of mission N is the file in step N+1. YAML entries of absent models are removed on each branch. When the final project changes, rebuild the step branches.
+- Skeletons compile and return NULL placeholders, so generic tests (YAML) and the singular tests in `transformation/tests/missions/` fail until the mission is done. Every mission test passes on the final project.
+- `atelier/sujets/<sujet>/`: free-topic skeleton + YAML + singular test for mission 3 option B, copied by `atelier:start` to `transformation/models/reporting/atelier/` and `transformation/tests/atelier/` (both git-ignored). Solutions in `atelier/solutions/`; `ex1.sql` is the SQL warm-up.
 - DuckDB locks the file for any open connection, even read-only: an open DuckDB CLI or DBeaver session makes `dbt` fail with `Could not set lock on file`. `task sql` works on a copy for that reason.
 
 ## Adding a reporting model

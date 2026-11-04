@@ -111,12 +111,16 @@ models:
         data_tests: [not_null]
       - name: season_label
         description: "Label lisible de la saison."
+        data_tests: [not_null]
       - name: seed_number
         description: "Numéro du seed de l'équipe au tournoi (1–16)."
+        data_tests: [not_null]
       - name: tourney_wins
         description: "Nombre de victoires au tournoi (0 à 6). 6 = champion."
+        data_tests: [not_null]
       - name: tourney_losses
         description: "Nombre de défaites au tournoi (0 ou 1, sauf pour le champion qui a 0)."
+        data_tests: [not_null]
       - name: avg_pts_scored_tourney
         description: "Moyenne de points marqués par match au tournoi."
       - name: avg_pts_allowed_tourney

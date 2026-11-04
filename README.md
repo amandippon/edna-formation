@@ -86,14 +86,17 @@ uv télécharge Python 3.12 si besoin. Le CLI `duckdb` et les extensions VS Code
 3. Dans le terminal du devcontainer : `task doctor`. Les lignes Docker et base doivent être ✅ (Superset sera démarré plus tard).
 4. Mets à jour le projet si on te le demande : `git pull`.
 
-La suite se passe dans le **[guide de l'atelier](atelier/README.md)** : quatre exercices, de l'interrogation des fichiers Parquet jusqu'au dashboard.
+La suite se passe dans le **[guide de l'atelier](atelier/README.md)** :
 
-| Exercice | Ce que tu fais | Couche |
+| Étape | Ce que tu fais | Couche |
 |---|---|---|
 | Ex. 1 | Interroger les fichiers Parquet en SQL avec DuckDB | Fichiers sources |
-| Ex. 2 | Ajouter des colonnes calculées à une table de faits dbt, validées par un test | Silver (`marts`) |
-| Ex. 3 | Écrire ta propre table de reporting dbt à partir d'un squelette, avec tests et documentation | Gold (`reporting`) |
+| Mission 1 | Écrire `stg_seasons` (branche `atelier/etape-1-bronze`) | Bronze (`staging`) |
+| Mission 2 | Écrire `dim_tourney_seeds` (branche `atelier/etape-2-silver`) | Silver (`marts`) |
+| Mission 3 | Écrire `rpt_tourney_runs` ou un sujet libre (branche `atelier/etape-3-gold`) | Gold (`reporting`) |
 | Ex. 4 | Construire un dashboard Superset sur ta table | Visualisation |
+
+Chaque mission a ses tests déjà écrits, et sa solution est dans la branche de l'étape suivante : `task etape N=2` y passe en rangeant ton travail.
 
 ---
 
@@ -169,10 +172,11 @@ ORDER BY titres DESC;
 | `task superset:reset` | Supprime toutes les données Superset (dashboards compris) puis redémarre |
 | `task doctor` | Vérifie Docker, la base et Superset |
 | `task sql` | Ouvre une copie de la base dans le terminal DuckDB (ne bloque pas dbt) |
-| `task atelier:start EX=…` | Prépare un exercice de l'atelier (`EX=3 SUJET=domicile`, `tirs-3pts` ou `upsets` pour l'ex. 3) |
-| `task atelier:check` | Construit les modèles de l'atelier et lance leurs tests |
-| `task atelier:solution EX=…` | Installe la solution d'un exercice |
-| `task atelier:reset` | Remet les modèles dans leur état initial (efface le travail d'atelier) |
+| `task etape N=…` | Passe à une étape de l'atelier (1 à 4) : range ton travail dans `git stash`, change de branche, reconstruit la base |
+| `task atelier:check` | Construit tous les modèles et lance les tests (rouge au début d'une mission, c'est normal) |
+| `task atelier:start SUJET=…` | Mission 3, sujet libre : copie le squelette (`domicile`, `tirs-3pts` ou `upsets`) |
+| `task atelier:solution SUJET=…` | Installe la solution d'un sujet libre |
+| `task atelier:reset` | Annule tes modifications de modèles sur la branche courante |
 | `task clean` | Supprime les fichiers générés par dbt et les caches Python |
 
 ---
@@ -204,7 +208,7 @@ Le code des modèles est dans `transformation/models/<couche>/`, leur documentat
 | Erreur `EOF` ou `failed to do request` au build | Erreur réseau temporaire : relance **Dev Containers: Reopen in Container** ou `task superset:up`. |
 | « No space left on device » (Windows) | Le disque virtuel de Docker (WSL2) est plein : Docker Desktop > **Settings > Resources > Disk image > Clean / Purge data**, ou `docker system prune -a` (supprime aussi les images des autres projets). |
 | `Could not set lock on file` dans DuckDB | Un autre programme a ouvert la base (DBeaver, terminal `duckdb`), même en lecture seule : ferme-le ou déconnecte-le, puis relance. Pour explorer sans bloquer dbt : `task sql`. |
-| Un exercice de l'atelier ne passe pas | `task atelier:solution EX=…` pour repartir de la solution ; tout est cassé : `task atelier:reset` puis `task dbt:build`. |
+| Une mission de l'atelier ne passe pas | `task etape N=<étape suivante>` pour repartir de la solution ; tout est cassé : `task atelier:reset` puis `task atelier:check`. |
 | Superset dans un état incohérent | `task superset:reset` (efface dashboards et charts). |
 
 ---
@@ -244,7 +248,7 @@ edna-formation/
 │           └── examples/    # rpt_uconn_tennessee_* (modèles d'exemple)
 ├── visualization/           # docker-compose et image Superset
 ├── colibri-docs/            # Lineage généré par Colibri
-├── atelier/                 # Guide, squelettes et solutions des exercices
+├── atelier/                 # Guide de l'atelier, sujets libres et solutions
 ├── docs/prerequis.md        # Prérequis à faire avant l'atelier
 ├── edna-sports-data.duckdb  # Base générée (ignorée par git)
 ├── Taskfile.yml             # Toutes les commandes
