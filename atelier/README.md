@@ -65,12 +65,35 @@ git stash list                                                                 #
 task step N=1
 ```
 
-La base ne contient que la couche `staging`. Le fichier `WNCAATourneySeeds` donne le seed sous forme de texte (`W01`) : il faut le découper en lettre de région (`W`) et numéro entier (`1`).
+La base ne contient que la couche `staging`. Un modèle dbt est un simple `select` : dbt-duckdb l'exécute dans DuckDB et enregistre le résultat comme une table. Les fonctions disponibles sont donc celles de DuckDB ([fonctions texte](https://duckdb.org/docs/current/sql/functions/text)).
 
-1. Dans `transformation/models/staging/stg_tourney_seeds.sql`, complète les TODO 1 et 2. `stg_teams.sql`, déjà écrit, a la même structure.
-2. `task show M=stg_tourney_seeds` pour vérifier le résultat sans rien écrire dans la base.
-3. Dans `transformation/models/staging/_staging_models.yml`, TODO 3 : déclare les tests de `seed_region` (`not_null` et `accepted_values` W, X, Y, Z) et de `seed_number` (`not_null`). La syntaxe est donnée en commentaire.
-4. `task build` jusqu'au vert. Le test `mission_1_stg_tourney_seeds` vérifie les valeurs et la présence des trois tests.
+**Entrée**, le fichier Parquet `WNCAATourneySeeds` :
+
+| Season | TeamID | Seed |
+|---|---|---|
+| 2019 | 3163 | `W02` |
+| 2019 | 3346 | `Z11` |
+
+**Sortie attendue**, la table `staging.stg_tourney_seeds` (1 408 lignes) :
+
+| season | team_id | seed_raw | seed_region | seed_number |
+|---|---|---|---|---|
+| 2019 | 3163 | `W02` | `W` | 2 |
+| 2019 | 3346 | `Z11` | `Z` | 11 |
+
+`seed_region` est la lettre de la région du bracket ; `seed_number` est un **entier**.
+
+1. Dans `transformation/models/staging/stg_tourney_seeds.sql`, remplace les deux `null::...` (TODO 1 et 2) par une expression calculée à partir de la colonne `Seed`, en gardant les alias :
+
+   | Fonction DuckDB | Exemple | Résultat |
+   |---|---|---|
+   | `left(texte, n)` : les n premiers caractères | `left('W02', 1)` | `'W'` |
+   | `regexp_extract(texte, '[0-9]+')` : les chiffres, en texte | `regexp_extract('W02', '[0-9]+')` | `'02'` |
+   | `cast(texte as integer)` : conversion en entier | `cast('02' as integer)` | `2` |
+
+2. `task show M=stg_tourney_seeds` : tes deux colonnes doivent ressembler à la sortie attendue.
+3. Dans `transformation/models/staging/_staging_models.yml`, TODO 3 : déclare les tests de `seed_region` (`not_null`, et `accepted_values` limité à W, X, Y, Z) et de `seed_number` (`not_null`). La syntaxe est donnée en commentaire ; le bloc `data_tests` se place sous `description`, au même niveau.
+4. `task build` jusqu'au vert. Tant que les tests ne sont pas déclarés, le test de mission reste rouge : `task show M=mission_1_stg_tourney_seeds` dit ce qui manque.
 
 ### Mission 2 : marts, `dim_tourney_seeds` (20 min)
 
@@ -78,14 +101,29 @@ La base ne contient que la couche `staging`. Le fichier `WNCAATourneySeeds` donn
 task step N=2
 ```
 
-La base contient `staging` et une partie de `marts` : `dim_teams`, `dim_seasons`, `dim_cities`, `fct_regular_season_games`.
+La base contient `staging` et une partie de `marts`. Un modèle dbt ne lit jamais une table par son nom : il écrit `{{ ref('nom_du_modele') }}`. dbt remplace `ref()` par le nom complet de la table et en déduit l'ordre de construction, le DAG.
 
-1. Ouvre `transformation/models/marts/dim_tourney_seeds.sql`. La CTE `seeds` lit `stg_tourney_seeds` avec `{{ ref('stg_tourney_seeds') }}`.
-2. TODO 1 et 2 : écris de la même façon les CTE `teams` et `seasons`, sur `stg_teams` et `stg_seasons`. Un modèle dbt ne lit jamais une table par son nom : `ref()` déclare la dépendance, et c'est ce qui construit le DAG.
-3. TODO 3 et 4 : les jointures, et un `case` pour choisir le nom de la région.
-4. `task build` jusqu'au vert. Le test de mission vérifie le résultat et la présence des deux `ref()`.
+**Entrées**, trois modèles staging (exemple de Connecticut en 2019) :
 
-Pour voir ce que devient `ref()` : `transformation/target/compiled/transformation/models/marts/dim_tourney_seeds.sql`.
+| Modèle | Colonnes utiles | Exemple |
+|---|---|---|
+| `stg_tourney_seeds` | season, team_id, seed_raw, seed_region, seed_number | 2019, 3163, `W02`, `W`, 2 |
+| `stg_teams` | team_id, team_name | 3163, `Connecticut` |
+| `stg_seasons` | season, region_w, region_x, region_y, region_z | 2019, `Albany`, `Chicago`, `Greensboro`, `Portland` |
+
+**Sortie attendue**, la table `marts.dim_tourney_seeds` (1 408 lignes) :
+
+| season | team_id | team_name | seed_raw | seed_region | seed_number | region_name |
+|---|---|---|---|---|---|---|
+| 2019 | 3163 | `Connecticut` | `W02` | `W` | 2 | `Albany` |
+
+`region_name` est la colonne `region_w`, `region_x`, `region_y` ou `region_z` qui correspond à `seed_region`.
+
+1. Ouvre `transformation/models/marts/dim_tourney_seeds.sql`. La CTE `seeds` montre comment lire un modèle avec `ref()`.
+2. TODO 1 et 2 : écris de la même façon une CTE `teams` sur `stg_teams` et une CTE `seasons` sur `stg_seasons`.
+3. TODO 3 : `left join` sur `teams` (clé `team_id`), puis remplace `null::varchar as team_name` par la colonne de `teams`.
+4. TODO 4 : `left join` sur `seasons` (clé `season`), puis un `case s.seed_region when 'W' then se.region_w ... end` pour `region_name`.
+5. `task build` jusqu'au vert. Pour voir ce que dbt a fait de tes `ref()` : `transformation/target/compiled/transformation/models/marts/dim_tourney_seeds.sql`.
 
 Fini en avance : ajoute une colonne `is_blowout` (écart d'au moins 20 points) à `fct_regular_season_games.sql`, documente-la dans `_marts_models.yml` et ajoute-lui un test `not_null`.
 
@@ -97,12 +135,42 @@ Fini en avance : ajoute une colonne `is_blowout` (écart d'au moins 20 points) �
 task step N=3
 ```
 
-La base contient toutes les couches, sauf ta mission.
+La base contient toutes les couches, sauf ta mission. Le tournoi NCAA féminin compte 64 équipes : 6 victoires donnent le titre, une défaite élimine.
 
-1. Dans `transformation/models/reporting/rpt_tourney_runs.sql`, complète les TODO 1 à 5 : une agrégation et trois jointures. Le `case` qui calcule l'étape atteinte est déjà écrit.
-2. Dans `transformation/models/reporting/_reporting_models.yml`, TODO 6 : décris les colonnes `seed_number`, `is_champion` et `tournament_result`.
-3. `task build` jusqu'au vert.
-4. `task docs`, puis le port **8088** (onglet **PORTS** de VS Code) : retrouve `rpt_tourney_runs`, tes descriptions, et remonte le lineage d'une colonne jusqu'au fichier source.
+**Entrée principale**, `marts.fct_tourney_games` (un match par ligne, gagnant et perdant) :
+
+| season | w_team_id | l_team_id | w_score | l_score |
+|---|---|---|---|---|
+| 2016 | 3163 | 3393 | 82 | 51 |
+
+**Déjà fait** dans le squelette (CTE `all_tourney_team_games`) : chaque match devient deux lignes, une par équipe.
+
+| season | team_id | is_win | pts_scored | pts_allowed |
+|---|---|---|---|---|
+| 2016 | 3163 | 1 | 82 | 51 |
+| 2016 | 3393 | 0 | 51 | 82 |
+
+**Sortie attendue**, la table `reporting.rpt_tourney_runs` (1 344 lignes, extrait de 2016) :
+
+| team_name | season_label | seed_number | tourney_wins | tourney_losses | tournament_result |
+|---|---|---|---|---|---|
+| `Connecticut` | `Season 2016` | 1 | 6 | 0 | `Champion` |
+| `Syracuse` | `Season 2016` | 4 | 5 | 1 | `Runner-Up` |
+| `Albany NY` | `Season 2016` | 12 | 1 | 1 | `Second Round` |
+
+1. TODO 1 et 2, dans la CTE `team_tourney_stats` : `tourney_wins` est la somme de `is_win`, `tourney_losses` le nombre de matchs moins les victoires. Convertis les deux en entier avec `::integer` : sans conversion, `sum()` renvoie un `HUGEINT`, que Superset ne traite pas comme un nombre (le test de mission le vérifie).
+2. TODO 3 à 5, dans la CTE `final` : trois `left join` vers des marts lus avec `ref()`, puis remplace les `null::...` par leurs colonnes :
+
+   | Mart | Clé de jointure | Colonnes à prendre |
+   |---|---|---|
+   | `dim_teams` (alias `t`) | `team_id` | `team_name`, `team_state`, `team_state_iso` |
+   | `dim_seasons` (alias `se`) | `season` | `season_label` |
+   | `dim_tourney_seeds` (alias `sd`) | `season` **et** `team_id` | `seed_number` |
+
+   Le `case` qui calcule `tournament_result` est déjà écrit.
+3. Dans `transformation/models/reporting/_reporting_models.yml`, TODO 6 : décris les colonnes `seed_number`, `is_champion` et `tournament_result` (une phrase : ce que contient la colonne et ses valeurs possibles).
+4. `task build` jusqu'au vert.
+5. `task docs`, puis le port **8088** (onglet **PORTS** de VS Code) : retrouve `rpt_tourney_runs`, tes descriptions, et remonte le lineage d'une colonne jusqu'au fichier source.
 
 Solution : `task step N=4`.
 
