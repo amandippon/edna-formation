@@ -28,3 +28,5 @@ Thumbs.db
 transformation/models/reporting/atelier/
 transformation/tests/atelier/
 .atelier-sauvegarde/
+
+.claude/settings.local.json
