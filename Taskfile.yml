@@ -131,8 +131,13 @@ tasks:
         git fetch --quiet origin 2>/dev/null || echo "ℹ️  Pas de réseau : branches locales utilisées."
         git switch "$B" 2>/dev/null || git switch --track "origin/$B"
         echo "🧭 Étape {{.N}} : $B"
+      # Les Parquet ne dépendent pas de l'étape : on ne relance l'ingestion que s'ils manquent.
+      - |
+        if [ -z "$(ls -A processed-resources 2>/dev/null)" ]; then
+          echo "📥 Parquet absents : lancement de l'ingestion."
+          task ingest
+        fi
       - rm -f {{.DB_FILE}}
-      - task: ingest
       - task: build
 
   topic:
