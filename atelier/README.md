@@ -46,7 +46,7 @@ Le projet dbt est découpé en étapes, une par couche. Chaque étape est une **
 
 | Étape | Branche | Ta mission | Couche |
 |---|---|---|---|
-| 1 | `atelier/etape-1-bronze` | `stg_seasons` : nettoyer le fichier des saisons | Bronze (`staging`) |
+| 1 | `atelier/etape-1-bronze` | `stg_tourney_seeds` : découper le seed brut en région et numéro | Bronze (`staging`) |
 | 2 | `atelier/etape-2-silver` | `dim_tourney_seeds` : joindre seeds, équipes et régions | Silver (`marts`) |
 | 3 | `atelier/etape-3-gold` | `rpt_tourney_runs` : le parcours de chaque équipe au tournoi, ou un sujet libre | Gold (`reporting`) |
 | 4 | `atelier/etape-4-solution` | Le projet complet | |
@@ -57,21 +57,21 @@ Pour voir ce qu'une étape a ajouté :
 
 ```bash
 git diff origin/atelier/etape-1-bronze origin/atelier/etape-2-silver --stat
-git show origin/atelier/etape-2-silver:transformation/models/staging/stg_seasons.sql   # la solution de la mission 1
+git show origin/atelier/etape-2-silver:transformation/models/staging/stg_tourney_seeds.sql   # la solution de la mission 1
 ```
 
 Pour retrouver ton propre travail rangé : `git stash list`, puis `git stash show -p stash@{0}`.
 
-### Mission 1 : Bronze, `stg_seasons` (15 min)
+### Mission 1 : Bronze, `stg_tourney_seeds` (15 min)
 
 ```bash
 task step N=1
 ```
 
-1. La base est reconstruite avec la seule couche `staging`. Les tests de `stg_seasons` sont rouges.
-2. Ouvre `transformation/models/staging/stg_seasons.sql` : les `TODO` sont numérotés.
-3. Convertis `DayZero` (texte au format `10/29/2018`) en date, renomme les colonnes de régions.
-4. `task build` jusqu'à ce que tout soit vert. Le test `mission_1_stg_seasons` (dans `transformation/tests/missions/`) vérifie le résultat.
+1. La base est reconstruite avec la seule couche `staging`. Les tests de `stg_tourney_seeds` sont rouges.
+2. Ouvre `transformation/models/staging/stg_tourney_seeds.sql` : les `TODO` sont numérotés.
+3. Découpe le seed brut (`W01`) en lettre de région (`W`) et numéro entier (`1`).
+4. `task build` jusqu'à ce que tout soit vert. Le test `mission_1_stg_tourney_seeds` (dans `transformation/tests/missions/`) vérifie le résultat.
 
 Compare avec `stg_teams.sql`, déjà écrit : c'est la même structure.
 

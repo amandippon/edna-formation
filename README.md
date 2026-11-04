@@ -92,7 +92,7 @@ La suite se passe dans le **[guide de l'atelier](atelier/README.md)** :
 | Étape | Ce que tu fais | Couche |
 |---|---|---|
 | Ex. 1 | Interroger les fichiers Parquet en SQL avec DuckDB | Fichiers sources |
-| Mission 1 | Écrire `stg_seasons` (branche `atelier/etape-1-bronze`) | Bronze (`staging`) |
+| Mission 1 | Écrire `stg_tourney_seeds` (branche `atelier/etape-1-bronze`) | Bronze (`staging`) |
 | Mission 2 | Écrire `dim_tourney_seeds` (branche `atelier/etape-2-silver`) | Silver (`marts`) |
 | Mission 3 | Écrire `rpt_tourney_runs` ou un sujet libre (branche `atelier/etape-3-gold`) | Gold (`reporting`) |
 | Ex. 4 | Construire un dashboard Superset sur ta table | Visualisation |

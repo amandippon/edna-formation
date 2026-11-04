@@ -52,7 +52,7 @@ There is no `dbt deps` step: the project has no dbt packages.
 ## Workshop (`atelier/` and `atelier/etape-*` branches)
 
 - Step branches, each created from the final state by removing what comes later and replacing the mission model by a skeleton:
-  - `atelier/etape-1-bronze`: staging only; `stg_seasons.sql` is a skeleton.
+  - `atelier/etape-1-bronze`: staging only; `stg_tourney_seeds.sql` is a skeleton.
   - `atelier/etape-2-silver`: staging + `dim_teams`, `dim_seasons`, `dim_cities`, `fct_regular_season_games`; `dim_tourney_seeds.sql` is a skeleton (`fct_tourney_games` and reporting are absent because they depend on it).
   - `atelier/etape-3-gold`: everything; `rpt_tourney_runs.sql` is a skeleton.
   - `atelier/etape-4-solution`: the complete project.
