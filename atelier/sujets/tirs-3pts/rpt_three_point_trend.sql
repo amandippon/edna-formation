@@ -4,7 +4,7 @@
 -- Source : marts.fct_regular_season_games (une ligne par match)
 --   colonnes utiles : has_box_score, w_fga3 / l_fga3 (3 pts tentés), w_fgm3 / l_fgm3 (3 pts réussis),
 --   w_fga / l_fga (tous les tirs tentés). Préfixe w_ = gagnant, l_ = perdant.
--- Vérifier : task atelier:check   (tous les tests doivent passer au vert)
+-- Vérifier : task build   (tous les tests doivent passer au vert)
 
 with games as (
     select *

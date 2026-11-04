@@ -3,7 +3,7 @@
 -- le nombre gagnés par l'équipe qui reçoit, et l'écart de score moyen pour elle.
 -- Source : marts.fct_regular_season_games (une ligne par match, format gagnant / perdant)
 --   w_loc = 'H' : le gagnant jouait à domicile ; 'A' : il jouait à l'extérieur ; 'N' : terrain neutre
--- Vérifier : task atelier:check   (tous les tests doivent passer au vert)
+-- Vérifier : task build   (tous les tests doivent passer au vert)
 
 with games as (
     select season, w_loc, score_margin

@@ -4,7 +4,7 @@
 -- Source : marts.fct_tourney_games (une ligne par match de tournoi)
 --   colonnes utiles : w_seed_number, l_seed_number (seed du gagnant / du perdant),
 --   is_upset (true si le gagnant avait le moins bon seed)
--- Vérifier : task atelier:check   (tous les tests doivent passer au vert)
+-- Vérifier : task build   (tous les tests doivent passer au vert)
 
 with games as (
     select *

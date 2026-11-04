@@ -17,104 +17,114 @@ tasks:
       - task --list
 
   # ─────────────────────────────────────────────
-  # Pipeline principal
-  # ─────────────────────────────────────────────
-
-  pipeline:
-    desc: "🚀 Pipeline complet : ingestion + transformation dbt (modèles + tests)"
-    cmds:
-      - task: ingest
-      - task: dbt:build
-
-  # ─────────────────────────────────────────────
-  # Ingestion
+  # Pipeline
   # ─────────────────────────────────────────────
 
   ingest:
-    desc: "📥 Ingestion des CSV vers Parquet"
+    desc: "📥 CSV (resources/) -> Parquet (processed-resources/)"
     cmds:
       - uv run python ingestion/pipeline.py
 
-  # ─────────────────────────────────────────────
-  # dbt
-  # ─────────────────────────────────────────────
-
-  dbt:build:
-    desc: "🏗️  Construit les modèles dbt et lance les tests (run + test)"
+  build:
+    desc: "🏗️  dbt build : construit les modèles et lance les tests"
     dir: "{{.DBT_DIR}}"
-    cmds:
-      - uv run dbt build
-
-  dbt:run:
-    desc: "⚙️  Transformation des données (dbt run, sans les tests)"
-    dir: "{{.DBT_DIR}}"
-    cmds:
-      - uv run dbt run
-
-  dbt:test:
-    desc: "✅ Tests qualité des données"
-    dir: "{{.DBT_DIR}}"
-    cmds:
-      - uv run dbt test
-
-  colibri:generate:
-    desc: "🎨 Génère le dashboard de lineage des colonnes avec Colibri"
-    dir: "{{.DBT_DIR}}"
-    cmds:
-      - echo "🔄 Génération des artifacts dbt..."
-      - uv run dbt docs generate
-      - echo "🎨 Génération du dashboard Colibri..."
-      - |
-        uv run colibri generate \
-          --manifest target/manifest.json \
-          --catalog target/catalog.json \
-          --output-dir {{.PROJECT_DIR}}/colibri-docs
-      - 'echo "✅ Dashboard généré → {{.PROJECT_DIR}}/colibri-docs/index.html"'
-
-  colibri:open:
-    desc: "🌐 Ouvre le dashboard Colibri dans le navigateur (port 8088)"
+    silent: true
     cmds:
       - |
-        if [ -f "{{.PROJECT_DIR}}/colibri-docs/index.html" ]; then
-          echo "🌐 Dashboard disponible à : {{.PROJECT_DIR}}/colibri-docs/index.html"
-
-          if [ -n "$CODESPACES" ] || [ -n "$CODESPACE_NAME" ] || [ -n "$REMOTE_CONTAINERS" ] || [ -f "/.dockerenv" ]; then
-            echo "📡 Environnement distant détecté"
-            echo "🔗 Démarrage du serveur HTTP sur le port 8088..."
-            echo ""
-            echo "   👉 Allez dans l'onglet 'PORTS' en bas de VSCode"
-            echo "   👉 Cliquez sur l'icône globe 🌐 à côté du port 8088"
-            echo ""
-            python3 -m http.server 8088 --directory {{.PROJECT_DIR}}/colibri-docs
-          elif command -v xdg-open &> /dev/null; then
-            xdg-open {{.PROJECT_DIR}}/colibri-docs/index.html
-          elif command -v open &> /dev/null; then
-            open {{.PROJECT_DIR}}/colibri-docs/index.html
-          else
-            echo "💡 Lancez : python3 -m http.server 8088 --directory {{.PROJECT_DIR}}/colibri-docs"
-          fi
-        else
-          echo "❌ Dashboard non trouvé. Lancez d'abord : task documentation"
+        if ! uv run dbt build; then
+          echo ""
+          echo "🔴 Modèles ou tests en erreur. Au début d'une mission, c'est attendu : voir atelier/README.md."
+          exit 1
         fi
 
-  documentation:
-    desc: "📖 Génère et ouvre le dashboard Colibri (lineage des colonnes, port 8088)"
+  docs:
+    desc: "📖 Génère la documentation dbt-colibri et la sert sur le port 8088 (Ctrl+C pour arrêter)"
+    dir: "{{.DBT_DIR}}"
     cmds:
-      - task: colibri:generate
-      - task: colibri:open
+      - uv run dbt docs generate --quiet
+      - uv run colibri generate --manifest target/manifest.json --catalog target/catalog.json --output-dir {{.PROJECT_DIR}}/colibri-docs
+      - 'echo "📖 Documentation : http://localhost:8088 (dans VS Code : onglet PORTS)"'
+      - python3 -m http.server 8088 --directory {{.PROJECT_DIR}}/colibri-docs
+
+  sql:
+    desc: "🦆 Ouvre une copie de la base dans le terminal DuckDB (ne bloque pas dbt)"
+    interactive: true
+    preconditions:
+      - sh: test -f {{.DB_FILE}}
+        msg: "❌ Base absente. Lance d'abord : task ingest puis task build"
+    cmds:
+      # DuckDB verrouille le fichier dès qu'un process l'ouvre, même en lecture seule :
+      # on travaille sur une copie pour que dbt puisse toujours écrire dans la vraie base.
+      - cp {{.DB_FILE}} /tmp/edna-snapshot.duckdb
+      - duckdb -readonly /tmp/edna-snapshot.duckdb
+
+  # ─────────────────────────────────────────────
+  # Atelier
+  #   task step N=1   -> branche atelier/etape-1-bronze   (mission 1 : stg_seasons)
+  #   task step N=2   -> branche atelier/etape-2-silver   (mission 2 : dim_tourney_seeds)
+  #   task step N=3   -> branche atelier/etape-3-gold     (mission 3 : rpt_tourney_runs)
+  #   task step N=4   -> branche atelier/etape-4-solution (projet complet)
+  # ─────────────────────────────────────────────
+
+  step:
+    desc: "🧭 Passe à l'étape N de l'atelier (1 à 4) : met le travail en cours dans git stash, change de branche, reconstruit la base"
+    silent: true
+    vars:
+      N: '{{.N | default ""}}'
+    preconditions:
+      - sh: '[ "{{.N}}" = "1" ] || [ "{{.N}}" = "2" ] || [ "{{.N}}" = "3" ] || [ "{{.N}}" = "4" ]'
+        msg: "❌ Usage : task step N=1 (staging), 2 (marts), 3 (reporting) ou 4 (solution)"
+    cmds:
+      - |
+        case "{{.N}}" in
+          1) B=atelier/etape-1-bronze ;;
+          2) B=atelier/etape-2-silver ;;
+          3) B=atelier/etape-3-gold ;;
+          4) B=atelier/etape-4-solution ;;
+        esac
+        if [ -n "$(git status --porcelain)" ]; then
+          git stash push --include-untracked -m "atelier : travail avant l'étape {{.N}}" > /dev/null
+          echo "💾 Travail en cours rangé dans git stash (git stash list)."
+        fi
+        # Les sujets libres (ignorés par git) dépendent de la couche reporting :
+        # avant les étapes 1 et 2, on les met de côté pour ne pas casser le build.
+        if [ "{{.N}}" -le 2 ] && [ -d {{.DBT_DIR}}/models/reporting/atelier -o -d {{.DBT_DIR}}/tests/atelier ]; then
+          D=.atelier-sauvegarde/$(date +%H%M%S)
+          mkdir -p "$D"
+          mv {{.DBT_DIR}}/models/reporting/atelier "$D/models" 2>/dev/null || true
+          mv {{.DBT_DIR}}/tests/atelier "$D/tests" 2>/dev/null || true
+          echo "💾 Sujet libre mis de côté dans $D"
+        fi
+        git fetch --quiet origin 2>/dev/null || echo "ℹ️  Pas de réseau : branches locales utilisées."
+        git switch "$B" 2>/dev/null || git switch --track "origin/$B"
+        echo "🧭 Étape {{.N}} : $B"
+      - rm -f {{.DB_FILE}}
+      - task: ingest
+      - task: build
+
+  topic:
+    desc: "🎯 Mission 3, sujet libre : copie le squelette et ses tests (NAME=domicile|tirs-3pts|upsets)"
+    vars:
+      NAME: '{{.NAME | default ""}}'
+    preconditions:
+      - sh: '[ -n "{{.NAME}}" ] && [ -d "atelier/sujets/{{.NAME}}" ]'
+        msg: "❌ Usage : task topic NAME=domicile (ou tirs-3pts, ou upsets)"
+    cmds:
+      - mkdir -p {{.DBT_DIR}}/tests/atelier {{.DBT_DIR}}/models/reporting/atelier
+      - cp -n atelier/sujets/{{.NAME}}/rpt_*.sql atelier/sujets/{{.NAME}}/_*.yml {{.DBT_DIR}}/models/reporting/atelier/
+      - cp -n atelier/sujets/{{.NAME}}/assert_*.sql {{.DBT_DIR}}/tests/atelier/
+      - 'echo "✏️  À compléter : transformation/models/reporting/atelier/$(ls atelier/sujets/{{.NAME}}/rpt_*.sql | xargs -n1 basename)  (solution : atelier/solutions/)"'
 
   # ─────────────────────────────────────────────
   # Superset
   # ─────────────────────────────────────────────
 
   superset:up:
-    desc: "🚀 Démarre Superset (port 8089) et branche la base DuckDB automatiquement"
+    desc: "🚀 Démarre Superset (port 8089) et y enregistre la base DuckDB"
     dir: "{{.SUPERSET_DIR}}"
-    env:
-      PROJECT_DIR: "{{.PROJECT_DIR}}"
     preconditions:
       - sh: test -f "{{.PROJECT_DIR}}/{{.DB_FILE}}"
-        msg: "❌ Base {{.DB_FILE}} introuvable. Lance d'abord : task pipeline"
+        msg: "❌ Base {{.DB_FILE}} introuvable. Lance d'abord : task ingest puis task build"
       - sh: docker info > /dev/null 2>&1
         msg: "❌ Docker ne répond pas. Démarre Docker Desktop puis relance la commande."
     cmds:
@@ -125,197 +135,50 @@ tasks:
         timeout=180; elapsed=0
         until docker exec {{.SUPERSET_CONTAINER}} curl -sf http://localhost:8088/health > /dev/null 2>&1; do
           sleep 5; elapsed=$((elapsed+5))
-          if [ $elapsed -ge $timeout ]; then echo "❌ Superset n'a pas démarré après ${timeout}s (voir : task superset:logs)" && exit 1; fi
+          if [ $elapsed -ge $timeout ]; then echo "❌ Superset n'a pas démarré après ${timeout}s (voir : docker logs superset)" && exit 1; fi
         done
       - docker cp {{.PROJECT_DIR}}/{{.DB_FILE}} {{.SUPERSET_CONTAINER}}:{{.SUPERSET_DB_PATH}}
       - docker exec {{.SUPERSET_CONTAINER}} superset db upgrade
       - docker exec {{.SUPERSET_CONTAINER}} superset fab create-admin --username admin --firstname Admin --lastname User --email admin@edna.fr --password admin || true
       - docker exec {{.SUPERSET_CONTAINER}} superset init
-      - echo "🔌 Enregistrement de la base DuckDB dans Superset..."
       - docker exec {{.SUPERSET_CONTAINER}} superset set-database-uri -d "{{.SUPERSET_DB_NAME}}" -u "duckdb:///{{.SUPERSET_DB_PATH}}?access_mode=read_only"
-      - 'echo "✅ Superset prêt : ouvre http://localhost:8089 dans le navigateur de ta machine (admin / admin)"'
-      - 'echo "   Base déjà connectée : {{.SUPERSET_DB_NAME}} (schémas staging, marts, reporting)"'
+      - 'echo "✅ Superset : http://localhost:8089 depuis le navigateur de la machine hôte (admin / admin). Base : {{.SUPERSET_DB_NAME}}"'
 
-  superset:refresh:
-    desc: "🔄 Reconstruit les modèles dbt et recopie la base dans Superset (sans redémarrer)"
+  superset:sync:
+    desc: "🔄 Recopie la base dans Superset et vide le cache des charts (après task build)"
     preconditions:
       - sh: docker ps --format '{{"{{"}}.Names{{"}}"}}' | grep -qx {{.SUPERSET_CONTAINER}}
         msg: "❌ Superset n'est pas démarré. Lance d'abord : task superset:up"
     cmds:
-      - task: dbt:build
       - docker cp {{.PROJECT_DIR}}/{{.DB_FILE}} {{.SUPERSET_CONTAINER}}:{{.SUPERSET_DB_PATH}}
-      - docker exec superset_cache redis-cli FLUSHALL > /dev/null  # vide le cache des charts
-      - 'echo "✅ Base mise à jour dans Superset. Nouvelle table : Datasets > + Dataset. Colonnes modifiées : Edit dataset > Sync columns from source."'
+      - docker exec superset_cache redis-cli FLUSHALL > /dev/null
+      - 'echo "✅ Base à jour dans Superset. Nouvelle table : Datasets > + Dataset. Table modifiée : Edit dataset > Sync columns from source."'
 
   superset:down:
-    desc: "🛑 Arrête Superset"
+    desc: "🛑 Arrête Superset (dashboards conservés)"
     dir: "{{.SUPERSET_DIR}}"
-    env:
-      PROJECT_DIR: "{{.PROJECT_DIR}}"
     cmds:
       - docker compose down
-
-  superset:logs:
-    desc: "📋 Affiche les logs Superset"
-    dir: "{{.SUPERSET_DIR}}"
-    env:
-      PROJECT_DIR: "{{.PROJECT_DIR}}"
-    cmds:
-      - docker compose logs -f superset
-
-  superset:reset:
-    desc: "⚠️  Réinitialise Superset (supprime toutes les données)"
-    dir: "{{.SUPERSET_DIR}}"
-    prompt: "Cela supprimera TOUTES les données Superset. Continuer?"
-    env:
-      PROJECT_DIR: "{{.PROJECT_DIR}}"
-    cmds:
-      - docker compose down -v --remove-orphans
-      - task: superset:up
 
   # ─────────────────────────────────────────────
   # Diagnostic
   # ─────────────────────────────────────────────
 
   doctor:
-    desc: "🩺 Vérifie que tout est prêt (Docker, base DuckDB, Superset)"
+    desc: "🩺 Vérifie Docker, la base DuckDB et Superset"
     silent: true
     cmds:
       - |
         ok=0
         if docker info > /dev/null 2>&1; then echo "✅ Docker joignable"; else echo "❌ Docker ne répond pas : démarre Docker Desktop"; ok=1; fi
-        if [ -f "{{.PROJECT_DIR}}/{{.DB_FILE}}" ]; then echo "✅ Base {{.DB_FILE}} présente"; else echo "❌ Base {{.DB_FILE}} absente : lance task pipeline"; ok=1; fi
+        if [ -f "{{.PROJECT_DIR}}/{{.DB_FILE}}" ]; then echo "✅ Base {{.DB_FILE}} présente"; else echo "❌ Base {{.DB_FILE}} absente : task ingest puis task build"; ok=1; fi
         if docker ps --format '{{"{{"}}.Names{{"}}"}}' 2>/dev/null | grep -qx {{.SUPERSET_CONTAINER}}; then
-          echo "✅ Conteneur Superset démarré"
           if docker exec {{.SUPERSET_CONTAINER}} curl -sf http://localhost:8088/health > /dev/null 2>&1; then
             echo "✅ Superset répond : http://localhost:8089 (admin / admin)"
           else
-            echo "⏳ Superset démarre encore (ou erreur : task superset:logs)"; ok=1
+            echo "⏳ Superset démarre encore (ou erreur : docker logs superset)"; ok=1
           fi
         else
-          echo "ℹ️  Superset n'est pas démarré : lance task superset:up"
+          echo "ℹ️  Superset arrêté : task superset:up pour le démarrer"
         fi
         exit $ok
-
-  # ─────────────────────────────────────────────
-  # Exploration SQL
-  # ─────────────────────────────────────────────
-
-  sql:
-    desc: "🦆 Ouvre une copie de la base dans le terminal DuckDB (ne bloque pas dbt ; relance après un dbt build pour voir les changements)"
-    interactive: true
-    preconditions:
-      - sh: test -f {{.DB_FILE}}
-        msg: "❌ Base absente. Lance d'abord : task pipeline"
-    cmds:
-      # DuckDB verrouille le fichier dès qu'un process l'ouvre, même en lecture seule :
-      # on travaille sur une copie pour que dbt puisse toujours écrire dans la vraie base.
-      - cp {{.DB_FILE}} /tmp/edna-snapshot.duckdb
-      - 'echo "🦆 Copie de la base ouverte (quitter : .quit). Tables : schémas staging, marts, reporting."'
-      - duckdb -readonly /tmp/edna-snapshot.duckdb
-
-  # ─────────────────────────────────────────────
-  # Atelier : missions de transformation
-  #   task etape N=1   -> branche atelier/etape-1-bronze   (mission 1 : stg_seasons)
-  #   task etape N=2   -> branche atelier/etape-2-silver   (mission 2 : dim_tourney_seeds)
-  #   task etape N=3   -> branche atelier/etape-3-gold     (mission 3 : rpt_tourney_runs ou un sujet libre)
-  #   task etape N=4   -> branche atelier/etape-4-solution (projet complet)
-  # La solution d'une mission est dans la branche de l'étape suivante.
-  # ─────────────────────────────────────────────
-
-  etape:
-    silent: true
-    desc: "🧭 Passe à une étape de l'atelier (N=1 à 4) : range ton travail dans git stash, change de branche et reconstruit la base"
-    vars:
-      N: '{{.N | default ""}}'
-    preconditions:
-      - sh: '[ "{{.N}}" = "1" ] || [ "{{.N}}" = "2" ] || [ "{{.N}}" = "3" ] || [ "{{.N}}" = "4" ]'
-        msg: "❌ Précise l'étape : task etape N=1 (bronze), 2 (silver), 3 (gold) ou 4 (solution)"
-    cmds:
-      - |
-        case "{{.N}}" in
-          1) B=atelier/etape-1-bronze ;;
-          2) B=atelier/etape-2-silver ;;
-          3) B=atelier/etape-3-gold ;;
-          4) B=atelier/etape-4-solution ;;
-        esac
-        if [ -n "$(git status --porcelain)" ]; then
-          git stash push --include-untracked -m "atelier : mon travail avant l'étape {{.N}}" > /dev/null
-          echo "💾 Ton travail en cours est rangé (git stash list pour le retrouver)."
-        fi
-        # Les fichiers des sujets libres (ignorés par git) dépendent de la couche Gold :
-        # avant les étapes 1 et 2, on les met de côté pour ne pas casser le build.
-        if [ "{{.N}}" -le 2 ] && [ -d {{.DBT_DIR}}/models/reporting/atelier -o -d {{.DBT_DIR}}/tests/atelier ]; then
-          D=.atelier-sauvegarde/$(date +%H%M%S)
-          mkdir -p "$D"
-          mv {{.DBT_DIR}}/models/reporting/atelier "$D/models" 2>/dev/null || true
-          mv {{.DBT_DIR}}/tests/atelier "$D/tests" 2>/dev/null || true
-          echo "💾 Ton sujet libre est mis de côté dans $D"
-        fi
-        git fetch --quiet origin 2>/dev/null || echo "ℹ️  Pas de réseau : on utilise les branches déjà téléchargées."
-        git switch "$B" 2>/dev/null || git switch --track "origin/$B"
-        echo "🧭 Étape {{.N}} : branche $B"
-      - rm -f {{.DB_FILE}}
-      - task: ingest
-      - task: atelier:check
-
-  atelier:check:
-    silent: true
-    desc: "🔎 Construit tous les modèles et lance les tests : tout vert = mission réussie"
-    dir: "{{.DBT_DIR}}"
-    cmds:
-      - |
-        if uv run dbt build; then
-          echo "✅ Tout est vert."
-        else
-          echo ""
-          echo "🔴 Des tests ou des modèles sont en erreur. Au début d'une mission, c'est normal : c'est à toi de les faire passer au vert."
-          echo "   Consignes : atelier/README.md"
-        fi
-
-  atelier:start:
-    desc: "🎯 Mission 3, sujet libre : copie le squelette d'un sujet (SUJET=domicile|tirs-3pts|upsets)"
-    vars:
-      SUJET: '{{.SUJET | default ""}}'
-    preconditions:
-      - sh: '[ -n "{{.SUJET}}" ] && [ -d "atelier/sujets/{{.SUJET}}" ]'
-        msg: "❌ Choisis un sujet : task atelier:start SUJET=domicile (ou tirs-3pts, ou upsets)"
-    cmds:
-      - mkdir -p {{.DBT_DIR}}/tests/atelier {{.DBT_DIR}}/models/reporting/atelier
-      - cp -n atelier/sujets/{{.SUJET}}/rpt_*.sql atelier/sujets/{{.SUJET}}/_*.yml {{.DBT_DIR}}/models/reporting/atelier/
-      - cp -n atelier/sujets/{{.SUJET}}/assert_*.sql {{.DBT_DIR}}/tests/atelier/
-      - 'echo "✏️  À compléter : transformation/models/reporting/atelier/$(ls atelier/sujets/{{.SUJET}}/rpt_*.sql | xargs -n1 basename)"'
-      - 'echo "✅ Vérifie ton travail avec : task atelier:check"'
-
-  atelier:solution:
-    desc: "🆘 Installe la solution d'un sujet libre de la mission 3 (SUJET=...)"
-    vars:
-      SUJET: '{{.SUJET | default ""}}'
-    preconditions:
-      - sh: '[ -n "{{.SUJET}}" ] && [ -d "atelier/sujets/{{.SUJET}}" ]'
-        msg: "❌ Usage : task atelier:solution SUJET=domicile (pour les missions 1 à 3, la solution est l'étape suivante : task etape N=...)"
-    cmds:
-      - task: atelier:start
-        vars: { SUJET: "{{.SUJET}}" }
-      - for f in atelier/sujets/{{.SUJET}}/rpt_*.sql; do cp "atelier/solutions/$(basename "$f")" {{.DBT_DIR}}/models/reporting/atelier/; done
-      - 'echo "✅ Solution installée."'
-      - task: atelier:check
-
-  atelier:reset:
-    desc: "♻️  Annule tes modifications de modèles sur la branche courante (efface ton travail d'atelier)"
-    prompt: "Cela efface tes modifications dans transformation/ et les fichiers des sujets libres. Continuer ?"
-    cmds:
-      - git checkout -- {{.DBT_DIR}}/models {{.DBT_DIR}}/tests
-      - rm -rf {{.DBT_DIR}}/models/reporting/atelier {{.DBT_DIR}}/tests/atelier
-      - 'echo "✅ Modèles remis à zéro. Relance task atelier:check pour reconstruire la base."'
-
-  # ─────────────────────────────────────────────
-  # Maintenance
-  # ─────────────────────────────────────────────
-
-  clean:
-    desc: "🧹 Nettoyage des fichiers temporaires"
-    cmds:
-      - rm -rf transformation/target transformation/logs transformation/dbt_packages
-      - find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
-      - echo "✅ Nettoyage terminé"

@@ -7,7 +7,7 @@ resources/*.csv                    11 fichiers bruts (Kaggle)
       │  task ingest               PyArrow
       ▼
 processed-resources/*/*.parquet    un fichier Parquet par table
-      │  task dbt:build            dbt + DuckDB (modèles + tests)
+      │  task build                dbt + DuckDB (modèles + tests)
       ▼
 edna-sports-data.duckdb            schémas staging -> marts -> reporting
       │  task superset:up          copie de la base dans le conteneur
@@ -46,7 +46,7 @@ Lance Docker Desktop et attends que l'icône de la baleine soit immobile.
 
    VS Code doit être ouvert **sur le dossier `edna-formation` lui-même**, sinon le devcontainer n'est pas détecté.
 
-2. `Cmd+Shift+P` (macOS) ou `Ctrl+Shift+P` (Windows), puis **Dev Containers: Reopen in Container**. Le premier build prend 5 à 10 minutes. À la fin, le script de post-création installe les dépendances Python (`uv sync`) et construit la base avec `task pipeline` : attends le message « ✅ Environnement prêt ! » dans le terminal.
+2. `Cmd+Shift+P` (macOS) ou `Ctrl+Shift+P` (Windows), puis **Dev Containers: Reopen in Container**. Le premier build prend 5 à 10 minutes. À la fin, le script de post-création installe les dépendances Python (`uv sync`) et construit la base (`task ingest` puis `task build`) : attends le message « ✅ Environnement prêt ! » dans le terminal.
 
 3. Dans le terminal VS Code (donc dans le devcontainer), télécharge et construis la stack Superset une première fois :
 
@@ -70,7 +70,8 @@ Le Taskfile fonctionne aussi directement sur ta machine si tu as installé [uv](
 
 ```bash
 uv sync
-task pipeline
+task ingest
+task build
 task superset:up
 ```
 
@@ -96,7 +97,7 @@ La suite se passe dans le **[guide de l'atelier](atelier/README.md)** :
 | Mission 3 | Écrire `rpt_tourney_runs` ou un sujet libre (branche `atelier/etape-3-gold`) | Gold (`reporting`) |
 | Ex. 4 | Construire un dashboard Superset sur ta table | Visualisation |
 
-Chaque mission a ses tests déjà écrits, et sa solution est dans la branche de l'étape suivante : `task etape N=2` y passe en rangeant ton travail.
+Chaque mission a ses tests déjà écrits, et sa solution est dans la branche de l'étape suivante : `task step N=2` y passe en rangeant ton travail.
 
 ---
 
@@ -112,7 +113,7 @@ task superset:up        # ~1 à 2 min (plus si les images ne sont pas en cache)
 
 > Dans les menus déroulants, les schémas s'affichent sous la forme `"edna-sports-data".reporting` (le préfixe est le nom du fichier DuckDB) : choisis celui qui finit par `reporting` et ignore les autres (`system.main`, `temp.main`, etc.).
 
-Superset travaille sur **une copie** de la base. Après une modification d'un modèle dbt, `task superset:refresh` reconstruit les modèles et recopie la base, sans redémarrage. Une nouvelle table apparaît dans **Datasets > + Dataset** ; pour une table modifiée, **Edit dataset > Sync columns from source**.
+Superset travaille sur **une copie** de la base. Après une modification d'un modèle dbt, `task build` puis `task superset:sync` recopie la base, sans redémarrage. Une nouvelle table apparaît dans **Datasets > + Dataset** ; pour une table modifiée, **Edit dataset > Sync columns from source**.
 
 Autres chemins utiles :
 
@@ -147,7 +148,7 @@ ORDER BY titres DESC;
 
 **DBeaver** (facultatif) : nouvelle connexion **DuckDB**, fichier `edna-sports-data.duckdb` à la racine du repo cloné sur ta machine. **Déconnecte-toi** avant de lancer dbt.
 
-**Lineage** : `task documentation` génère la documentation Colibri (lineage au niveau des colonnes, descriptions, tests) et la sert sur le port 8088, transféré automatiquement par VS Code. Le fichier `colibri-docs/index.html` s'ouvre aussi directement dans un navigateur.
+**Lineage** : `task docs` génère la documentation Colibri (lineage au niveau des colonnes, descriptions, tests) et la sert sur le port 8088, transféré automatiquement par VS Code. Le fichier `colibri-docs/index.html` s'ouvre aussi directement dans un navigateur.
 
 ---
 
@@ -157,27 +158,18 @@ ORDER BY titres DESC;
 
 | Commande | Effet |
 |---|---|
-| `task pipeline` | Ingestion puis `dbt build` (modèles + tests) |
 | `task ingest` | CSV de `resources/` -> Parquet dans `processed-resources/` |
-| `task dbt:build` | Construit tous les modèles dbt et lance les tests |
-| `task dbt:run` | Construit les modèles, sans les tests |
-| `task dbt:test` | Lance uniquement les tests de qualité |
-| `task documentation` | Génère et sert le lineage Colibri (port 8088) |
-| `task colibri:generate` | Génère seulement `colibri-docs/` |
-| `task colibri:open` | Sert ou ouvre `colibri-docs/index.html` |
-| `task superset:up` | Construit et démarre Superset, copie la base, crée l'admin et connecte la base |
-| `task superset:refresh` | `dbt build` puis recopie la base dans Superset (Superset doit tourner) |
-| `task superset:down` | Arrête Superset (dashboards conservés) |
-| `task superset:logs` | Affiche les logs de Superset |
-| `task superset:reset` | Supprime toutes les données Superset (dashboards compris) puis redémarre |
-| `task doctor` | Vérifie Docker, la base et Superset |
+| `task build` | `dbt build` : construit les modèles et lance les tests |
+| `task docs` | Génère la documentation dbt-colibri et la sert sur le port 8088 |
 | `task sql` | Ouvre une copie de la base dans le terminal DuckDB (ne bloque pas dbt) |
-| `task etape N=…` | Passe à une étape de l'atelier (1 à 4) : range ton travail dans `git stash`, change de branche, reconstruit la base |
-| `task atelier:check` | Construit tous les modèles et lance les tests (rouge au début d'une mission, c'est normal) |
-| `task atelier:start SUJET=…` | Mission 3, sujet libre : copie le squelette (`domicile`, `tirs-3pts` ou `upsets`) |
-| `task atelier:solution SUJET=…` | Installe la solution d'un sujet libre |
-| `task atelier:reset` | Annule tes modifications de modèles sur la branche courante |
-| `task clean` | Supprime les fichiers générés par dbt et les caches Python |
+| `task step N=…` | Atelier : passe à l'étape 1 à 4 (met le travail en cours dans `git stash`, change de branche, reconstruit la base) |
+| `task topic NAME=…` | Atelier, mission 3 : copie le squelette d'un sujet libre (`domicile`, `tirs-3pts`, `upsets`) |
+| `task superset:up` | Démarre Superset et y enregistre la base |
+| `task superset:sync` | Recopie la base dans Superset et vide le cache des charts |
+| `task superset:down` | Arrête Superset (dashboards conservés) |
+| `task doctor` | Vérifie Docker, la base et Superset |
+
+Pour le reste, les commandes d'origine restent disponibles : `cd transformation && uv run dbt run --select ...`, `docker logs -f superset`, `git restore transformation/`.
 
 ---
 
@@ -201,15 +193,15 @@ Le code des modèles est dans `transformation/models/<couche>/`, leur documentat
 | Symptôme | Solution |
 |---|---|
 | « Docker is not running » ou `❌ Docker ne répond pas` | Démarre Docker Desktop et attends que l'icône soit immobile. |
-| `❌ Base edna-sports-data.duckdb introuvable` | `task pipeline` |
-| Superset ne voit pas mon nouveau modèle | `task superset:refresh` (il vide aussi le cache des charts), puis **Datasets > + Dataset** (ou **Sync columns from source** pour une table modifiée). Si un chart affiche encore d'anciennes valeurs : **Force refresh** dans le menu du chart ou du dashboard. |
-| La page http://localhost:8089 ne répond pas | `task doctor`. Si Superset démarre encore, patiente ; sinon `task superset:logs`. Ouvre l'URL dans le navigateur de ta machine, pas via la notification de port de VS Code. |
+| `❌ Base edna-sports-data.duckdb introuvable` | `task ingest` puis `task build` |
+| Superset ne voit pas mon nouveau modèle | `task build` puis `task superset:sync` (qui vide aussi le cache des charts), puis **Datasets > + Dataset** (ou **Sync columns from source** pour une table modifiée). Si un chart affiche encore d'anciennes valeurs : **Force refresh** dans le menu du chart ou du dashboard. |
+| La page http://localhost:8089 ne répond pas | `task doctor`. Si Superset démarre encore, patiente ; sinon `docker logs -f superset`. Ouvre l'URL dans le navigateur de ta machine, pas via la notification de port de VS Code. |
 | Port 8089 déjà utilisé | Change `"8089:8088"` en `"8090:8088"` dans `visualization/docker-compose.yml`, relance `task superset:up` et ouvre http://localhost:8090. |
 | Erreur `EOF` ou `failed to do request` au build | Erreur réseau temporaire : relance **Dev Containers: Reopen in Container** ou `task superset:up`. |
 | « No space left on device » (Windows) | Le disque virtuel de Docker (WSL2) est plein : Docker Desktop > **Settings > Resources > Disk image > Clean / Purge data**, ou `docker system prune -a` (supprime aussi les images des autres projets). |
 | `Could not set lock on file` dans DuckDB | Un autre programme a ouvert la base (DBeaver, terminal `duckdb`), même en lecture seule : ferme-le ou déconnecte-le, puis relance. Pour explorer sans bloquer dbt : `task sql`. |
-| Une mission de l'atelier ne passe pas | `task etape N=<étape suivante>` pour repartir de la solution ; tout est cassé : `task atelier:reset` puis `task atelier:check`. |
-| Superset dans un état incohérent | `task superset:reset` (efface dashboards et charts). |
+| Une mission de l'atelier ne passe pas | `task step N=<étape suivante>` pour repartir de la solution ; tout est cassé : `git restore transformation/` puis `task build`. |
+| Superset dans un état incohérent | `docker compose -f visualization/docker-compose.yml down -v` (efface dashboards et charts), puis `task superset:up`. |
 
 ---
 

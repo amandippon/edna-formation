@@ -10,11 +10,11 @@ Avant de commencer : `task doctor` doit afficher ✅ pour Docker et pour la base
 |---|---|
 | `task ingest` | Ex. 1 : convertir les CSV en Parquet |
 | `task sql` | Ouvrir la base dans le terminal DuckDB (quitter avec `.quit`) |
-| `task etape N=1` | Passer à l'étape 1, 2, 3 ou 4 de l'atelier (voir plus bas) |
-| `task atelier:check` | Construire tous les modèles dbt et lancer les tests : tout vert = mission réussie |
-| `task documentation` | Ouvrir le lineage dbt-colibri (port 8088) |
+| `task step N=1` | Passer à l'étape 1, 2, 3 ou 4 de l'atelier (voir plus bas) |
+| `task build` | Construire tous les modèles dbt et lancer les tests : tout vert = mission réussie |
+| `task docs` | Ouvrir le lineage dbt-colibri (port 8088) |
 | `task superset:up` | Démarrer Superset (à lancer avant la pause) |
-| `task superset:refresh` | Recopier la base dans Superset après un changement de modèle |
+| `task superset:sync` | Recopier la base dans Superset après un `task build` |
 
 > **Le piège du verrou DuckDB.** DuckDB verrouille le fichier `edna-sports-data.duckdb` dès qu'un programme l'ouvre, même en lecture seule. Si DBeaver ou un terminal `duckdb` lancé à la main est ouvert sur ce fichier, `dbt` échoue avec `Could not set lock on file`. Ferme-le, ou passe par `task sql`, qui ouvre une copie de la base.
 
@@ -51,7 +51,7 @@ Le projet dbt est découpé en étapes, une par couche. Chaque étape est une **
 | 3 | `atelier/etape-3-gold` | `rpt_tourney_runs` : le parcours de chaque équipe au tournoi, ou un sujet libre | Gold (`reporting`) |
 | 4 | `atelier/etape-4-solution` | Le projet complet | |
 
-**La solution d'une mission, c'est l'étape suivante.** `task etape N=2` range ton travail en cours dans `git stash`, passe sur la branche de l'étape 2 (qui contient la solution de la mission 1) et reconstruit la base. Tu ne restes donc jamais bloqué.
+**La solution d'une mission, c'est l'étape suivante.** `task step N=2` range ton travail en cours dans `git stash`, passe sur la branche de l'étape 2 (qui contient la solution de la mission 1) et reconstruit la base. Tu ne restes donc jamais bloqué.
 
 Pour voir ce qu'une étape a ajouté :
 
@@ -65,32 +65,32 @@ Pour retrouver ton propre travail rangé : `git stash list`, puis `git stash sho
 ### Mission 1 : Bronze, `stg_seasons` (15 min)
 
 ```bash
-task etape N=1
+task step N=1
 ```
 
 1. La base est reconstruite avec la seule couche `staging`. Les tests de `stg_seasons` sont rouges.
 2. Ouvre `transformation/models/staging/stg_seasons.sql` : les `TODO` sont numérotés.
 3. Convertis `DayZero` (texte au format `10/29/2018`) en date, renomme les colonnes de régions.
-4. `task atelier:check` jusqu'à ce que tout soit vert. Le test `mission_1_stg_seasons` (dans `transformation/tests/missions/`) vérifie le résultat.
+4. `task build` jusqu'à ce que tout soit vert. Le test `mission_1_stg_seasons` (dans `transformation/tests/missions/`) vérifie le résultat.
 
 Compare avec `stg_teams.sql`, déjà écrit : c'est la même structure.
 
 ### Mission 2 : Silver, `dim_tourney_seeds` (15 min)
 
 ```bash
-task etape N=2
+task step N=2
 ```
 
 1. La base contient maintenant `staging` et une partie de `marts` : `dim_teams`, `dim_seasons`, `dim_cities`, `fct_regular_season_games`.
 2. Ouvre `transformation/models/marts/dim_tourney_seeds.sql` et complète les `TODO` : une jointure pour le nom de l'équipe, une jointure et un `case` pour le nom de la région.
-3. `task atelier:check` jusqu'au vert. La documentation et les tests du modèle sont dans `_marts_models.yml`.
+3. `task build` jusqu'au vert. La documentation et les tests du modèle sont dans `_marts_models.yml`.
 
 Bonus : ajoute une colonne `is_blowout` (écart d'au moins 20 points) à `fct_regular_season_games.sql`, documente-la et ajoute-lui un test `not_null`.
 
 ### Mission 3 : Gold, ta table de reporting (25 min)
 
 ```bash
-task etape N=3
+task step N=3
 ```
 
 La base contient toutes les couches, sauf ta mission. Deux options :
@@ -101,24 +101,24 @@ La base contient toutes les couches, sauf ta mission. Deux options :
 
 | Sujet | Commande | Question |
 |---|---|---|
-| `domicile` | `task atelier:start SUJET=domicile` | L'équipe qui reçoit gagne-t-elle plus souvent, selon les saisons ? |
-| `tirs-3pts` | `task atelier:start SUJET=tirs-3pts` | Le tir à 3 points prend-il plus de place depuis 2010 ? |
-| `upsets` | `task atelier:start SUJET=upsets` | Au tournoi, quelles affiches produisent le plus de surprises ? |
+| `domicile` | `task topic NAME=domicile` | L'équipe qui reçoit gagne-t-elle plus souvent, selon les saisons ? |
+| `tirs-3pts` | `task topic NAME=tirs-3pts` | Le tir à 3 points prend-il plus de place depuis 2010 ? |
+| `upsets` | `task topic NAME=upsets` | Au tournoi, quelles affiches produisent le plus de surprises ? |
 
-Dans les deux cas : `task atelier:check` jusqu'au vert. Solution de l'option A : `task etape N=4` ; de l'option B : `task atelier:solution SUJET=<ton sujet>`.
+Dans les deux cas : `task build` jusqu'au vert. Solution de l'option A : `task step N=4` ; de l'option B : le fichier correspondant dans `atelier/solutions/`.
 
 Fini en avance : fais l'autre option.
 
 ## Documentation : retrouver ta table dans le lineage (7 min)
 
-`task documentation`, puis le port **8088** (onglet **PORTS** de VS Code). Cherche ta table de la mission 3, lis sa description et ses tests, et remonte son lineage colonne par colonne jusqu'aux fichiers sources.
+`task docs`, puis le port **8088** (onglet **PORTS** de VS Code). Cherche ta table de la mission 3, lis sa description et ses tests, et remonte son lineage colonne par colonne jusqu'aux fichiers sources.
 
 ## Ex. 4 : le dashboard (30 min)
 
 But : brancher Superset sur ta table Gold et en tirer un dashboard.
 
 1. Superset a été lancé avant la pause (`task superset:up`). Sinon, lance-le maintenant (1 à 2 minutes).
-2. `task superset:refresh` : recopie ta base (avec ta table de la mission 3) dans Superset.
+2. `task superset:sync` : recopie ta base (avec ta table de la mission 3) dans Superset.
 3. Ouvre **http://localhost:8089** dans le navigateur de ta machine, connecte-toi avec `admin` / `admin`.
 4. La connexion **NCAA Basketball (DuckDB)** existe déjà : **Settings > Database Connections** pour voir son URI.
 5. **Datasets > + Dataset** : base `NCAA Basketball (DuckDB)`, schéma `"edna-sports-data".reporting`, ta table.
@@ -127,6 +127,6 @@ But : brancher Superset sur ta table Gold et en tirer un dashboard.
 
 ## Si tu es perdu
 
-- Une mission ne passe pas : `task etape N=<étape suivante>` installe la solution, tu repars du même point que tout le monde.
-- Tout est cassé sur ta branche : `task atelier:reset`, puis `task atelier:check`.
+- Une mission ne passe pas : `task step N=<étape suivante>` installe la solution, tu repars du même point que tout le monde.
+- Tout est cassé sur ta branche : `git restore transformation/`, puis `task build`.
 - Ta machine ne suit pas : rejoins un voisin, on travaille très bien à deux sur un écran.

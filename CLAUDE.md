@@ -13,26 +13,19 @@ User-facing docs are in French: `README.md` (setup), `docs/prerequis.md` (to sen
 ## Commands
 
 ```bash
-task pipeline          # ingest + dbt:build (models + tests)
 task ingest            # PyArrow: resources/*.csv -> processed-resources/<table>/<table>.parquet
-task dbt:build         # dbt build (run + test) -> edna-sports-data.duckdb
-task dbt:run           # dbt run only
-task dbt:test          # dbt test only
-task documentation     # colibri:generate + colibri:open (serves colibri-docs/ on port 8088)
-task superset:up       # build + start Superset on host port 8089, copy the DB, create admin, register the DB connection
-task superset:refresh  # dbt:build + docker cp of the DB into the running Superset container
-task superset:down     # stop Superset (volumes kept)
-task superset:logs     # follow Superset logs
-task superset:reset    # wipe Superset volumes and restart
-task doctor            # check Docker, DuckDB file, Superset container + /health
+task build             # dbt build (models + tests) -> edna-sports-data.duckdb; prints a hint and exits 1 on failure
+task docs              # dbt docs generate + colibri generate, then serves colibri-docs/ on port 8088
 task sql               # copy the DB to /tmp and open it in the DuckDB CLI (never locks the real file)
-task etape N=2         # stash local work, switch to branch atelier/etape-N-..., rebuild the DB
-task atelier:check     # dbt build, never fails the task (red tests are expected at the start of a mission)
-task atelier:start SUJET=domicile     # mission 3 option B: copy a free-topic skeleton (domicile|tirs-3pts|upsets)
-task atelier:solution SUJET=domicile  # install that topic's solution, then check
-task atelier:reset     # git checkout transformation/models and tests, remove free-topic working files
-task clean             # remove transformation/target, logs, dbt_packages, __pycache__
+task step N=2          # workshop: stash local work, switch to branch atelier/etape-N-..., rebuild the DB
+task topic NAME=domicile  # workshop mission 3 option B: copy a free-topic skeleton (domicile|tirs-3pts|upsets)
+task superset:up       # build + start Superset on host port 8089, copy the DB, create admin, register the DB connection
+task superset:sync     # docker cp of the DB into the running Superset container + flush the Redis chart cache
+task superset:down     # stop Superset (volumes kept)
+task doctor            # check Docker, DuckDB file, Superset /health
 ```
+
+The Taskfile is deliberately short. Anything else uses the underlying tools directly: `cd transformation && uv run dbt ...`, `docker logs -f superset`, `docker compose -f visualization/docker-compose.yml down -v` (wipe Superset), `git restore transformation/` (undo workshop edits).
 
 There is no `dbt deps` step: the project has no dbt packages.
 
@@ -52,7 +45,7 @@ There is no `dbt deps` step: the project has no dbt packages.
   - `models/reporting/examples/`: `rpt_uconn_tennessee_*` (5 models, schema `reporting`), example of "one business question = one model". Documented in `_examples_models.yml`.
 - **Visualization** (`visualization/`): Superset 6.0.0 + PostgreSQL 16 + Redis 7 via Docker Compose, host port 8089 -> container 8088.
   - Python packages (`psycopg2-binary`, `duckdb==1.5.1`, `duckdb-engine`) are installed into the image venv with `/app/.venv/bin/python -m ensurepip && /app/.venv/bin/python -m pip install ...`. A plain `pip install` goes to system Python and is invisible to Superset.
-  - The DuckDB file is copied with `docker cp` to `/app/superset_home/edna-sports-data.duckdb` (in `superset:up` and `superset:refresh`). No bind mount: with Docker-outside-of-Docker, the devcontainer path (`/workspaces/...`) does not exist on the host.
+  - The DuckDB file is copied with `docker cp` to `/app/superset_home/edna-sports-data.duckdb` (in `superset:up` and `superset:sync`). No bind mount: with Docker-outside-of-Docker, the devcontainer path (`/workspaces/...`) does not exist on the host.
   - `superset:up` registers the connection automatically: `superset set-database-uri -d "NCAA Basketball (DuckDB)" -u "duckdb:////app/superset_home/edna-sports-data.duckdb?access_mode=read_only"`. Read-only so several processes can open the file.
   - The Superset schema dropdown shows schemas as `"edna-sports-data".reporting` (catalog prefix from the file name); datasets created on `reporting` also work.
 
@@ -65,7 +58,7 @@ There is no `dbt deps` step: the project has no dbt packages.
   - `atelier/etape-4-solution`: the complete project.
   The solution of mission N is the file in step N+1. YAML entries of absent models are removed on each branch. When the final project changes, rebuild the step branches.
 - Skeletons compile and return NULL placeholders, so generic tests (YAML) and the singular tests in `transformation/tests/missions/` fail until the mission is done. Every mission test passes on the final project.
-- `atelier/sujets/<sujet>/`: free-topic skeleton + YAML + singular test for mission 3 option B, copied by `atelier:start` to `transformation/models/reporting/atelier/` and `transformation/tests/atelier/` (both git-ignored). Solutions in `atelier/solutions/`; `ex1.sql` is the SQL warm-up.
+- `atelier/sujets/<sujet>/`: free-topic skeleton + YAML + singular test for mission 3 option B, copied by `task topic` to `transformation/models/reporting/atelier/` and `transformation/tests/atelier/` (both git-ignored). Solutions in `atelier/solutions/`; `ex1.sql` is the SQL warm-up.
 - DuckDB locks the file for any open connection, even read-only: an open DuckDB CLI or DBeaver session makes `dbt` fail with `Could not set lock on file`. `task sql` works on a copy for that reason.
 
 ## Adding a reporting model
@@ -82,12 +75,12 @@ There is no `dbt deps` step: the project has no dbt packages.
              values: ['Regular', 'Tournament']
    ```
 
-3. Run `task superset:refresh` (or `task dbt:build` if Superset is not running); it also flushes the Redis chart cache. In Superset: Datasets > + Dataset for a new table, or Edit dataset > Sync columns from source for a changed one.
+3. Run `task build`, then `task superset:sync` if Superset is running (it also flushes the Redis chart cache). In Superset: Datasets > + Dataset for a new table, or Edit dataset > Sync columns from source for a changed one.
 4. Keep data coverage in mind: box score and cities only from 2010, tournament until 2018, seeds null for regular season.
 
 ## Dev environment
 
-VS Code devcontainer (`.devcontainer/`: Python 3.12, uv, DuckDB CLI 1.5.1, Task) with Docker-outside-of-Docker. `post-create.sh` runs `uv sync --no-install-project` then `task pipeline`, so the DB exists when the container opens. Only port 8088 (Colibri) is forwarded; Superset runs on the host Docker and is reached at http://localhost:8089 from the host browser. Fully local, no cloud.
+VS Code devcontainer (`.devcontainer/`: Python 3.12, uv, DuckDB CLI 1.5.1, Task) with Docker-outside-of-Docker. `post-create.sh` runs `uv sync --no-install-project`, `task ingest` and `task build`, so the DB exists when the container opens. Only port 8088 (Colibri) is forwarded; Superset runs on the host Docker and is reached at http://localhost:8089 from the host browser. Fully local, no cloud.
 
 DuckDB 1.5.1 is locked in `uv.lock` and pinned in `visualization/docker/Dockerfile` to guarantee file format compatibility between dbt and Superset. Python is constrained to `>=3.12,<3.13` in `pyproject.toml`; dev dependencies are in `[dependency-groups]`.
 
@@ -100,6 +93,6 @@ DuckDB 1.5.1 is locked in `uv.lock` and pinned in `visualization/docker/Dockerfi
 - `visualization/docker/Dockerfile`: Superset image, installs Python deps into `/app/.venv`
 - `visualization/docker/superset_config.py`: metadata DB URI, Redis cache, CSRF disabled
 - `visualization/docker-compose.yml`: superset, db, redis; no bind mount for DuckDB
-- `colibri-docs/`: generated column-level lineage (`task colibri:generate`), committed
+- `colibri-docs/`: generated column-level lineage (`task docs`), committed
 - `atelier/`: workshop guide, skeletons, tests and solutions (French)
 - `docs/prerequis.md`: pre-workshop setup (French)

@@ -23,7 +23,7 @@ Le dictionnaire des tables `reporting`, les pièges à connaître et des idées 
 
 **`rpt_tourney_runs`** : `team_name`, `team_state`, `season`, `seed_number`, `tourney_wins`, `tourney_losses`, `is_champion`, `tournament_result` (`Champion`, `Runner-Up`, `Final Four`, `Elite Eight`, `Sweet Sixteen`, `Second Round`, `First Round Exit`).
 
-Les descriptions complètes sont dans `transformation/models/reporting/_reporting_models.yml` et dans le lineage Colibri (`task documentation`).
+Les descriptions complètes sont dans `transformation/models/reporting/_reporting_models.yml` et dans le lineage Colibri (`task docs`).
 
 ### Pièges à connaître
 
