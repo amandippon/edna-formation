@@ -14,8 +14,8 @@ team_tourney_stats as (
     select
         season,
         team_id,
-        sum(is_win)                         as tourney_wins,
-        count(*) - sum(is_win)              as tourney_losses,
+        sum(is_win)::integer                as tourney_wins,
+        (count(*) - sum(is_win))::integer   as tourney_losses,
         round(avg(pts_scored), 1)           as avg_pts_scored_tourney,
         round(avg(pts_allowed), 1)          as avg_pts_allowed_tourney
     from all_tourney_team_games

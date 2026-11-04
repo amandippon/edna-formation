@@ -34,6 +34,7 @@ Les descriptions complètes sont dans `transformation/models/reporting/_reportin
 - **`rpt_team_games` compte chaque match deux fois** : pour compter des matchs, filtrez `is_win = true` ou comptez les `game_id` distincts.
 - **`rpt_team_season_stats` ne couvre que la saison régulière** : les matchs de tournoi n'y sont pas.
 - **Pourcentages entre 0 et 1** (`fg_pct`, `win_pct`…) : réglez le format d'affichage en `%` dans Superset.
+- **Entiers issus d'un `sum()`** : dans DuckDB, `sum()` sur un entier renvoie un `HUGEINT`, que Superset ne traite pas comme un nombre. Convertissez dans le modèle : `sum(is_win)::integer`.
 - **Booléens** : pour un taux, créez une métrique SQL `AVG(CASE WHEN is_win THEN 1 ELSE 0 END)` ; pour un compte, `SUM(CASE WHEN is_close_game THEN 1 ELSE 0 END)`.
 - **Cartes** : le chart **Country Map** (pays `usa`) attend des codes ISO comme `US-TX` : utilisez `team_state_iso` ou `state_iso`.
 - **Temps** : `game_date` est la colonne temporelle pour les séries chronologiques ; `season` pour des agrégats par saison.

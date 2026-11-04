@@ -32,7 +32,7 @@ models:
         description: "Numéro de seed (1 = favori, 16 = outsider)."
         data_tests: [not_null]
       - name: region_name
-        description: "Nom de la région du bracket pour cette saison (issu de dim_seasons.region_w à region_z)."
+        description: "Nom de la région du bracket pour cette saison (issu de stg_seasons.region_w à region_z, selon seed_region)."
         data_tests: [not_null]
   - name: dim_teams
     description: "Dimension équipes NCAA Women avec état d'origine déduit des matchs à domicile."

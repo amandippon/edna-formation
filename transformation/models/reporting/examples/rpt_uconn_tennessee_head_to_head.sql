@@ -74,9 +74,9 @@ final as (
         g.l_seed_number,
         -- running totals for rivalry tracking
         sum(case when g.w_team_id = 3163 then 1 else 0 end)
-            over (order by g.season, g.day_num rows unbounded preceding) as uconn_cumulative_wins,
+            over (order by g.season, g.day_num rows unbounded preceding)::integer as uconn_cumulative_wins,
         sum(case when g.w_team_id = 3397 then 1 else 0 end)
-            over (order by g.season, g.day_num rows unbounded preceding) as tennessee_cumulative_wins,
+            over (order by g.season, g.day_num rows unbounded preceding)::integer as tennessee_cumulative_wins,
         -- box score
         g.has_box_score,
         g.w_fgm, g.w_fga, g.w_fg_pct, g.w_fgm3, g.w_fga3, g.w_fg3_pct,

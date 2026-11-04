@@ -57,7 +57,7 @@ models:
         data_tests: [not_null]
 
   - name: stg_tourney_seeds
-    description: "Seeds (classements) des 64 équipes sélectionnées pour le tournoi NCAA, par saison (1998–2018)."
+    description: "Seeds (classements) des 64 équipes sélectionnées pour le tournoi NCAA, par saison (1998–2019 ; les résultats du tournoi 2019 ne sont pas dans le jeu de données)."
     columns:
       - name: season
         description: "Année de la saison du tournoi."

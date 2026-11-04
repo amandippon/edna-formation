@@ -111,29 +111,29 @@ aggregated as (
         tg.team_id,
         -- overall
         count(*)                                                            as games_played,
-        sum(tg.is_win)                                                      as wins,
-        count(*) - sum(tg.is_win)                                           as losses,
+        sum(tg.is_win)::integer as wins,
+        (count(*) - sum(tg.is_win))::integer as losses,
         round(sum(tg.is_win)::double / count(*), 3)                         as win_pct,
-        sum(tg.pts_scored)                                                  as total_pts_scored,
-        sum(tg.pts_allowed)                                                 as total_pts_allowed,
+        sum(tg.pts_scored)::integer as total_pts_scored,
+        sum(tg.pts_allowed)::integer as total_pts_allowed,
         round(avg(tg.pts_scored), 1)                                        as avg_pts_scored,
         round(avg(tg.pts_allowed), 1)                                       as avg_pts_allowed,
         round(avg(tg.pts_scored - tg.pts_allowed), 1)                       as avg_pt_diff,
         -- win rate by location
         count(case when tg.game_location = 'Home' then 1 end)              as home_games,
-        sum(case when tg.game_location = 'Home' then tg.is_win else 0 end) as home_wins,
+        sum(case when tg.game_location = 'Home' then tg.is_win else 0 end)::integer as home_wins,
         round(
             sum(case when tg.game_location = 'Home' then tg.is_win else 0 end)::double
             / nullif(count(case when tg.game_location = 'Home' then 1 end), 0), 3
         )                                                                   as home_win_pct,
         count(case when tg.game_location = 'Away' then 1 end)              as away_games,
-        sum(case when tg.game_location = 'Away' then tg.is_win else 0 end) as away_wins,
+        sum(case when tg.game_location = 'Away' then tg.is_win else 0 end)::integer as away_wins,
         round(
             sum(case when tg.game_location = 'Away' then tg.is_win else 0 end)::double
             / nullif(count(case when tg.game_location = 'Away' then 1 end), 0), 3
         )                                                                   as away_win_pct,
         count(case when tg.game_location = 'Neutral' then 1 end)              as neutral_games,
-        sum(case when tg.game_location = 'Neutral' then tg.is_win else 0 end) as neutral_wins,
+        sum(case when tg.game_location = 'Neutral' then tg.is_win else 0 end)::integer as neutral_wins,
         round(
             sum(case when tg.game_location = 'Neutral' then tg.is_win else 0 end)::double
             / nullif(count(case when tg.game_location = 'Neutral' then 1 end), 0), 3
