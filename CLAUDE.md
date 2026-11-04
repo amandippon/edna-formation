@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) and other AI assista
 
 ## Project
 
-Local, hands-on data pipeline used for workshops (originally a course for design students, now also a 3-hour meetup workshop for data/dev profiles). Participants work individually: SQL on Parquet, then three dbt missions (one per layer, on dedicated git branches, against pre-written tests), lineage, then a Superset dashboard on their own reporting table. Everything is driven by `task` commands.
+Local, hands-on data pipeline used for workshops (originally a course for design students, now also a 3-hour meetup workshop for data/dev profiles). Participants work individually: an optional SQL warm-up on Parquet, then three dbt missions (one per layer, on dedicated git branches, against pre-written tests), lineage, then a Superset dashboard on their own reporting table. Everything is driven by `task` commands.
 
 **Theme**: NCAA Women's Basketball (Kaggle 2019): teams, seasons, regular season games 1998-2019, NCAA tournament 1998-2018. Box scores and game cities only from season 2010.
 
@@ -19,7 +19,7 @@ task docs              # dbt docs generate + colibri generate, then serves colib
 task show M=stg_teams  # dbt show of a model or test, reformatted (native output truncates text at 20 chars)
 task sql               # copy the DB to /tmp and open it in the DuckDB CLI (never locks the real file)
 task step N=2          # workshop: stash local work, switch to branch atelier/etape-N-..., rebuild the DB
-task topic NAME=domicile  # workshop mission 3 option B: copy a free-topic skeleton (domicile|tirs-3pts|upsets)
+task topic NAME=domicile  # workshop, bonus after mission 3: copy a free-topic skeleton (domicile|tirs-3pts|upsets)
 task superset:up       # build + start Superset on host port 8089, copy the DB, create admin, register the DB connection
 task superset:sync     # docker cp of the DB into the running Superset container + flush the Redis chart cache
 task superset:down     # stop Superset (volumes kept)
@@ -59,8 +59,8 @@ There is no `dbt deps` step: the project has no dbt packages.
   - `atelier/etape-4-solution`: the complete project.
   The solution of mission N is the file in step N+1. YAML entries of absent models are removed on each branch. When the final project changes, rebuild the step branches.
 - Each mission pairs SQL with one dbt mechanism: mission 1 declares the YAML tests of `seed_region`/`seed_number` (removed from the YAML on step 1), mission 2 writes the `ref()` CTEs for `stg_teams`/`stg_seasons`, mission 3 writes three column descriptions (blanked in the YAML on step 3).
-- Skeletons compile and return NULL placeholders, so generic tests (YAML) and the singular tests in `transformation/tests/missions/` fail until the mission is done. The mission tests also inspect the dbt `graph` (declared tests, `depends_on`, column descriptions) and return one row per problem, readable with `task show M=mission_<n>_<model>`. Every mission test passes on the final project.
-- `atelier/sujets/<sujet>/`: free-topic skeleton + YAML + singular test for mission 3 option B, copied by `task topic` to `transformation/models/reporting/atelier/` and `transformation/tests/atelier/` (both git-ignored). Solutions in `atelier/solutions/`; `ex1.sql` is the SQL warm-up.
+- Skeletons compile and return NULL placeholders, so generic tests (YAML) and the singular tests in `transformation/tests/missions/` fail until the mission is done. The mission tests also inspect the dbt `graph` (declared tests, `depends_on`, column descriptions), mission 3 also rejects `HUGEINT` columns, and each test returns one row per problem, readable with `task show M=mission_<n>_<model>`. Every mission test passes on the final project.
+- `atelier/sujets/<sujet>/`: free-topic skeleton + YAML + singular test, a bonus for participants who finish mission 3 early, copied by `task topic` to `transformation/models/reporting/atelier/` and `transformation/tests/atelier/` (both git-ignored). Solutions in `atelier/solutions/`; `ex1.sql` is the SQL warm-up.
 - DuckDB locks the file for any open connection, even read-only: an open DuckDB CLI or DBeaver session makes `dbt` fail with `Could not set lock on file`. `task sql` works on a copy for that reason.
 - dbt never drops relations whose model was renamed or deleted (tables are only replaced on rebuild). Orphans stay in the DuckDB file and in Superset after sync; the fix is `rm edna-sports-data.duckdb && task build`. `task step` always starts from an empty DB.
 
@@ -78,8 +78,9 @@ There is no `dbt deps` step: the project has no dbt packages.
              values: ['Regular', 'Tournament']
    ```
 
-3. Run `task build`, then `task superset:sync` if Superset is running (it also flushes the Redis chart cache). In Superset: Datasets > + Dataset for a new table, or Edit dataset > Sync columns from source for a changed one.
-4. Keep data coverage in mind: box score and cities only from 2010, tournament until 2018, seeds null for regular season.
+3. Cast every `sum()` to `::integer` (`sum(is_win)::integer`, `(count(*) - sum(is_win))::integer`): DuckDB returns `HUGEINT` for sums of integers, which Superset does not treat as numeric.
+4. Run `task build`, then `task superset:sync` if Superset is running (it also flushes the Redis chart cache). In Superset: Datasets > + Dataset for a new table, or Edit dataset > Sync columns from source for a changed one.
+5. Keep data coverage in mind: box score and cities only from 2010, tournament until 2018, seeds null for regular season.
 
 ## Dev environment
 

@@ -38,7 +38,7 @@ task superset:up
 task doctor
 ```
 
-**C'est prêt si `task doctor` affiche quatre lignes ✅.** Tu peux aussi ouvrir http://localhost:8089 dans ton navigateur (identifiants `admin` / `admin`). Ensuite :
+**C'est prêt si `task doctor` affiche trois lignes ✅ (Docker, base, Superset).** Tu peux aussi ouvrir http://localhost:8089 dans ton navigateur (identifiants `admin` / `admin`). Ensuite :
 
 ```bash
 task superset:down

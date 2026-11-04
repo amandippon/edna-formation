@@ -55,7 +55,7 @@ Lance Docker Desktop et attends que l'icône de la baleine soit immobile.
    task doctor
    ```
 
-   `task doctor` doit afficher quatre lignes ✅ (Docker, base, conteneur, Superset). Ouvre http://localhost:8089 pour vérifier, connecte-toi avec `admin` / `admin`, puis arrête la stack :
+   `task doctor` doit afficher trois lignes ✅ (Docker, base, Superset). Ouvre http://localhost:8089 pour vérifier, connecte-toi avec `admin` / `admin`, puis arrête la stack :
 
    ```bash
    task superset:down
@@ -187,7 +187,7 @@ En vocabulaire médaillon : les fichiers Parquet de `processed-resources/` tienn
 | `reporting` | Tables larges prêtes pour Superset | `rpt_team_games`, `rpt_games`, `rpt_team_season_stats`, `rpt_tourney_runs` |
 | `reporting` (exemples) | Une question métier = un modèle | `rpt_uconn_tennessee_*` (5 tables) |
 
-Le code des modèles est dans `transformation/models/<couche>/`, leur documentation dans les fichiers `_*_models.yml`. Le dictionnaire des tables `reporting` est dans [atelier/donnees.md](atelier/donnees.md).
+Le code des modèles est dans `transformation/models/<couche>/`, leur documentation dans les fichiers `_*_models.yml`. Les totaux calculés avec `sum()` sont convertis en `::integer` : DuckDB renvoie sinon un `HUGEINT`, que Superset ne traite pas comme un nombre. Le dictionnaire des tables `reporting` est dans [atelier/donnees.md](atelier/donnees.md).
 
 ---
 
@@ -237,11 +237,12 @@ edna-formation/
 ├── processed-resources/     # Parquet générés (ignorés par git)
 ├── transformation/          # Projet dbt
 │   ├── macros/              # generate_schema_name : schémas sans préfixe
-│   └── models/
-│       ├── staging/         # stg_* : CSV renommés
-│       ├── marts/           # dim_* et fct_*
-│       └── reporting/       # rpt_* pour Superset
-│           └── examples/    # rpt_uconn_tennessee_* (modèles d'exemple)
+│   ├── models/
+│   │   ├── staging/         # stg_* : CSV renommés
+│   │   ├── marts/           # dim_* et fct_*
+│   │   └── reporting/       # rpt_* pour Superset
+│   │       └── examples/    # rpt_uconn_tennessee_* (modèles d'exemple)
+│   └── tests/missions/      # Tests des trois missions de l'atelier
 ├── visualization/           # docker-compose et image Superset
 ├── colibri-docs/            # Lineage généré par Colibri
 ├── atelier/                 # Guide de l'atelier, sujets libres et solutions
