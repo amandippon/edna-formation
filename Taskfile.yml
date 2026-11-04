@@ -198,6 +198,87 @@ tasks:
         exit $ok
 
   # ─────────────────────────────────────────────
+  # Exploration SQL
+  # ─────────────────────────────────────────────
+
+  sql:
+    desc: "🦆 Ouvre une copie de la base dans le terminal DuckDB (ne bloque pas dbt ; relance après un dbt build pour voir les changements)"
+    interactive: true
+    preconditions:
+      - sh: test -f {{.DB_FILE}}
+        msg: "❌ Base absente. Lance d'abord : task pipeline"
+    cmds:
+      # DuckDB verrouille le fichier dès qu'un process l'ouvre, même en lecture seule :
+      # on travaille sur une copie pour que dbt puisse toujours écrire dans la vraie base.
+      - cp {{.DB_FILE}} /tmp/edna-snapshot.duckdb
+      - 'echo "🦆 Copie de la base ouverte (quitter : .quit). Tables : schémas staging, marts, reporting."'
+      - duckdb -readonly /tmp/edna-snapshot.duckdb
+
+  # ─────────────────────────────────────────────
+  # Atelier : exercices de transformation
+  # Exemples : task atelier:start EX=2
+  #            task atelier:start EX=3 SUJET=domicile   (domicile | tirs-3pts | upsets)
+  # ─────────────────────────────────────────────
+
+  atelier:start:
+    desc: "🎯 Prépare un exercice (EX=1, EX=2, ou EX=3 SUJET=domicile|tirs-3pts|upsets)"
+    vars:
+      EX: '{{.EX | default ""}}'
+      SUJET: '{{.SUJET | default ""}}'
+    preconditions:
+      - sh: '[ "{{.EX}}" = "1" ] || [ "{{.EX}}" = "2" ] || [ "{{.EX}}" = "3" ]'
+        msg: "❌ Précise l'exercice : task atelier:start EX=1 (ou EX=2, ou EX=3 SUJET=domicile)"
+      - sh: '[ "{{.EX}}" != "3" ] || [ -d "atelier/ex3/{{.SUJET}}" -a -n "{{.SUJET}}" ]'
+        msg: "❌ Pour l'ex. 3, choisis un sujet : SUJET=domicile, SUJET=tirs-3pts ou SUJET=upsets"
+    cmds:
+      - mkdir -p {{.DBT_DIR}}/tests/atelier {{.DBT_DIR}}/models/reporting/atelier
+      - |
+        case "{{.EX}}" in
+          1) echo "📄 Consignes : atelier/README.md, section Ex. 1   |   DuckDB en mémoire : duckdb" ;;
+          2) cp -n atelier/ex2/assert_*.sql {{.DBT_DIR}}/tests/atelier/
+             echo "📄 Consignes : atelier/README.md, section Ex. 2"
+             echo "✏️  Fichier à modifier : transformation/models/marts/fct_regular_season_games.sql" ;;
+          3) cp -n atelier/ex3/{{.SUJET}}/*.sql atelier/ex3/{{.SUJET}}/*.yml {{.DBT_DIR}}/models/reporting/atelier/
+             mv -n {{.DBT_DIR}}/models/reporting/atelier/assert_*.sql {{.DBT_DIR}}/tests/atelier/ 2>/dev/null || true
+             echo "📄 Consignes : atelier/README.md, section Ex. 3"
+             echo "✏️  Fichier à compléter : $(ls {{.DBT_DIR}}/models/reporting/atelier/*.sql | grep -v '^$' | xargs -n1 basename | tr '\n' ' ')" ;;
+        esac
+      - 'echo "✅ Vérifie ton travail avec : task atelier:check"'
+
+  atelier:check:
+    desc: "🔎 Construit les modèles de l'atelier et lance leurs tests (vert = exercice réussi)"
+    dir: "{{.DBT_DIR}}"
+    cmds:
+      - uv run dbt build --select fct_regular_season_games path:models/reporting/atelier
+
+  atelier:solution:
+    desc: "🆘 Installe la solution d'un exercice pour repartir (EX=2, ou EX=3 SUJET=...)"
+    vars:
+      EX: '{{.EX | default ""}}'
+      SUJET: '{{.SUJET | default ""}}'
+    preconditions:
+      - sh: '[ "{{.EX}}" = "2" ] || [ "{{.EX}}" = "3" -a -d "atelier/ex3/{{.SUJET}}" -a -n "{{.SUJET}}" ]'
+        msg: "❌ Usage : task atelier:solution EX=2   ou   task atelier:solution EX=3 SUJET=domicile (solution de l'ex. 1 : atelier/solutions/ex1.sql)"
+    cmds:
+      - task: atelier:start
+        vars: { EX: "{{.EX}}", SUJET: "{{.SUJET}}" }
+      - |
+        case "{{.EX}}" in
+          2) cp atelier/solutions/ex2/fct_regular_season_games.sql atelier/solutions/ex2/_marts_models.yml {{.DBT_DIR}}/models/marts/ ;;
+          3) for f in atelier/ex3/{{.SUJET}}/rpt_*.sql; do cp "atelier/solutions/ex3/$(basename "$f")" {{.DBT_DIR}}/models/reporting/atelier/; done ;;
+        esac
+      - 'echo "✅ Solution installée."'
+      - task: atelier:check
+
+  atelier:reset:
+    desc: "♻️  Remet les modèles dans leur état initial (efface ton travail d'atelier)"
+    prompt: "Cela efface tes modifications dans transformation/models et les fichiers d'atelier. Continuer ?"
+    cmds:
+      - git checkout -- {{.DBT_DIR}}/models
+      - rm -rf {{.DBT_DIR}}/models/reporting/atelier {{.DBT_DIR}}/tests/atelier
+      - 'echo "✅ Modèles remis à zéro. Relance task dbt:build pour reconstruire la base."'
+
+  # ─────────────────────────────────────────────
   # Maintenance
   # ─────────────────────────────────────────────
 

@@ -1,22 +1,6 @@
-# Fiche atelier : un dashboard par équipe
+# Les données de l'atelier
 
-Objectif : en une heure, chaque équipe choisit **une question**, construit **un dashboard** Superset qui y répond, et le présente en 4 minutes.
-
-Prérequis : Superset tourne (`task superset:up`), base **NCAA Basketball (DuckDB)** déjà connectée. Voir le [README](../README.md) en cas de souci.
-
-## Déroulé de l'heure
-
-| Temps | Jalon |
-|---|---|
-| 0 à 10 min | Choisir la question (liste plus bas ou la vôtre), repérer la table, lancer Superset sur une machine. |
-| 10 à 25 min | Créer le ou les datasets, premier chart qui répond à la question, même brut. |
-| 25 à 50 min | Enrichir : 3 à 5 charts, filtres natifs du dashboard (saison, équipe), titres explicites. Niveau 2 : un modèle dbt dédié. |
-| 50 à 60 min | Figer le dashboard, choisir l'insight à raconter, préparer la restitution. |
-
-Deux façons d'obtenir les données qu'il vous faut :
-
-- **Dataset virtuel** : SQL Lab, requête, **Save > Save dataset**. Le plus rapide.
-- **Modèle dbt** : `transformation/models/reporting/rpt_<sujet>.sql` puis `task superset:refresh`. Plus propre, testé, visible dans le lineage. Exemples dans `transformation/models/reporting/examples/`.
+Le dictionnaire des tables `reporting`, les pièges à connaître et des idées de dashboards pour l'[ex. 4](README.md#ex-4--le-dashboard-35-min) ou pour aller plus loin.
 
 ## Les tables `reporting`
 
@@ -27,6 +11,7 @@ Deux façons d'obtenir les données qu'il vous faut :
 | `rpt_team_season_stats` | une équipe sur une saison régulière | 7 364 | Classements, bilans victoires/défaites, qualification au tournoi, carte par état |
 | `rpt_tourney_runs` | une équipe sur un tournoi NCAA | 1 344 | Parcours au tournoi, titres, résultats par seed |
 | `rpt_uconn_tennessee_*` | variable (5 tables d'exemple) | 2 à 1 574 | Rivalité Connecticut vs Tennessee, modèle à copier pour votre propre question |
+| Vos tables de l'ex. 3 | une saison ou une affiche | 10 à 45 | `rpt_home_advantage_by_season`, `rpt_three_point_trend`, `rpt_upsets_by_seed` |
 
 ### Colonnes clés
 
@@ -53,7 +38,7 @@ Les descriptions complètes sont dans `transformation/models/reporting/_reportin
 - **Cartes** : le chart **Country Map** (pays `usa`) attend des codes ISO comme `US-TX` : utilisez `team_state_iso` ou `state_iso`.
 - **Temps** : `game_date` est la colonne temporelle pour les séries chronologiques ; `season` pour des agrégats par saison.
 
-## Six idées de dashboards
+## Six idées de dashboards (ex. 4 ou bonus)
 
 Les chiffres d'accroche ont été calculés sur la base du projet ; les requêtes sont en annexe.
 
@@ -93,16 +78,9 @@ Les chiffres d'accroche ont été calculés sur la base du projet ; les requête
 - **Charts** : Big Number de la part de matchs serrés ; histogramme de `score_margin` ; bar chart des équipes au meilleur bilan dans les matchs serrés ; table des matchs à plusieurs prolongations (`num_ot`, disponible dans `rpt_team_games`).
 - **Accroche** : en saison régulière, **21,4 %** des matchs se jouent à 5 points ou moins et **3,1 %** vont en prolongation (jusqu'à 5 prolongations dans un même match).
 
-## Restitution : 4 minutes par équipe
-
-1. **La question** (30 s) : ce que vous vouliez savoir et pourquoi.
-2. **Le dashboard** (2 min) : démonstration en direct, sans tout commenter.
-3. **Une insight** (1 min) : le chiffre ou le graphique à retenir.
-4. **Une difficulté** (30 s) : ce qui a coincé (donnée, outil, modélisation) et comment vous l'avez contourné.
-
 ## Annexe : requêtes de vérification
 
-À lancer dans SQL Lab ou avec `duckdb -readonly edna-sports-data.duckdb`.
+À lancer dans SQL Lab ou dans le terminal DuckDB (`task sql`).
 
 ```sql
 -- 1. Avantage du terrain (saison régulière)

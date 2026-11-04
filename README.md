@@ -21,7 +21,7 @@ Superset (http://localhost:8089)   datasets, charts, dashboards, SQL Lab
 
 ## 1. À faire avant l'atelier (20 à 30 min, une seule fois)
 
-Le jour J, le Wi-Fi ne suffira pas à télécharger les images Docker de toute la salle. Fais ces étapes chez toi.
+Le jour J, le Wi-Fi ne suffira pas à télécharger les images Docker de toute la salle. Fais ces étapes chez toi (version courte à envoyer aux participants : [docs/prerequis.md](docs/prerequis.md)).
 
 ### Installer les outils
 
@@ -79,64 +79,56 @@ uv télécharge Python 3.12 si besoin. Le CLI `duckdb` et les extensions VS Code
 
 ---
 
-## 2. Le jour J : setup en 15 minutes
+## 2. Le jour de l'atelier
 
-1. Démarre Docker Desktop.
+1. Démarre Docker Desktop **avant** d'ouvrir VS Code.
 2. Ouvre le projet dans VS Code, puis **Dev Containers: Reopen in Container** (quelques secondes, l'image est déjà construite).
-3. Dans le terminal du devcontainer :
+3. Dans le terminal du devcontainer : `task doctor`. Les lignes Docker et base doivent être ✅ (Superset sera démarré plus tard).
+4. Mets à jour le projet si on te le demande : `git pull`.
 
-   ```bash
-   task pipeline       # facultatif si la base existe déjà (~15-20 s)
-   task superset:up    # ~1 à 2 min
-   ```
+La suite se passe dans le **[guide de l'atelier](atelier/README.md)** : quatre exercices, de l'interrogation des fichiers Parquet jusqu'au dashboard.
 
-4. Ouvre **http://localhost:8089 dans le navigateur de ta machine**, et pas via la notification de port de VS Code : Superset tourne sur le Docker de ta machine, pas dans le devcontainer. Identifiants : `admin` / `admin`.
-5. La base est **déjà connectée** sous le nom **NCAA Basketball (DuckDB)**, en lecture seule. Rien à configurer.
-
-En cas de doute : `task doctor`.
-
-> Dans les menus déroulants de Superset, les schémas s'affichent sous la forme `"edna-sports-data".reporting`. C'est normal (le préfixe est le nom du fichier DuckDB) : choisis celui qui finit par `reporting` et ignore les autres (`system.main`, `temp.main`, etc.).
-
-Une seule machine par équipe a besoin de faire tourner Superset.
+| Exercice | Ce que tu fais | Couche |
+|---|---|---|
+| Ex. 1 | Interroger les fichiers Parquet en SQL avec DuckDB | Fichiers sources |
+| Ex. 2 | Ajouter des colonnes calculées à une table de faits dbt, validées par un test | Silver (`marts`) |
+| Ex. 3 | Écrire ta propre table de reporting dbt à partir d'un squelette, avec tests et documentation | Gold (`reporting`) |
+| Ex. 4 | Construire un dashboard Superset sur ta table | Visualisation |
 
 ---
 
-## 3. Construire un dashboard
+## 3. Superset
 
-La fiche [docs/atelier.md](docs/atelier.md) détaille les tables, leurs pièges et six idées de dashboards.
+```bash
+task superset:up        # ~1 à 2 min (plus si les images ne sont pas en cache)
+```
 
-**Chemin rapide : une table existante**
+1. Ouvre **http://localhost:8089 dans le navigateur de ta machine**, et pas via la notification de port de VS Code : Superset tourne sur le Docker de ta machine, pas dans le devcontainer. Identifiants : `admin` / `admin`.
+2. La base est **déjà connectée** sous le nom **NCAA Basketball (DuckDB)**, en lecture seule (URI : `duckdb:////app/superset_home/edna-sports-data.duckdb?access_mode=read_only`).
+3. **Datasets > + Dataset** : base `NCAA Basketball (DuckDB)`, schéma `reporting`, une table.
 
-1. **Datasets > + Dataset** : base `NCAA Basketball (DuckDB)`, schéma `reporting`, une table (par exemple `rpt_team_games`).
-2. **Create chart** depuis le dataset, choisis un type de graphique, glisse colonnes et métriques, **Save** en l'ajoutant à un dashboard.
-3. Les booléens (`is_win`, `is_close_game`…) s'agrègent avec une métrique SQL personnalisée, par exemple `AVG(CASE WHEN is_win THEN 1 ELSE 0 END)`.
+> Dans les menus déroulants, les schémas s'affichent sous la forme `"edna-sports-data".reporting` (le préfixe est le nom du fichier DuckDB) : choisis celui qui finit par `reporting` et ignore les autres (`system.main`, `temp.main`, etc.).
 
-**Chemin SQL : dataset virtuel**
+Superset travaille sur **une copie** de la base. Après une modification d'un modèle dbt, `task superset:refresh` reconstruit les modèles et recopie la base, sans redémarrage. Une nouvelle table apparaît dans **Datasets > + Dataset** ; pour une table modifiée, **Edit dataset > Sync columns from source**.
 
-**SQL > SQL Lab**, écris ta requête sur n'importe quel schéma (`staging`, `marts`, `reporting`), exécute-la, puis **Save > Save dataset**. Le résultat devient un dataset utilisable dans les charts, sans toucher au projet dbt.
+Autres chemins utiles :
 
-**Niveau 2 : un nouveau modèle dbt**
+- **SQL Lab** (**SQL > SQL Lab**) : une requête sur n'importe quel schéma, puis **Save > Save dataset**, devient un dataset virtuel.
+- **Booléens** (`is_win`, `is_close_game`…) : métrique SQL personnalisée, par exemple `AVG(CASE WHEN is_win THEN 1 ELSE 0 END)`.
+- **Idées de dashboards et dictionnaire des tables** : [atelier/donnees.md](atelier/donnees.md).
 
-1. Crée `transformation/models/reporting/rpt_<ton_sujet>.sql`, construit à partir des tables `marts` avec `{{ ref('...') }}`. Les modèles de `transformation/models/reporting/examples/` (rivalité UConn vs Tennessee) montrent comment traduire une question en table.
-2. Documente-le dans un fichier YAML du même dossier (description, colonnes, tests).
-3. Lance :
-
-   ```bash
-   task superset:refresh
-   ```
-
-   La commande reconstruit les modèles dbt (avec les tests) et recopie la base dans Superset, sans redémarrage. Une nouvelle table apparaît dans **Datasets > + Dataset** ; pour une table modifiée, **Edit dataset > Sync columns from source**.
-
-Un assistant IA (Claude Code ou équivalent) peut écrire le modèle : le fichier `CLAUDE.md` à la racine lui décrit l'architecture et les conventions.
+Un assistant IA (Claude Code ou équivalent) peut écrire un modèle dbt : le fichier `CLAUDE.md` à la racine lui décrit l'architecture et les conventions.
 
 ---
 
 ## 4. Explorer la base hors Superset
 
-**CLI DuckDB** (installé dans le devcontainer) :
+> **Verrou DuckDB.** DuckDB verrouille le fichier `edna-sports-data.duckdb` dès qu'un programme l'ouvre, **même en lecture seule**. Tant qu'un terminal `duckdb` ou DBeaver est ouvert dessus, `dbt` échoue avec `Could not set lock on file`. Utilise `task sql` (qui ouvre une copie) ou ferme ces outils avant de lancer dbt.
+
+**Terminal DuckDB** (installé dans le devcontainer) :
 
 ```bash
-duckdb -readonly edna-sports-data.duckdb
+task sql
 ```
 
 ```sql
@@ -148,9 +140,9 @@ GROUP BY team_name
 ORDER BY titres DESC;
 ```
 
-**DuckDB UI** (facultatif, non testé dans le devcontainer) : `duckdb -ui edna-sports-data.duckdb` ouvre une interface notebook sur http://localhost:4213. L'extension télécharge son interface depuis internet, et dans le devcontainer il faut transférer le port 4213 depuis l'onglet **Ports** de VS Code.
+`task sql` travaille sur une copie de la base prise au lancement : relance-le après un `dbt build` pour voir tes nouvelles tables.
 
-**DBeaver** (facultatif) : nouvelle connexion **DuckDB**, fichier `edna-sports-data.duckdb` à la racine du repo cloné sur ta machine. Coche une connexion en lecture seule, ou ferme DBeaver avant `task pipeline` : DuckDB n'accepte qu'un seul processus en écriture.
+**DBeaver** (facultatif) : nouvelle connexion **DuckDB**, fichier `edna-sports-data.duckdb` à la racine du repo cloné sur ta machine. **Déconnecte-toi** avant de lancer dbt.
 
 **Lineage** : `task documentation` génère la documentation Colibri (lineage au niveau des colonnes, descriptions, tests) et la sert sur le port 8088, transféré automatiquement par VS Code. Le fichier `colibri-docs/index.html` s'ouvre aussi directement dans un navigateur.
 
@@ -176,6 +168,11 @@ ORDER BY titres DESC;
 | `task superset:logs` | Affiche les logs de Superset |
 | `task superset:reset` | Supprime toutes les données Superset (dashboards compris) puis redémarre |
 | `task doctor` | Vérifie Docker, la base et Superset |
+| `task sql` | Ouvre une copie de la base dans le terminal DuckDB (ne bloque pas dbt) |
+| `task atelier:start EX=…` | Prépare un exercice de l'atelier (`EX=3 SUJET=domicile`, `tirs-3pts` ou `upsets` pour l'ex. 3) |
+| `task atelier:check` | Construit les modèles de l'atelier et lance leurs tests |
+| `task atelier:solution EX=…` | Installe la solution d'un exercice |
+| `task atelier:reset` | Remet les modèles dans leur état initial (efface le travail d'atelier) |
 | `task clean` | Supprime les fichiers générés par dbt et les caches Python |
 
 ---
@@ -186,12 +183,12 @@ Toutes les tables vivent dans `edna-sports-data.duckdb`, en trois schémas.
 
 | Schéma | Rôle | Tables |
 |---|---|---|
-| `staging` | Copie fidèle des CSV, colonnes renommées en snake_case, aucune règle métier | 11 tables `stg_*` |
-| `marts` | Dimensions et faits nettoyés et enrichis | `dim_teams`, `dim_seasons`, `dim_cities`, `dim_tourney_seeds`, `fct_regular_season_games`, `fct_tourney_games` |
-| `reporting` | Tables larges prêtes pour Superset | `rpt_team_games`, `rpt_games`, `rpt_team_season_stats`, `rpt_tourney_runs` |
+| `staging` (Bronze) | Copie fidèle des CSV, colonnes renommées en snake_case, aucune règle métier | 11 tables `stg_*` |
+| `marts` (Silver) | Dimensions et faits nettoyés et enrichis | `dim_teams`, `dim_seasons`, `dim_cities`, `dim_tourney_seeds`, `fct_regular_season_games`, `fct_tourney_games` |
+| `reporting` (Gold) | Tables larges prêtes pour Superset | `rpt_team_games`, `rpt_games`, `rpt_team_season_stats`, `rpt_tourney_runs` |
 | `reporting` (exemples) | Une question métier = un modèle | `rpt_uconn_tennessee_*` (5 tables) |
 
-Le code des modèles est dans `transformation/models/<couche>/`, leur documentation dans les fichiers `_*_models.yml`. Le dictionnaire des tables `reporting` est dans [docs/atelier.md](docs/atelier.md).
+Le code des modèles est dans `transformation/models/<couche>/`, leur documentation dans les fichiers `_*_models.yml`. Le dictionnaire des tables `reporting` est dans [atelier/donnees.md](atelier/donnees.md).
 
 ---
 
@@ -206,7 +203,8 @@ Le code des modèles est dans `transformation/models/<couche>/`, leur documentat
 | Port 8089 déjà utilisé | Change `"8089:8088"` en `"8090:8088"` dans `visualization/docker-compose.yml`, relance `task superset:up` et ouvre http://localhost:8090. |
 | Erreur `EOF` ou `failed to do request` au build | Erreur réseau temporaire : relance **Dev Containers: Reopen in Container** ou `task superset:up`. |
 | « No space left on device » (Windows) | Le disque virtuel de Docker (WSL2) est plein : Docker Desktop > **Settings > Resources > Disk image > Clean / Purge data**, ou `docker system prune -a` (supprime aussi les images des autres projets). |
-| `Could not set lock on file` dans DuckDB | Un autre processus (DBeaver, CLI `duckdb`) tient la base en écriture : ferme-le ou ouvre-le en lecture seule, puis relance. |
+| `Could not set lock on file` dans DuckDB | Un autre programme a ouvert la base (DBeaver, terminal `duckdb`), même en lecture seule : ferme-le ou déconnecte-le, puis relance. Pour explorer sans bloquer dbt : `task sql`. |
+| Un exercice de l'atelier ne passe pas | `task atelier:solution EX=…` pour repartir de la solution ; tout est cassé : `task atelier:reset` puis `task dbt:build`. |
 | Superset dans un état incohérent | `task superset:reset` (efface dashboards et charts). |
 
 ---
@@ -246,7 +244,8 @@ edna-formation/
 │           └── examples/    # rpt_uconn_tennessee_* (modèles d'exemple)
 ├── visualization/           # docker-compose et image Superset
 ├── colibri-docs/            # Lineage généré par Colibri
-├── docs/atelier.md          # Fiche atelier : tables et idées de dashboards
+├── atelier/                 # Guide, squelettes et solutions des exercices
+├── docs/prerequis.md        # Prérequis à faire avant l'atelier
 ├── edna-sports-data.duckdb  # Base générée (ignorée par git)
 ├── Taskfile.yml             # Toutes les commandes
 └── CLAUDE.md                # Contexte pour les assistants IA

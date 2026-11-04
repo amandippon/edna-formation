@@ -23,3 +23,7 @@ processed-resources/
 # OS
 .DS_Store
 Thumbs.db
+
+# Fichiers de travail de l'atelier (copiés par task atelier:start)
+transformation/models/reporting/atelier/
+transformation/tests/atelier/

@@ -4,11 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) and other AI assista
 
 ## Project
 
-Local, hands-on data pipeline used for workshops (originally a course for design students, now also a 3-hour meetup workshop for data/dev profiles). Participants run `task` commands, then build Superset dashboards in teams.
+Local, hands-on data pipeline used for workshops (originally a course for design students, now also a 3-hour meetup workshop for data/dev profiles). Participants work individually through four exercises (SQL on Parquet, edit a Silver dbt model, write a Gold dbt model against pre-written tests, Superset dashboard), driven by `task` commands.
 
 **Theme**: NCAA Women's Basketball (Kaggle 2019): teams, seasons, regular season games 1998-2019, NCAA tournament 1998-2018. Box scores and game cities only from season 2010.
 
-User-facing docs are in French: `README.md` (setup) and `docs/atelier.md` (workshop sheet: reporting tables, pitfalls, dashboard ideas). Keep them in sync with the code.
+User-facing docs are in French: `README.md` (setup), `docs/prerequis.md` (to send before the workshop), `atelier/README.md` (exercise guide) and `atelier/donnees.md` (reporting tables, pitfalls, dashboard ideas). Keep them in sync with the code.
 
 ## Commands
 
@@ -25,6 +25,11 @@ task superset:down     # stop Superset (volumes kept)
 task superset:logs     # follow Superset logs
 task superset:reset    # wipe Superset volumes and restart
 task doctor            # check Docker, DuckDB file, Superset container + /health
+task sql               # copy the DB to /tmp and open it in the DuckDB CLI (never locks the real file)
+task atelier:start EX=2            # set up an exercise (EX=3 needs SUJET=domicile|tirs-3pts|upsets)
+task atelier:check                 # dbt build on fct_regular_season_games + models/reporting/atelier
+task atelier:solution EX=3 SUJET=domicile  # install the solution, then check
+task atelier:reset                 # git checkout transformation/models, remove atelier working files
 task clean             # remove transformation/target, logs, dbt_packages, __pycache__
 ```
 
@@ -49,6 +54,13 @@ There is no `dbt deps` step: the project has no dbt packages.
   - The DuckDB file is copied with `docker cp` to `/app/superset_home/edna-sports-data.duckdb` (in `superset:up` and `superset:refresh`). No bind mount: with Docker-outside-of-Docker, the devcontainer path (`/workspaces/...`) does not exist on the host.
   - `superset:up` registers the connection automatically: `superset set-database-uri -d "NCAA Basketball (DuckDB)" -u "duckdb:////app/superset_home/edna-sports-data.duckdb?access_mode=read_only"`. Read-only so several processes can open the file.
   - The Superset schema dropdown shows schemas as `"edna-sports-data".reporting` (catalog prefix from the file name); datasets created on `reporting` also work.
+
+## Workshop exercises (`atelier/`)
+
+- `atelier/ex2/`: singular test copied to `transformation/tests/atelier/`; participants add `is_blowout` and `game_month` to `fct_regular_season_games`.
+- `atelier/ex3/<sujet>/`: skeleton model with numbered `TODO`s (compiles, returns NULLs so tests fail), YAML with tests, and a singular result test. `atelier:start` copies them to `transformation/models/reporting/atelier/` and `transformation/tests/atelier/` (both git-ignored).
+- `atelier/solutions/`: `ex1.sql`, full replacement files for ex2, solution models for ex3. Keep skeletons, solutions and tests consistent: every solution must pass `task atelier:check`.
+- DuckDB locks the file for any open connection, even read-only: an open DuckDB CLI or DBeaver session makes `dbt` fail with `Could not set lock on file`. `task sql` works on a copy for that reason.
 
 ## Adding a reporting model
 
@@ -83,4 +95,5 @@ DuckDB 1.5.1 is locked in `uv.lock` and pinned in `visualization/docker/Dockerfi
 - `visualization/docker/superset_config.py`: metadata DB URI, Redis cache, CSRF disabled
 - `visualization/docker-compose.yml`: superset, db, redis; no bind mount for DuckDB
 - `colibri-docs/`: generated column-level lineage (`task colibri:generate`), committed
-- `docs/atelier.md`: workshop sheet (French)
+- `atelier/`: workshop guide, skeletons, tests and solutions (French)
+- `docs/prerequis.md`: pre-workshop setup (French)

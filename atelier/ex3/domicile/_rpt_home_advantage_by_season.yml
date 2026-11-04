@@ -1,0 +1,24 @@
+version: 2
+
+models:
+  - name: rpt_home_advantage_by_season
+    description: "Atelier ex. 3 : avantage du terrain par saison (saison régulière, matchs non neutres). Une ligne par saison."
+    columns:
+      - name: season
+        description: "Année de la saison (clé de la table)."
+        data_tests: [unique, not_null]
+      - name: season_label
+        description: "Label lisible de la saison (ex : 'Season 2019')."
+        data_tests: [not_null]
+      - name: games
+        description: "Nombre de matchs joués chez l'une des deux équipes (terrain neutre exclu)."
+        data_tests: [not_null]
+      - name: home_wins
+        description: "Nombre de ces matchs gagnés par l'équipe qui reçoit."
+        data_tests: [not_null]
+      - name: home_win_pct
+        description: "Part des matchs gagnés par l'équipe qui reçoit (entre 0 et 1)."
+        data_tests: [not_null]
+      - name: avg_home_margin
+        description: "Écart de score moyen du point de vue de l'équipe qui reçoit (négatif si elle perd)."
+        data_tests: [not_null]

@@ -1,0 +1,27 @@
+version: 2
+
+models:
+  - name: rpt_upsets_by_seed
+    description: "Atelier ex. 3 : upsets du tournoi NCAA par affiche (seed du favori contre seed de l'outsider). Une ligne par affiche ; les matchs entre deux équipes de même seed sont exclus."
+    columns:
+      - name: matchup
+        description: "Affiche lisible, ex : '8 vs 9' (clé de la table)."
+        data_tests: [unique, not_null]
+      - name: favorite_seed
+        description: "Seed du favori (le plus petit numéro)."
+        data_tests: [not_null]
+      - name: underdog_seed
+        description: "Seed de l'outsider (le plus grand numéro)."
+        data_tests: [not_null]
+      - name: seed_gap
+        description: "Écart de seed entre les deux équipes (toujours positif)."
+        data_tests: [not_null]
+      - name: games
+        description: "Nombre de matchs joués avec cette affiche."
+        data_tests: [not_null]
+      - name: upsets
+        description: "Nombre de matchs gagnés par l'outsider."
+        data_tests: [not_null]
+      - name: upset_pct
+        description: "Part des matchs gagnés par l'outsider (entre 0 et 1)."
+        data_tests: [not_null]
