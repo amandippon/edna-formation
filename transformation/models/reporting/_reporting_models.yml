@@ -113,7 +113,7 @@ models:
         description: "Label lisible de la saison."
         data_tests: [not_null]
       - name: seed_number
-        description: "Numéro du seed de l'équipe au tournoi (1–16)."
+        description: ""   # TODO 6 : décrire la colonne
         data_tests: [not_null]
       - name: tourney_wins
         description: "Nombre de victoires au tournoi (0 à 6). 6 = champion."
@@ -126,10 +126,10 @@ models:
       - name: avg_pts_allowed_tourney
         description: "Moyenne de points encaissés par match au tournoi."
       - name: is_champion
-        description: "Booléen : true si l'équipe a remporté le tournoi (6 victoires)."
+        description: ""   # TODO 6 : décrire la colonne
         data_tests: [not_null]
       - name: tournament_result
-        description: "Étape atteinte au tournoi : 'Champion' (6 wins), 'Runner-Up' (5), 'Final Four' (4), 'Elite Eight' (3), 'Sweet Sixteen' (2), 'Second Round' (1), 'First Round Exit' (0)."
+        description: ""   # TODO 6 : décrire la colonne
         data_tests:
           - not_null
           - accepted_values:
