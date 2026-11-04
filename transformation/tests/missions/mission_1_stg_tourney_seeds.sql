@@ -19,14 +19,20 @@ having count(*) <> 1408
 
 union all
 
+select 'seed_number doit être un entier : ajoute cast(... as integer)', any_value(typeof(seed_number))
+from {{ ref('stg_tourney_seeds') }}
+having any_value(typeof(seed_number)) not in ('INTEGER', 'BIGINT', 'SMALLINT', 'TINYINT')
+
+union all
+
 select 'seeds mal découpés : ' || count(*) || ' sur ' || (select count(*) from {{ ref('stg_tourney_seeds') }}),
        'ex. ' || min(seed_raw) || ' -> ' || coalesce(arg_min(seed_region, seed_raw), 'null')
               || ' / ' || coalesce(arg_min(seed_number, seed_raw)::varchar, 'null')
 from {{ ref('stg_tourney_seeds') }}
 where seed_region is null
    or seed_number is null
-   or seed_number not between 1 and 16
-   or seed_raw <> seed_region || lpad(seed_number::varchar, 2, '0')
+   or try_cast(seed_number as integer) not between 1 and 16
+   or seed_raw <> seed_region || lpad(try_cast(seed_number as integer)::varchar, 2, '0')
 having count(*) > 0
 {%- for colonne, test in attendus if (colonne, test) not in declares %}
 

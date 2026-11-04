@@ -26,3 +26,10 @@ models:
     reporting:
       +materialized: table
       +schema: reporting
+
+# Sur les branches d'étape 1 et 2, les dossiers marts ou reporting sont absents :
+# on masque l'avertissement « unused configuration paths », sans intérêt pour les participants.
+flags:
+  warn_error_options:
+    silence:
+      - UnusedResourceConfigPath

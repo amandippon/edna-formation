@@ -119,7 +119,7 @@ models:
         description: "Nombre de victoires au tournoi (0 à 6). 6 = champion."
         data_tests: [not_null]
       - name: tourney_losses
-        description: "Nombre de défaites au tournoi (0 ou 1, sauf pour le champion qui a 0)."
+        description: "Nombre de défaites au tournoi : 1, sauf pour le champion (0)."
         data_tests: [not_null]
       - name: avg_pts_scored_tourney
         description: "Moyenne de points marqués par match au tournoi."

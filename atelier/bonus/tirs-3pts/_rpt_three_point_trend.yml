@@ -2,7 +2,7 @@ version: 2
 
 models:
   - name: rpt_three_point_trend
-    description: "Mission 3, sujet libre : évolution du tir à 3 points par saison, sur les matchs de saison régulière avec box score (2010-2019). Une ligne par saison."
+    description: "Exercice bonus : évolution du tir à 3 points par saison, sur les matchs de saison régulière avec box score (2010-2019). Une ligne par saison."
     columns:
       - name: season
         description: "Année de la saison (clé de la table)."

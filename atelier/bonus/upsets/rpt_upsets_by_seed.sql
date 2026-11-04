@@ -1,4 +1,4 @@
--- Mission 3, sujet libre : les surprises du tournoi NCAA
+-- Exercice bonus : les surprises du tournoi NCAA
 -- Objectif : une ligne par affiche (ex : '8 vs 9') avec le nombre de matchs
 -- et le nombre gagnés par l'outsider (l'équipe au plus grand numéro de seed).
 -- Source : marts.fct_tourney_games (une ligne par match de tournoi)
@@ -25,8 +25,12 @@ final as (
         underdog_seed,
         underdog_seed - favorite_seed              as seed_gap,
         count(*)                                   as games,
-        null::bigint                               as upsets,     -- TODO 4 : compter les matchs où is_upset est vrai
-        null::double                               as upset_pct   -- TODO 5 : upsets / games, arrondi à 3 décimales
+        null::integer                              as upsets,     -- TODO 4 : compter les matchs où is_upset est vrai :
+                                                                  --   count(*) filter (where is_upset)
+                                                                  --   (un sum(case ...) renverrait un HUGEINT : ajouter ::integer)
+        null::double                               as upset_pct   -- TODO 5 : upsets / games, arrondi à 3 décimales avec round(x, 3).
+                                                                  --   DuckDB accepte un alias défini plus haut dans le même select,
+                                                                  --   et / renvoie un décimal (pas de division entière).
     from matchups
     group by favorite_seed, underdog_seed
 )

@@ -33,7 +33,10 @@ tasks:
       - |
         if ! uv run dbt build; then
           echo ""
-          echo "🔴 Modèles ou tests en erreur. Au début d'une mission, c'est attendu : voir atelier/README.md."
+          echo "🔴 Modèles ou tests en erreur."
+          echo "   Au début d'une mission, les tests de la mission sont rouges : c'est attendu."
+          echo "   « Parsing Error » ou « Compilation Error » : un fichier SQL ou YAML est mal écrit, regarde le fichier et la ligne indiqués."
+          echo "   Détail d'un test de mission : task show M=mission_<n>_<modèle>"
           exit 1
         fi
 
@@ -79,7 +82,7 @@ tasks:
         print(f"({len(rows)} lignes affichées, 10 au plus)")
         '
 
-  sql:
+  duckdb:
     desc: "🦆 Ouvre une copie de la base dans le terminal DuckDB (ne bloque pas dbt)"
     interactive: true
     preconditions:
@@ -119,14 +122,14 @@ tasks:
           git stash push --include-untracked -m "atelier : travail avant l'étape {{.N}}" > /dev/null
           echo "💾 Travail en cours rangé dans git stash (git stash list)."
         fi
-        # Les sujets libres (ignorés par git) dépendent de la couche reporting :
+        # Les exercices bonus (ignorés par git) dépendent de la couche reporting :
         # avant les étapes 1 et 2, on les met de côté pour ne pas casser le build.
-        if [ "{{.N}}" -le 2 ] && [ -d {{.DBT_DIR}}/models/reporting/atelier -o -d {{.DBT_DIR}}/tests/atelier ]; then
+        if [ "{{.N}}" -le 2 ] && [ -d {{.DBT_DIR}}/models/reporting/bonus -o -d {{.DBT_DIR}}/tests/bonus ]; then
           D=.atelier-sauvegarde/$(date +%H%M%S)
           mkdir -p "$D"
-          mv {{.DBT_DIR}}/models/reporting/atelier "$D/models" 2>/dev/null || true
-          mv {{.DBT_DIR}}/tests/atelier "$D/tests" 2>/dev/null || true
-          echo "💾 Sujet libre mis de côté dans $D"
+          mv {{.DBT_DIR}}/models/reporting/bonus "$D/models" 2>/dev/null || true
+          mv {{.DBT_DIR}}/tests/bonus "$D/tests" 2>/dev/null || true
+          echo "💾 Exercice bonus mis de côté dans $D"
         fi
         git fetch --quiet origin 2>/dev/null || echo "ℹ️  Pas de réseau : branches locales utilisées."
         git switch "$B" 2>/dev/null || git switch --track "origin/$B"
@@ -140,18 +143,22 @@ tasks:
       - rm -f {{.DB_FILE}}
       - task: build
 
-  topic:
-    desc: "🎯 Mission 3, sujet libre : copie le squelette et ses tests (NAME=domicile|tirs-3pts|upsets)"
+  bonus:
+    desc: "🎯 Exercice bonus après la mission 3 : copie le squelette et ses tests (NAME=domicile|tirs-3pts|upsets)"
+    silent: true
     vars:
       NAME: '{{.NAME | default ""}}'
     preconditions:
-      - sh: '[ -n "{{.NAME}}" ] && [ -d "atelier/sujets/{{.NAME}}" ]'
-        msg: "❌ Usage : task topic NAME=domicile (ou tirs-3pts, ou upsets)"
+      - sh: '[ -n "{{.NAME}}" ] && [ -d "atelier/bonus/{{.NAME}}" ]'
+        msg: "❌ Usage : task bonus NAME=domicile (ou tirs-3pts, ou upsets)"
     cmds:
-      - mkdir -p {{.DBT_DIR}}/tests/atelier {{.DBT_DIR}}/models/reporting/atelier
-      - cp -n atelier/sujets/{{.NAME}}/rpt_*.sql atelier/sujets/{{.NAME}}/_*.yml {{.DBT_DIR}}/models/reporting/atelier/
-      - cp -n atelier/sujets/{{.NAME}}/assert_*.sql {{.DBT_DIR}}/tests/atelier/
-      - 'echo "✏️  À compléter : transformation/models/reporting/atelier/$(ls atelier/sujets/{{.NAME}}/rpt_*.sql | xargs -n1 basename)  (solution : atelier/solutions/)"'
+      - |
+        M={{.DBT_DIR}}/models/reporting/bonus; T={{.DBT_DIR}}/tests/bonus
+        mkdir -p "$M" "$T"
+        for f in atelier/bonus/{{.NAME}}/rpt_*.sql atelier/bonus/{{.NAME}}/_*.yml; do [ -e "$M/$(basename "$f")" ] || cp "$f" "$M/"; done
+        for f in atelier/bonus/{{.NAME}}/assert_*.sql; do [ -e "$T/$(basename "$f")" ] || cp "$f" "$T/"; done
+        echo "✏️  À compléter : transformation/models/reporting/bonus/$(basename atelier/bonus/{{.NAME}}/rpt_*.sql)"
+        echo "   Puis : task build. Solution : atelier/solutions/"
 
   # ─────────────────────────────────────────────
   # Superset

@@ -127,12 +127,12 @@ Un assistant IA (Claude Code ou équivalent) peut écrire un modèle dbt : le fi
 
 ## 4. Explorer la base hors Superset
 
-> **Verrou DuckDB.** DuckDB verrouille le fichier `edna-sports-data.duckdb` dès qu'un programme l'ouvre, **même en lecture seule**. Tant qu'un terminal `duckdb` ou DBeaver est ouvert dessus, `dbt` échoue avec `Could not set lock on file`. Utilise `task sql` (qui ouvre une copie) ou ferme ces outils avant de lancer dbt.
+> **Verrou DuckDB.** DuckDB verrouille le fichier `edna-sports-data.duckdb` dès qu'un programme l'ouvre, **même en lecture seule**. Tant qu'un terminal `duckdb` ou DBeaver est ouvert dessus, `dbt` échoue avec `Could not set lock on file`. Utilise `task duckdb` (qui ouvre une copie) ou ferme ces outils avant de lancer dbt.
 
 **Terminal DuckDB** (installé dans le devcontainer) :
 
 ```bash
-task sql
+task duckdb
 ```
 
 ```sql
@@ -144,7 +144,7 @@ GROUP BY team_name
 ORDER BY titres DESC;
 ```
 
-`task sql` travaille sur une copie de la base prise au lancement : relance-le après un `dbt build` pour voir tes nouvelles tables.
+`task duckdb` travaille sur une copie de la base prise au lancement : relance-le après un `dbt build` pour voir tes nouvelles tables.
 
 **DBeaver** (facultatif) : nouvelle connexion **DuckDB**, fichier `edna-sports-data.duckdb` à la racine du repo cloné sur ta machine. **Déconnecte-toi** avant de lancer dbt.
 
@@ -162,9 +162,9 @@ ORDER BY titres DESC;
 | `task build` | `dbt build` : construit les modèles et lance les tests |
 | `task docs` | Génère la documentation dbt-colibri et la sert sur le port 8088 |
 | `task show M=…` | Affiche les 10 premières lignes d'un modèle ou d'un test dbt, sans rien écrire dans la base |
-| `task sql` | Ouvre une copie de la base dans le terminal DuckDB (ne bloque pas dbt) |
+| `task duckdb` | Ouvre une copie de la base dans le terminal DuckDB (ne bloque pas dbt) |
 | `task step N=…` | Atelier : passe à l'étape 1 à 4 (met le travail en cours dans `git stash`, change de branche, reconstruit la base) |
-| `task topic NAME=…` | Atelier, mission 3 : copie le squelette d'un sujet libre (`domicile`, `tirs-3pts`, `upsets`) |
+| `task bonus NAME=…` | Atelier, après la mission 3 : copie le squelette d'un exercice bonus (`domicile`, `tirs-3pts`, `upsets`) |
 | `task superset:up` | Démarre Superset et y enregistre la base |
 | `task superset:sync` | Recopie la base dans Superset et vide le cache des charts |
 | `task superset:down` | Arrête Superset (dashboards conservés) |
@@ -202,7 +202,7 @@ Le code des modèles est dans `transformation/models/<couche>/`, leur documentat
 | Port 8089 déjà utilisé | Change `"8089:8088"` en `"8090:8088"` dans `visualization/docker-compose.yml`, relance `task superset:up` et ouvre http://localhost:8090. |
 | Erreur `EOF` ou `failed to do request` au build | Erreur réseau temporaire : relance **Dev Containers: Reopen in Container** ou `task superset:up`. |
 | « No space left on device » (Windows) | Le disque virtuel de Docker (WSL2) est plein : Docker Desktop > **Settings > Resources > Disk image > Clean / Purge data**, ou `docker system prune -a` (supprime aussi les images des autres projets). |
-| `Could not set lock on file` dans DuckDB | Un autre programme a ouvert la base (DBeaver, terminal `duckdb`), même en lecture seule : ferme-le ou déconnecte-le, puis relance. Pour explorer sans bloquer dbt : `task sql`. |
+| `Could not set lock on file` dans DuckDB | Un autre programme a ouvert la base (DBeaver, terminal `duckdb`), même en lecture seule : ferme-le ou déconnecte-le, puis relance. Pour explorer sans bloquer dbt : `task duckdb`. |
 | Une ancienne table reste dans la base (ou dans Superset) après avoir renommé ou supprimé un modèle | dbt recrée les tables de ses modèles à chaque build, mais ne supprime jamais une table ou un schéma dont le modèle a disparu. Pour repartir d'une base propre : `rm edna-sports-data.duckdb` puis `task build` (et `task superset:sync` si Superset tourne). `task step` le fait déjà à chaque changement d'étape. |
 | Une mission de l'atelier ne passe pas | `task show M=mission_<n>_<modèle>` liste les problèmes ; `task step N=<étape suivante>` pour repartir de la solution ; tout est cassé : `git restore transformation/` puis `task build`. |
 | Superset dans un état incohérent | `docker compose -f visualization/docker-compose.yml down -v` (efface dashboards et charts), puis `task superset:up`. |
@@ -245,7 +245,7 @@ edna-formation/
 │   └── tests/missions/      # Tests des trois missions de l'atelier
 ├── visualization/           # docker-compose et image Superset
 ├── colibri-docs/            # Lineage généré par Colibri
-├── atelier/                 # Guide de l'atelier, sujets libres et solutions
+├── atelier/                 # Guide de l'atelier, exercices bonus et solutions
 ├── docs/prerequis.md        # Prérequis à faire avant l'atelier
 ├── edna-sports-data.duckdb  # Base générée (ignorée par git)
 ├── Taskfile.yml             # Toutes les commandes

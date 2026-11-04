@@ -12,11 +12,11 @@ Avant de commencer : `task doctor` doit afficher ✅ pour Docker et pour la base
 | `task build` | Construire tous les modèles dbt et lancer les tests : tout vert = mission réussie |
 | `task show M=<nom>` | Afficher les 10 premières lignes d'un modèle, ou les problèmes remontés par un test |
 | `task docs` | Ouvrir la documentation et le lineage dbt-colibri (port 8088) |
-| `task sql` | Ouvrir une copie de la base dans le terminal DuckDB (quitter avec `.quit`) |
+| `task duckdb` | Ouvrir une copie de la base dans le terminal DuckDB (quitter avec `.quit`) |
 | `task superset:up` | Démarrer Superset (à lancer avant la pause) |
 | `task superset:sync` | Recopier la base dans Superset après un `task build` |
 
-> **Le piège du verrou DuckDB.** DuckDB verrouille le fichier `edna-sports-data.duckdb` dès qu'un programme l'ouvre, même en lecture seule. Si DBeaver ou un terminal `duckdb` lancé à la main est ouvert sur ce fichier, `dbt` échoue avec `Could not set lock on file`. Ferme-le, ou passe par `task sql`, qui ouvre une copie de la base.
+> **Le piège du verrou DuckDB.** DuckDB verrouille le fichier `edna-sports-data.duckdb` dès qu'un programme l'ouvre, même en lecture seule. Si DBeaver ou un terminal `duckdb` lancé à la main est ouvert sur ce fichier, `dbt` échoue avec `Could not set lock on file`. Ferme-le, ou passe par `task duckdb`, qui ouvre une copie de la base.
 
 > **dbt ne fait pas le ménage.** À chaque `task build`, dbt recrée les tables de tes modèles : modifier un modèle et relancer suffit. En revanche, il ne supprime jamais une table ou un schéma dont le modèle a disparu : si tu renommes ou supprimes un modèle, l'ancienne table reste dans la base, et dans Superset après `task superset:sync`. Pour repartir d'une base propre : `rm edna-sports-data.duckdb` puis `task build`. `task step` repart toujours d'une base vide.
 
@@ -24,11 +24,11 @@ Avant de commencer : `task doctor` doit afficher ✅ pour Docker et pour la base
 
 À faire pendant que les dernières installations se terminent, ou plus tard. But : voir qu'un moteur SQL analytique lit directement des fichiers, sans rien charger.
 
-1. Ouvre DuckDB **en mémoire** (sans fichier de base) : `duckdb`
-2. Réponds aux trois questions en lisant les Parquet avec `read_parquet('processed-resources/<Table>/*.parquet')` :
+1. Dans le terminal, à la racine du projet (le dossier ouvert par défaut), lance `duckdb` : DuckDB s'ouvre **en mémoire**, sans fichier de base. Pour quitter : `.quit`.
+2. Réponds aux trois questions en lisant les Parquet avec `read_parquet('processed-resources/<Table>/*.parquet')`. Pour voir les colonnes d'un fichier : `describe select * from read_parquet('...');`
    1. Combien de matchs de saison régulière par saison ? (`WRegularSeasonCompactResults`, colonne `Season`)
-   2. Quelles sont les 5 équipes avec le plus de victoires en 2019 ? (jointure avec `WTeams` sur `WTeamID = TeamID`)
-   3. Le nombre de points par match (`WScore + LScore`) a-t-il évolué entre 1998 et 2019 ?
+   2. Quelles sont les 5 équipes avec le plus de victoires en saison régulière 2019 ? (`Season = 2019` dans `WRegularSeasonCompactResults`, jointure avec `WTeams` sur `WTeamID = TeamID`, nom dans `TeamName`)
+   3. Calcule la moyenne de points par match (`WScore + LScore`) pour chaque saison : a-t-elle évolué de 1998 à 2019 ?
 
 ```sql
 select * from read_parquet('processed-resources/WTeams/*.parquet') limit 5;
@@ -92,7 +92,7 @@ La base ne contient que la couche `staging`. Un modèle dbt est un simple `selec
    | `cast(texte as integer)` : conversion en entier | `cast('02' as integer)` | `2` |
 
 2. `task show M=stg_tourney_seeds` : tes deux colonnes doivent ressembler à la sortie attendue.
-3. Dans `transformation/models/staging/_staging_models.yml`, TODO 3 : déclare les tests de `seed_region` (`not_null`, et `accepted_values` limité à W, X, Y, Z) et de `seed_number` (`not_null`). La syntaxe est donnée en commentaire ; le bloc `data_tests` se place sous `description`, au même niveau.
+3. Dans `transformation/models/staging/_staging_models.yml`, TODO 3 : déclare les tests de `seed_region` (`not_null`, et `accepted_values` limité à W, X, Y, Z) et de `seed_number` (`not_null`). Le bloc est déjà écrit en commentaire, à la bonne indentation : sélectionne ses lignes, décommente-les (`Cmd+/` ou `Ctrl+/`), puis remplace `['A', 'B']` par les bonnes valeurs. En YAML, l'indentation compte : `data_tests` doit être aligné sur `description`.
 4. `task build` jusqu'au vert. Tant que les tests ne sont pas déclarés, le test de mission reste rouge : `task show M=mission_1_stg_tourney_seeds` dit ce qui manque.
 
 ### Mission 2 : marts, `dim_tourney_seeds` (20 min)
@@ -123,9 +123,10 @@ La base contient `staging` et une partie de `marts`. Un modèle dbt ne lit jamai
 2. TODO 1 et 2 : écris de la même façon une CTE `teams` sur `stg_teams` et une CTE `seasons` sur `stg_seasons`.
 3. TODO 3 : `left join` sur `teams` (clé `team_id`), puis remplace `null::varchar as team_name` par la colonne de `teams`.
 4. TODO 4 : `left join` sur `seasons` (clé `season`), puis un `case s.seed_region when 'W' then se.region_w ... end` pour `region_name`.
-5. `task build` jusqu'au vert. Pour voir ce que dbt a fait de tes `ref()` : `transformation/target/compiled/transformation/models/marts/dim_tourney_seeds.sql`.
+5. `task show M=dim_tourney_seeds` : vérifie `team_name` et `region_name` sur quelques lignes.
+6. `task build` jusqu'au vert. Pour voir ce que dbt a fait de tes `ref()` : `transformation/target/compiled/transformation/models/marts/dim_tourney_seeds.sql` (le second `transformation` est le nom du projet dbt ; le fichier est créé par `task build`).
 
-Fini en avance : ajoute une colonne `is_blowout` (écart d'au moins 20 points) à `fct_regular_season_games.sql`, documente-la dans `_marts_models.yml` et ajoute-lui un test `not_null`.
+Fini en avance : ajoute une colonne `is_blowout` (vraie si l'écart final est d'au moins 20 points) à `fct_regular_season_games.sql`, juste sous `is_close_game` et sur le même modèle. Documente-la dans `_marts_models.yml`, sous `is_close_game` dans la liste `columns` de `fct_regular_season_games`, avec un test `not_null`. Contrôle : 26 485 matchs sur 107 133 sont des `is_blowout`.
 
 **Avant la pause : `task superset:up`**, pour que Superset démarre pendant la pause (1 à 2 minutes).
 
@@ -135,7 +136,7 @@ Fini en avance : ajoute une colonne `is_blowout` (écart d'au moins 20 points) �
 task step N=3
 ```
 
-La base contient toutes les couches, sauf ta mission. Le tournoi NCAA féminin compte 64 équipes : 6 victoires donnent le titre, une défaite élimine.
+La base contient toutes les couches, sauf ta mission. Le tournoi NCAA féminin compte 64 équipes réparties en 4 régions, chacune classée de 1 (tête de série, le « seed » 1) à 16. Il se joue par élimination directe : 6 victoires donnent le titre, une défaite élimine. Les tours s'appellent, dans l'ordre : First Round, Second Round, Sweet Sixteen, Elite Eight, Final Four, finale.
 
 **Entrée principale**, `marts.fct_tourney_games` (un match par ligne, gagnant et perdant) :
 
@@ -167,22 +168,24 @@ La base contient toutes les couches, sauf ta mission. Le tournoi NCAA féminin c
    | `dim_seasons` (alias `se`) | `season` | `season_label` |
    | `dim_tourney_seeds` (alias `sd`) | `season` **et** `team_id` | `seed_number` |
 
-   Le `case` qui calcule `tournament_result` est déjà écrit.
-3. Dans `transformation/models/reporting/_reporting_models.yml`, TODO 6 : décris les colonnes `seed_number`, `is_champion` et `tournament_result` (une phrase : ce que contient la colonne et ses valeurs possibles).
+   Le `case` qui calcule `tournament_result` est déjà écrit. Tant que le TODO 1 n'est pas fait, `is_champion` et `tournament_result` sont faux eux aussi (ils dépendent de `tourney_wins`) : leurs tests rouges disparaissent avec le TODO 1.
+3. Dans `transformation/models/reporting/_reporting_models.yml`, TODO 6 : décris les colonnes `seed_number` (de 1, meilleure tête de série, à 16), `is_champion` et `tournament_result`, en une phrase : ce que contient la colonne et ses valeurs possibles. Le commentaire `# TODO 6` peut rester.
 4. `task build` jusqu'au vert.
-5. `task docs`, puis le port **8088** (onglet **PORTS** de VS Code) : retrouve `rpt_tourney_runs`, tes descriptions, et remonte le lineage d'une colonne jusqu'au fichier source.
+5. `task docs`, puis ouvre le port **8088** (onglet **PORTS** de VS Code). Cherche `rpt_tourney_runs` : tes descriptions s'affichent sur ses colonnes. Clique sur `seed_number` et remonte son lineage jusqu'à `stg_tourney_seeds`, qui lit le fichier `WNCAATourneySeeds`. `task docs` occupe le terminal tant que le serveur tourne : `Ctrl+C` pour l'arrêter.
 
 Solution : `task step N=4`.
 
-Fini en avance : un sujet libre, avec son squelette et ses tests, copié dans `transformation/models/reporting/atelier/` :
+### Exercices bonus
 
-| Sujet | Commande | Question |
+Pour ceux qui ont fini la mission 3 en avance : trois exercices de reporting, avec squelette et tests. `task bonus NAME=<exercice>` copie le squelette dans `transformation/models/reporting/bonus/` et ses tests dans `transformation/tests/bonus/` (deux dossiers ignorés par git).
+
+| Exercice | Commande | Question |
 |---|---|---|
-| `domicile` | `task topic NAME=domicile` | L'équipe qui reçoit gagne-t-elle plus souvent, selon les saisons ? |
-| `tirs-3pts` | `task topic NAME=tirs-3pts` | Le tir à 3 points prend-il plus de place depuis 2010 ? |
-| `upsets` | `task topic NAME=upsets` | Au tournoi, quelles affiches produisent le plus de surprises ? |
+| `domicile` | `task bonus NAME=domicile` | L'équipe qui reçoit gagne-t-elle plus souvent, selon les saisons ? |
+| `tirs-3pts` | `task bonus NAME=tirs-3pts` | Le tir à 3 points prend-il plus de place depuis 2010 ? |
+| `upsets` | `task bonus NAME=upsets` | Au tournoi, quelles affiches produisent le plus de surprises ? |
 
-Solutions dans `atelier/solutions/`.
+Puis `task build` jusqu'au vert. Solutions dans `atelier/solutions/`.
 
 ## Le dashboard (40 min)
 

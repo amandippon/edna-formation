@@ -11,7 +11,7 @@ Le dictionnaire des tables `reporting`, les pièges à connaître et des idées 
 | `rpt_team_season_stats` | une équipe sur une saison régulière | 7 364 | Classements, bilans victoires/défaites, qualification au tournoi, carte par état |
 | `rpt_tourney_runs` | une équipe sur un tournoi NCAA | 1 344 | Parcours au tournoi, titres, résultats par seed |
 | `rpt_uconn_tennessee_*` | variable (5 tables d'exemple) | 2 à 1 574 | Rivalité Connecticut vs Tennessee, modèle à copier pour votre propre question |
-| Vos sujets libres (mission 3) | une saison ou une affiche | 10 à 45 | `rpt_home_advantage_by_season`, `rpt_three_point_trend`, `rpt_upsets_by_seed` |
+| Vos exercices bonus | une saison ou une affiche | 10 à 45 | `rpt_home_advantage_by_season`, `rpt_three_point_trend`, `rpt_upsets_by_seed` |
 
 ### Colonnes clés
 
@@ -81,7 +81,7 @@ Les chiffres d'accroche ont été calculés sur la base du projet ; les requête
 
 ## Annexe : requêtes de vérification
 
-À lancer dans SQL Lab ou dans le terminal DuckDB (`task sql`).
+À lancer dans SQL Lab ou dans le terminal DuckDB (`task duckdb`).
 
 ```sql
 -- 1. Avantage du terrain (saison régulière)

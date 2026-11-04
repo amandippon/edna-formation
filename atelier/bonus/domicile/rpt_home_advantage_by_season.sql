@@ -1,4 +1,4 @@
--- Mission 3, sujet libre : avantage du terrain par saison
+-- Exercice bonus : avantage du terrain par saison
 -- Objectif : une ligne par saison avec le nombre de matchs joués chez une équipe,
 -- le nombre gagnés par l'équipe qui reçoit, et l'écart de score moyen pour elle.
 -- Source : marts.fct_regular_season_games (une ligne par match, format gagnant / perdant)
@@ -14,7 +14,8 @@ by_season as (
     select
         season,
         count(*)                as games,
-        null::bigint            as home_wins,        -- TODO 2 : compter les matchs où w_loc = 'H'
+        null::integer           as home_wins,        -- TODO 2 : compter les matchs où w_loc = 'H' :
+                                                     --   count(*) filter (where ...)
         null::double            as avg_home_margin   -- TODO 3 : moyenne de score_margin si l'équipe qui reçoit gagne,
                                                      --          de -score_margin si elle perd
     from games

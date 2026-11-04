@@ -1,4 +1,4 @@
--- Test de l'atelier : renvoie une ligne par problème trouvé (0 ligne = test vert)
+-- Test de l'exercice bonus : renvoie une ligne par problème trouvé (0 ligne = test vert)
 with expected as (
     select count(*) as games, sum(case when is_upset then 1 else 0 end) as upsets
     from {{ ref('fct_tourney_games') }}

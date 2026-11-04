@@ -1,4 +1,4 @@
--- Mission 3, sujet libre : le tir à 3 points prend-il le pouvoir ?
+-- Exercice bonus : le tir à 3 points prend-il le pouvoir ?
 -- Objectif : une ligne par saison avec les tirs à 3 points tentés et réussis,
 -- leur part dans tous les tirs tentés et l'adresse à 3 points.
 -- Source : marts.fct_regular_season_games (une ligne par match)
@@ -15,7 +15,8 @@ by_season as (
     select
         season,
         count(*)                as games,
-        null::bigint            as fga3,    -- TODO 2 : somme des 3 pts tentés des deux équipes
+        null::bigint            as fga3,    -- TODO 2 : somme des 3 pts tentés des deux équipes (w_fga3 + l_fga3),
+                                            --   convertie avec ::bigint : sum() renvoie sinon un HUGEINT, mal géré par Superset
         null::bigint            as fgm3,    -- TODO 3 : somme des 3 pts réussis des deux équipes
         null::bigint            as fga      -- TODO 4 : somme de tous les tirs tentés des deux équipes
     from games
