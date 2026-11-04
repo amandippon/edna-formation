@@ -13,7 +13,11 @@ where seed_number not between 1 and 16
 
 union all
 
-select 'Connecticut 2019', coalesce(seed_number::varchar, 'null') || ' / ' || coalesce(region_name, 'null')
-from {{ ref('dim_tourney_seeds') }}
-where season = 2019 and team_name = 'Connecticut'
-  and (seed_number is distinct from 2 or region_name is distinct from 'Albany')
+select 'Connecticut 2019',
+       coalesce(d.team_name, 'null') || ' / ' || coalesce(d.seed_number::varchar, 'null') || ' / ' || coalesce(d.region_name, 'null')
+from {{ ref('dim_tourney_seeds') }} d
+join {{ ref('stg_teams') }} t on d.team_id = t.team_id
+where d.season = 2019 and t.team_name = 'Connecticut'
+  and (d.team_name is distinct from 'Connecticut'
+       or d.seed_number is distinct from 2
+       or d.region_name is distinct from 'Albany')

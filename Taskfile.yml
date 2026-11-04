@@ -224,6 +224,7 @@ tasks:
   # ─────────────────────────────────────────────
 
   etape:
+    silent: true
     desc: "🧭 Passe à une étape de l'atelier (N=1 à 4) : range ton travail dans git stash, change de branche et reconstruit la base"
     vars:
       N: '{{.N | default ""}}'
@@ -250,6 +251,7 @@ tasks:
       - task: atelier:check
 
   atelier:check:
+    silent: true
     desc: "🔎 Construit tous les modèles et lance les tests : tout vert = mission réussie"
     dir: "{{.DBT_DIR}}"
     cmds:
