@@ -70,14 +70,18 @@ models:
         data_tests: [not_null]
       - name: seed_region
         description: "Lettre de la région du bracket (W, X, Y ou Z). Correspond aux noms de régions dans stg_seasons."
-        data_tests:
-          - not_null
-          - accepted_values:
-              arguments:
-                values: ['W', 'X', 'Y', 'Z']
+        # TODO 3 : deux tests sur cette colonne, not_null et accepted_values (W, X, Y, Z).
+        # Sélectionne les 5 lignes ci-dessous, décommente-les (Cmd+/ ou Ctrl+/),
+        # puis remplace ['A', 'B'] par les valeurs attendues. data_tests reste aligné sur description.
+        # data_tests:
+        #   - not_null
+        #   - accepted_values:
+        #       arguments:
+        #         values: ['A', 'B']
       - name: seed_number
         description: "Numéro du seed dans la région (1 = meilleur, 16 = moins bien classé). Entier de 1 à 16."
-        data_tests: [not_null]
+        # TODO 3 (suite) : un test not_null. Décommente la ligne ci-dessous.
+        # data_tests: [not_null]
 
   - name: stg_tourney_slots
     description: "Structure fixe des brackets du tournoi NCAA féminin (64 équipes, 63 matchs, 6 rounds). Identique chaque saison car pas de play-in games."
