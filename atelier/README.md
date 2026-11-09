@@ -12,11 +12,13 @@ Avant de commencer : `task doctor` doit afficher ✅ pour Docker et pour la base
 | `task build` | Construire tous les modèles dbt et lancer les tests : tout vert = mission réussie |
 | `task show M=<nom>` | Afficher les 10 premières lignes d'un modèle, ou les problèmes remontés par un test |
 | `task docs` | Ouvrir la documentation et le lineage dbt-colibri (port 8088) |
-| `task duckdb` | Ouvrir une copie de la base dans le terminal DuckDB (quitter avec `.quit`) |
+| `task duckdb` | Explorer la base en ligne de commande : ouvre une copie dans le terminal DuckDB (quitter avec `.quit`) |
 | `task superset:up` | Démarrer Superset (à lancer avant la pause) |
 | `task superset:sync` | Recopier la base dans Superset après un `task build` |
 
-> **Le piège du verrou DuckDB.** DuckDB verrouille le fichier `edna-sports-data.duckdb` dès qu'un programme l'ouvre, même en lecture seule. Si DBeaver ou un terminal `duckdb` lancé à la main est ouvert sur ce fichier, `dbt` échoue avec `Could not set lock on file`. Ferme-le, ou passe par `task duckdb`, qui ouvre une copie de la base.
+**Explorer les données.** Pour regarder les tables construites par dbt, deux options au choix : l'application **DBeaver** avec son connecteur DuckDB (mise en place : [README, section 4](../README.md#4-explorer-la-base-hors-superset)), ou `task duckdb` si tu préfères la ligne de commande.
+
+> **Le piège du verrou DuckDB.** DuckDB verrouille le fichier `edna-sports-data.duckdb` dès qu'un programme l'ouvre, même en lecture seule. Si DBeaver ou un terminal `duckdb` lancé à la main est ouvert sur ce fichier, `dbt` échoue avec `Could not set lock on file`. Dans DBeaver, déconnecte-toi (clic droit > **Disconnect**) avant chaque `task build` ou `task step` ; `task duckdb` n'a pas ce problème, car il ouvre une copie de la base.
 
 > **dbt ne fait pas le ménage.** À chaque `task build`, dbt recrée les tables de tes modèles : modifier un modèle et relancer suffit. En revanche, il ne supprime jamais une table ou un schéma dont le modèle a disparu : si tu renommes ou supprimes un modèle, l'ancienne table reste dans la base, et dans Superset après `task superset:sync`. Pour repartir d'une base propre : `rm edna-sports-data.duckdb` puis `task build`. `task step` repart toujours d'une base vide.
 

@@ -127,6 +127,8 @@ Un assistant IA (Claude Code ou équivalent) peut écrire un modèle dbt : le fi
 
 ## 4. Explorer la base hors Superset
 
+Deux façons de regarder les tables construites par dbt : **DBeaver** et son connecteur DuckDB si tu préfères une interface graphique, ou **`task duckdb`** si tu préfères la ligne de commande.
+
 > **Verrou DuckDB.** DuckDB verrouille le fichier `edna-sports-data.duckdb` dès qu'un programme l'ouvre, **même en lecture seule**. Tant qu'un terminal `duckdb` ou DBeaver est ouvert dessus, `dbt` échoue avec `Could not set lock on file`. Utilise `task duckdb` (qui ouvre une copie) ou ferme ces outils avant de lancer dbt.
 
 **Terminal DuckDB** (installé dans le devcontainer) :
@@ -146,7 +148,14 @@ ORDER BY titres DESC;
 
 `task duckdb` travaille sur une copie de la base prise au lancement : relance-le après un `dbt build` pour voir tes nouvelles tables.
 
-**DBeaver** (facultatif) : nouvelle connexion **DuckDB**, fichier `edna-sports-data.duckdb` à la racine du repo cloné sur ta machine. **Déconnecte-toi** avant de lancer dbt.
+**DBeaver** (application, facultatif) : pour parcourir les schémas et les tables dans une interface graphique.
+
+1. Installe [DBeaver Community](https://dbeaver.io/download/) sur ta machine (pas dans le devcontainer).
+2. **Database > New Database Connection**, cherche **DuckDB**, puis **Next**.
+3. **Path** : le fichier `edna-sports-data.duckdb` à la racine du repo cloné sur ta machine. Sous Windows avec un clone dans WSL : `\\wsl$\Ubuntu\home\<toi>\edna-formation\edna-sports-data.duckdb`.
+4. Onglet **Driver properties** : ajoute `duckdb.read_only` = `true`. DBeaver ne peut alors rien modifier dans la base, que dbt et Superset continuent de lire en DuckDB 1.5.1 (DBeaver télécharge un pilote plus récent).
+5. **Test Connection** : DBeaver propose de télécharger le pilote DuckDB, accepte (**Download**), puis **Finish**.
+6. **Avant chaque `task build` ou `task step`**, déconnecte DBeaver (clic droit sur la connexion > **Disconnect**) : même en lecture seule, sa connexion empêche dbt d'écrire. Reconnecte-toi ensuite pour voir les nouvelles tables.
 
 **Lineage** : `task docs` génère la documentation Colibri (lineage au niveau des colonnes, descriptions, tests) et la sert sur le port 8088, transféré automatiquement par VS Code. Le fichier `colibri-docs/index.html` s'ouvre aussi directement dans un navigateur.
 

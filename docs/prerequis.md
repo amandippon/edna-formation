@@ -15,6 +15,8 @@ Il te faut un ordinateur portable (macOS, Windows 10/11 ou Linux) avec, à titre
 
 Sous Linux : Docker Engine, Git, VS Code et l'extension Dev Containers.
 
+Facultatif : [DBeaver Community](https://dbeaver.io/download/), pour explorer la base dans une interface graphique pendant l'atelier (sinon, tout se fait aussi en ligne de commande). La connexion se crée à l'étape 3.
+
 Lance Docker Desktop et attends que l'icône de la baleine soit immobile.
 
 ## 2. Récupérer et ouvrir le projet
@@ -43,6 +45,8 @@ task doctor
 ```bash
 task superset:down
 ```
+
+Si tu as installé DBeaver : crée la connexion DuckDB sur le fichier `edna-sports-data.duckdb` du projet en suivant la [section 4 du README](../README.md#4-explorer-la-base-hors-superset). Le pilote DuckDB se télécharge au premier test de connexion, autant le faire chez toi. Puis déconnecte-toi.
 
 ## Ça ne marche pas ?
 
