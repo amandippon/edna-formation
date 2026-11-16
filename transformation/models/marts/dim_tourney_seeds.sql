@@ -18,10 +18,15 @@
 --   region_name = la colonne region_w, region_x, region_y ou region_z qui correspond à seed_region.
 --
 -- À FAIRE
---   TODO 1 : une CTE teams qui lit stg_teams avec ref (colonnes team_id et team_name).
+--   TODO 1 : une CTE teams qui lit stg_teams avec ref (seules team_id et team_name sont utiles).
 --   TODO 2 : une CTE seasons qui lit stg_seasons avec ref (toutes les colonnes).
 --   TODO 3 : joindre teams sur team_id, et prendre team_name.
 --   TODO 4 : joindre seasons sur season, puis calculer region_name avec un case.
+--
+-- RAPPELS SQL
+--   Plusieurs CTE se suivent, séparées par une virgule :  with a as (...), b as (...), c as (...)
+--   Jointure qui garde toutes les lignes de gauche :      left join <table> <alias> on <colonne> = <colonne>
+--   Choisir une valeur selon une autre :                  case x when 'A' then ... when 'B' then ... end
 --
 -- Aperçu du résultat : task show M=dim_tourney_seeds
 -- Vérifier         : task build (au vert quand la mission est finie)
@@ -31,24 +36,23 @@
 with seeds as (
     select * from {{ ref('stg_tourney_seeds') }}
 ),
--- TODO 1 : teams as ( select team_id, team_name from <ref vers stg_teams> ),
--- TODO 2 : seasons as ( select * from <ref vers stg_seasons> ),
+-- TODO 1 : CTE teams
+-- TODO 2 : CTE seasons
 final as (
     select
         s.season,
         s.team_id,
-        null::varchar   as team_name,     -- TODO 3 : t.team_name, après la jointure sur teams
+        null::varchar   as team_name,     -- TODO 3 : le nom de l'équipe, pris dans teams
         s.seed_raw,
         s.seed_region,
         s.seed_number,
         null::varchar   as region_name    -- TODO 4 : selon s.seed_region, la bonne colonne de seasons :
                                           --   case s.seed_region
                                           --       when 'W' then se.region_w
-                                          --       when 'X' then ...
+                                          --       ... (une ligne par région)
                                           --   end
     from seeds s
-    -- TODO 3 et 4 : les jointures, en left join pour garder toutes les lignes de seeds :
-    --   left join teams   t  on ...
-    --   left join seasons se on ...
+    -- TODO 3 et 4 : les deux jointures (alias t pour teams, se pour seasons), en left join
+    --   pour garder toutes les lignes de seeds
 )
 select * from final

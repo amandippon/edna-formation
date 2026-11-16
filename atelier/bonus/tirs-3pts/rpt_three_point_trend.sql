@@ -15,10 +15,10 @@ by_season as (
     select
         season,
         count(*)                as games,
-        null::bigint            as fga3,    -- TODO 2 : somme des 3 pts tentés des deux équipes (w_fga3 + l_fga3),
-                                            --   convertie avec ::bigint : sum() renvoie sinon un HUGEINT, mal géré par Superset
-        null::bigint            as fgm3,    -- TODO 3 : somme des 3 pts réussis des deux équipes
-        null::bigint            as fga      -- TODO 4 : somme de tous les tirs tentés des deux équipes
+        null::integer           as fga3,    -- TODO 2 : somme des 3 pts tentés des deux équipes (w_fga3 + l_fga3),
+                                            --   convertie avec ::integer : sum() renvoie sinon un HUGEINT, mal géré par Superset
+        null::integer           as fgm3,    -- TODO 3 : somme des 3 pts réussis des deux équipes
+        null::integer           as fga      -- TODO 4 : somme de tous les tirs tentés des deux équipes
     from games
     group by season
 ),
