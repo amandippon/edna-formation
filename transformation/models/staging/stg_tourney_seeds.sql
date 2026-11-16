@@ -19,6 +19,11 @@
 --                              de la colonne Seed. Garder les alias (as seed_region, as seed_number).
 --   TODO 3 (models/staging/_staging_models.yml) : déclarer les tests de seed_region et seed_number.
 --
+-- FONCTIONS UTILES (une expression peut en contenir plusieurs, comme en maths : f(g(x)))
+--   left(texte, n)                     les n premiers caractères      left('W02', 1)                  = 'W'
+--   regexp_extract(texte, '[0-9]+')    les chiffres, en texte         regexp_extract('W02', '[0-9]+') = '02'
+--   cast(texte as integer)             conversion en entier           cast('02' as integer)           = 2
+--
 -- Aperçu du résultat : task show M=stg_tourney_seeds
 -- Vérifier         : task build (au vert quand la mission est finie)
 -- Détail d'un échec : task show M=mission_1_stg_tourney_seeds
@@ -32,15 +37,9 @@ renamed as (
         Season          as season,
         TeamID          as team_id,
         Seed            as seed_raw,
-        null::varchar   as seed_region,   -- TODO 1 : premier caractère de Seed.
-                                          --   left(texte, n) renvoie les n premiers caractères :
-                                          --   left('W02', 1) = 'W'
-        null::integer   as seed_number    -- TODO 2 : les chiffres de Seed, en entier.
-                                          --   regexp_extract(texte, '[0-9]+') renvoie les chiffres, en texte :
-                                          --   regexp_extract('W02', '[0-9]+') = '02'
-                                          --   cast(texte as integer) convertit en entier :
-                                          --   cast('02' as integer) = 2
-                                          --   Les deux fonctions s'imbriquent : cast(regexp_extract(...) as integer)
+        null::varchar   as seed_region,   -- TODO 1 : la lettre de la région, prise dans Seed
+        null::integer   as seed_number    -- TODO 2 : le numéro, pris dans Seed, en entier
+                                          --   (attention : regexp_extract renvoie du texte)
     from source
 )
 select * from renamed
