@@ -85,7 +85,7 @@ La base ne contient que la couche `staging`. Un modèle dbt est un simple `selec
 
 `seed_region` est la lettre de la région du bracket ; `seed_number` est un **entier**.
 
-1. Dans `transformation/models/staging/stg_tourney_seeds.sql`, remplace les deux `null::...` (TODO 1 et 2) par une expression calculée à partir de la colonne `Seed`, en gardant les alias :
+1. Dans `transformation/models/staging/stg_tourney_seeds.sql`, remplace les deux `null::...` (TODO 1 et 2) par une expression calculée à partir de la colonne `Seed`, en gardant les alias. Trois fonctions suffisent ; pour `seed_number`, il faut en combiner deux, l'une dans l'autre :
 
    | Fonction DuckDB | Exemple | Résultat |
    |---|---|---|
@@ -94,7 +94,7 @@ La base ne contient que la couche `staging`. Un modèle dbt est un simple `selec
    | `cast(texte as integer)` : conversion en entier | `cast('02' as integer)` | `2` |
 
 2. `task show M=stg_tourney_seeds` : tes deux colonnes doivent ressembler à la sortie attendue.
-3. Dans `transformation/models/staging/_staging_models.yml`, TODO 3 : déclare les tests de `seed_region` (`not_null`, et `accepted_values` limité à W, X, Y, Z) et de `seed_number` (`not_null`). Le bloc est déjà écrit en commentaire, à la bonne indentation : sélectionne ses lignes, décommente-les (`Cmd+/` ou `Ctrl+/`), puis remplace `['A', 'B']` par les bonnes valeurs. En YAML, l'indentation compte : `data_tests` doit être aligné sur `description`.
+3. Dans `transformation/models/staging/_staging_models.yml`, TODO 3 : déclare les tests de `seed_region` (`not_null`, et `accepted_values` limité à W, X, Y, Z) et de `seed_number` (`not_null`). Le même fichier contient déjà ces deux tests sur une autre colonne : `w_loc`, dans `stg_regular_season_compact_results`. Inspire-toi de cette déclaration. En YAML, l'indentation compte : `data_tests` doit être aligné sur `description`.
 4. `task build` jusqu'au vert. Tant que les tests ne sont pas déclarés, le test de mission reste rouge : `task show M=mission_1_stg_tourney_seeds` dit ce qui manque.
 
 ### Mission 2 : marts, `dim_tourney_seeds` (20 min)
@@ -122,9 +122,9 @@ La base contient `staging` et une partie de `marts`. Un modèle dbt ne lit jamai
 `region_name` est la colonne `region_w`, `region_x`, `region_y` ou `region_z` qui correspond à `seed_region`.
 
 1. Ouvre `transformation/models/marts/dim_tourney_seeds.sql`. La CTE `seeds` montre comment lire un modèle avec `ref()`.
-2. TODO 1 et 2 : écris de la même façon une CTE `teams` sur `stg_teams` et une CTE `seasons` sur `stg_seasons`.
-3. TODO 3 : `left join` sur `teams` (clé `team_id`), puis remplace `null::varchar as team_name` par la colonne de `teams`.
-4. TODO 4 : `left join` sur `seasons` (clé `season`), puis un `case s.seed_region when 'W' then se.region_w ... end` pour `region_name`.
+2. TODO 1 et 2 : écris de la même façon une CTE `teams` sur `stg_teams` et une CTE `seasons` sur `stg_seasons`. Les CTE se suivent, séparées par une virgule.
+3. TODO 3 : `left join` sur `teams` (alias `t`, clé `team_id`), puis remplace `null::varchar as team_name` par la colonne de `teams`.
+4. TODO 4 : `left join` sur `seasons` (alias `se`, clé `season`), puis un `case` pour `region_name` : le squelette donne la première branche (`when 'W' then se.region_w`), écris les trois autres.
 5. `task show M=dim_tourney_seeds` : vérifie `team_name` et `region_name` sur quelques lignes.
 6. `task build` jusqu'au vert. Pour voir ce que dbt a fait de tes `ref()` : `transformation/target/compiled/transformation/models/marts/dim_tourney_seeds.sql` (le second `transformation` est le nom du projet dbt ; le fichier est créé par `task build`).
 
@@ -162,7 +162,7 @@ La base contient toutes les couches, sauf ta mission. Le tournoi NCAA féminin c
 | `Albany NY` | `Season 2016` | 12 | 1 | 1 | `Second Round` |
 
 1. TODO 1 et 2, dans la CTE `team_tourney_stats` : `tourney_wins` est la somme de `is_win`, `tourney_losses` le nombre de matchs moins les victoires. Convertis les deux en entier avec `::integer` : sans conversion, `sum()` renvoie un `HUGEINT`, que Superset ne traite pas comme un nombre (le test de mission le vérifie).
-2. TODO 3 à 5, dans la CTE `final` : trois `left join` vers des marts lus avec `ref()`, puis remplace les `null::...` par leurs colonnes :
+2. TODO 3 à 5, dans la CTE `final` : trois `left join` vers des marts lus avec `ref()`, puis remplace les `null::...` par leurs colonnes. Le squelette donne la première jointure en exemple ; écris les deux autres :
 
    | Mart | Clé de jointure | Colonnes à prendre |
    |---|---|---|
