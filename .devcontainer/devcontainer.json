@@ -17,7 +17,7 @@
         "tamasfe.even-better-toml",
         "ms-azuretools.vscode-docker",
         "mechatroner.rainbow-csv",
-        "lucien-martijn.parquet-visualizer"
+        "adamviola.parquet-explorer"
       ],
       "settings": {
         "python.defaultInterpreterPath": ".venv/bin/python",
@@ -36,6 +36,14 @@
     }
   },
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  "mounts": [
+    "source=edna-claude-config-${devcontainerId},target=/home/vscode/.claude,type=volume",
+    "source=edna-codex-config-${devcontainerId},target=/home/vscode/.codex,type=volume"
+  ],
+  "containerEnv": {
+    "CLAUDE_CONFIG_DIR": "/home/vscode/.claude",
+    "CODEX_HOME": "/home/vscode/.codex"
+  },
   "postCreateCommand": "bash .devcontainer/post-create.sh",
   "remoteUser": "vscode",
   "forwardPorts": [8088],

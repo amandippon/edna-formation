@@ -23,7 +23,7 @@ task bonus NAME=domicile  # workshop, bonus exercise after mission 3: copy its s
 task superset:up       # build + start Superset on host port 8089, copy the DB, create admin, register the DB connection
 task superset:sync     # docker cp of the DB into the running Superset container + flush the Redis chart cache
 task superset:down     # stop Superset (volumes kept)
-task doctor            # check Docker, DuckDB file, Superset /health
+task doctor            # check Docker and Superset /health (fails only on these); a missing DuckDB file is info only
 ```
 
 The Taskfile is deliberately short. Anything else uses the underlying tools directly: `cd transformation && uv run dbt ...`, `docker logs -f superset`, `docker compose -f visualization/docker-compose.yml down -v` (wipe Superset), `git restore transformation/` (undo workshop edits).
@@ -85,7 +85,7 @@ There is no `dbt deps` step: the project has no dbt packages.
 
 ## Dev environment
 
-VS Code devcontainer (`.devcontainer/`: Python 3.12, uv, DuckDB CLI 1.5.1, Task) with Docker-outside-of-Docker. `post-create.sh` runs `uv sync --no-install-project`, `task ingest` and `task build`, so the DB exists when the container opens. Only port 8088 (Colibri) is forwarded; Superset runs on the host Docker and is reached at http://localhost:8089 from the host browser. Fully local, no cloud.
+VS Code devcontainer (`.devcontainer/`: Python 3.12, uv, DuckDB CLI 1.5.1, Task) with Docker-outside-of-Docker. `post-create.sh` only runs `uv sync --no-install-project` and creates `.env`: it never runs `task ingest` or `task build`, so creating, rebuilding or reopening the container launches no pipeline (run them by hand). The image also ships Node 22, Claude Code (`claude`) and Codex (`codex`); their config dirs (`/home/vscode/.claude`, `/home/vscode/.codex`, via `CLAUDE_CONFIG_DIR`/`CODEX_HOME`) are named volumes, so logins survive a rebuild. Only port 8088 (Colibri) is forwarded; Superset runs on the host Docker and is reached at http://localhost:8089 from the host browser. Fully local, no cloud.
 
 DuckDB 1.5.1 is locked in `uv.lock` and pinned in `visualization/docker/Dockerfile` to guarantee file format compatibility between dbt and Superset. Python is constrained to `>=3.12,<3.13` in `pyproject.toml`; dev dependencies are in `[dependency-groups]`.
 

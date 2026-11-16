@@ -46,11 +46,13 @@ Lance Docker Desktop et attends que l'icône de la baleine soit immobile.
 
    VS Code doit être ouvert **sur le dossier `edna-formation` lui-même**, sinon le devcontainer n'est pas détecté.
 
-2. `Cmd+Shift+P` (macOS) ou `Ctrl+Shift+P` (Windows), puis **Dev Containers: Reopen in Container**. Le premier build prend 5 à 10 minutes. À la fin, le script de post-création installe les dépendances Python (`uv sync`) et construit la base (`task ingest` puis `task build`) : attends le message « ✅ Environnement prêt ! » dans le terminal.
+2. `Cmd+Shift+P` (macOS) ou `Ctrl+Shift+P` (Windows), puis **Dev Containers: Reopen in Container**. Le premier build prend 5 à 10 minutes. À la fin, le script de post-création installe les dépendances Python (`uv sync`) : attends le message « ✅ Environnement prêt ! » dans le terminal. Il ne construit pas la base : c'est l'étape suivante.
 
-3. Dans le terminal VS Code (donc dans le devcontainer), télécharge et construis la stack Superset une première fois :
+3. Dans le terminal VS Code (donc dans le devcontainer), construis la base, puis télécharge et construis la stack Superset une première fois :
 
    ```bash
+   task ingest
+   task build
    task superset:up
    task doctor
    ```
@@ -121,7 +123,7 @@ Autres chemins utiles :
 - **Booléens** (`is_win`, `is_close_game`…) : métrique SQL personnalisée, par exemple `AVG(CASE WHEN is_win THEN 1 ELSE 0 END)`.
 - **Idées de dashboards et dictionnaire des tables** : [atelier/donnees.md](atelier/donnees.md).
 
-Un assistant IA (Claude Code ou équivalent) peut écrire un modèle dbt : le fichier `CLAUDE.md` à la racine lui décrit l'architecture et les conventions.
+Un assistant IA (Claude Code ou équivalent) peut écrire un modèle dbt : le fichier `CLAUDE.md` à la racine lui décrit l'architecture et les conventions. Le devcontainer fournit `claude` (Claude Code) et `codex` (Codex) dans le terminal ; au premier lancement, connecte-toi avec ton compte. La connexion est conservée lors d'un rebuild du conteneur.
 
 ---
 
