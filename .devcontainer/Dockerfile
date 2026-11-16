@@ -20,3 +20,19 @@ RUN curl https://install.duckdb.org | DUCKDB_VERSION=1.5.1 sh \
 
 # Install Task runner
 RUN sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b /usr/local/bin
+
+# Node.js 22 (copié depuis l'image officielle), nécessaire aux CLI d'agents IA
+COPY --from=node:22-bookworm-slim /usr/local/bin/node /usr/local/bin/node
+COPY --from=node:22-bookworm-slim /usr/local/lib/node_modules /usr/local/lib/node_modules
+RUN ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
+    && ln -s ../lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx \
+    && node --version && npm --version
+
+# Agents IA en ligne de commande : Claude Code (claude) et Codex (codex)
+RUN npm install -g @anthropic-ai/claude-code @openai/codex \
+    && claude --version && codex --version
+
+# Dossiers de config des agents, montés en volumes nommés (login conservé au rebuild).
+# Créés ici pour que les volumes neufs appartiennent à vscode et non à root.
+RUN mkdir -p /home/vscode/.claude /home/vscode/.codex \
+    && chown -R vscode:vscode /home/vscode/.claude /home/vscode/.codex
