@@ -33,9 +33,11 @@ Dans VS Code : `Cmd+Shift+P` (macOS) ou `Ctrl+Shift+P` (Windows), puis **Dev Con
 
 ## 3. Télécharger Superset et vérifier
 
-Dans le terminal de VS Code (celui du devcontainer) :
+Dans le terminal de VS Code (celui du devcontainer), construis d'abord la base, puis Superset :
 
 ```bash
+task ingest
+task build
 task superset:up
 task doctor
 ```
