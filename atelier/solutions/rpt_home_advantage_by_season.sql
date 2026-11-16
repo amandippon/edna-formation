@@ -8,7 +8,7 @@ by_season as (
     select
         season,
         count(*)                                                   as games,
-        sum(case when w_loc = 'H' then 1 else 0 end)::bigint       as home_wins,
+        count(*) filter (where w_loc = 'H')                        as home_wins,
         avg(case when w_loc = 'H' then score_margin
                  else -score_margin end)                           as avg_home_margin
     from games

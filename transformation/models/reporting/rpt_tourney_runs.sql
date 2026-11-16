@@ -21,17 +21,14 @@ team_tourney_stats as (
     from all_tourney_team_games
     group by season, team_id
 ),
-seeds as (
-    select * from {{ ref('dim_tourney_seeds') }}
-),
 final as (
     select
         t.team_name,
         t.team_state,
         t.team_state_iso,
         tts.season,
-        s.season_label,
-        seed.seed_number,
+        se.season_label,
+        sd.seed_number,
         tts.tourney_wins,
         tts.tourney_losses,
         tts.avg_pts_scored_tourney,
@@ -47,8 +44,8 @@ final as (
             else        'First Round Exit'
         end                             as tournament_result
     from team_tourney_stats tts
-    left join {{ ref('dim_teams') }}   t    on tts.team_id = t.team_id
-    left join {{ ref('dim_seasons') }} s    on tts.season  = s.season
-    left join seeds                    seed on tts.season  = seed.season and tts.team_id = seed.team_id
+    left join {{ ref('dim_teams') }}         t  on tts.team_id = t.team_id
+    left join {{ ref('dim_seasons') }}       se on tts.season  = se.season
+    left join {{ ref('dim_tourney_seeds') }} sd on tts.season  = sd.season and tts.team_id = sd.team_id
 )
 select * from final
