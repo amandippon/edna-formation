@@ -197,9 +197,10 @@ But : brancher Superset sur ta table de reporting et en tirer un dashboard qui r
 2. `task superset:sync` : recopie ta base (avec ta table de la mission 3) dans Superset.
 3. Ouvre **http://localhost:8089** dans le navigateur de ta machine, connecte-toi avec `admin` / `admin`.
 4. La connexion **NCAA Basketball (DuckDB)** existe déjà : **Settings > Database Connections** pour voir son URI.
-5. **Datasets > + Dataset** : base `NCAA Basketball (DuckDB)`, schéma `"edna-sports-data".reporting`, ta table.
-6. Crée 2 à 4 charts (un **Line Chart** par saison, un **Big Number**, une **Table**), puis assemble-les dans un dashboard.
-7. Encore du temps : ajoute un chart sur une autre table `reporting` ([idées et dictionnaire](donnees.md)).
+5. **Datasets > + Dataset** : base `NCAA Basketball (DuckDB)`, schéma `"edna-sports-data".reporting`, crée deux datasets : `rpt_season_overview` (une ligne par saison, déjà agrégée) et ta table `rpt_tourney_runs`.
+6. **Vue d'ensemble** sur `rpt_season_overview` : 3 **Big Number with Trendline** (matchs joués, équipes, points par match ; colonne temporelle `season_date`, découpage Year), un **Bar Chart** des matchs par saison et une **Table** du palmarès (`champion_name`, `runner_up_name`, `final_score`). Assemble-les dans un dashboard, puis ajoute un filtre **Numerical range** sur `season` (panneau des filtres à gauche, ⚙ > **Add or edit filters** ; [mode d'emploi](donnees.md#filtrer-un-dashboard)).
+7. Ajoute un chart sur ta table : par exemple le nombre de titres par `seed_number`, ou le `tournament_result` des seeds 1.
+8. Encore du temps : un deuxième dashboard qui répond à une seule question, à partir des [six pistes et du dictionnaire des tables](donnees.md).
 
 ## Si tu es perdu
 
