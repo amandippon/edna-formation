@@ -121,7 +121,7 @@ Autres chemins utiles :
 
 - **SQL Lab** (**SQL > SQL Lab**) : une requête sur n'importe quel schéma, puis **Save > Save dataset**, devient un dataset virtuel.
 - **Booléens** (`is_win`, `is_close_game`…) : métrique SQL personnalisée, par exemple `AVG(CASE WHEN is_win THEN 1 ELSE 0 END)`.
-- **Idées de dashboards et dictionnaire des tables** : [atelier/donnees.md](atelier/donnees.md).
+- **Idées de dashboards et dictionnaire des tables** : [atelier/donnees.md](atelier/donnees.md). Commence par une vue d'ensemble sur `rpt_season_overview` (une ligne par saison : matchs, équipes, points, palmarès), puis un dashboard par question.
 
 Un assistant IA (Claude Code ou équivalent) peut écrire un modèle dbt : le fichier `CLAUDE.md` à la racine lui décrit l'architecture et les conventions. Le devcontainer fournit `claude` (Claude Code) et `codex` (Codex) dans le terminal ; au premier lancement, connecte-toi avec ton compte. La connexion est conservée lors d'un rebuild du conteneur.
 
@@ -195,7 +195,7 @@ En vocabulaire médaillon : les fichiers Parquet de `processed-resources/` tienn
 |---|---|---|
 | `staging` | Copie fidèle des CSV, colonnes renommées en snake_case, aucune règle métier | 11 tables `stg_*` |
 | `marts` | Dimensions et faits nettoyés et enrichis | `dim_teams`, `dim_seasons`, `dim_cities`, `dim_tourney_seeds`, `fct_regular_season_games`, `fct_tourney_games` |
-| `reporting` | Tables larges prêtes pour Superset | `rpt_team_games`, `rpt_games`, `rpt_team_season_stats`, `rpt_tourney_runs` |
+| `reporting` | Tables larges prêtes pour Superset | `rpt_season_overview`, `rpt_team_games`, `rpt_games`, `rpt_team_season_stats`, `rpt_tourney_runs` |
 | `reporting` (exemples) | Une question métier = un modèle | `rpt_uconn_tennessee_*` (5 tables) |
 
 Le code des modèles est dans `transformation/models/<couche>/`, leur documentation dans les fichiers `_*_models.yml`. Les totaux calculés avec `sum()` sont convertis en `::integer` : DuckDB renvoie sinon un `HUGEINT`, que Superset ne traite pas comme un nombre. Le dictionnaire des tables `reporting` est dans [atelier/donnees.md](atelier/donnees.md).
