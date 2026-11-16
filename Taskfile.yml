@@ -216,7 +216,7 @@ tasks:
       - |
         ok=0
         if docker info > /dev/null 2>&1; then echo "✅ Docker joignable"; else echo "❌ Docker ne répond pas : démarre Docker Desktop"; ok=1; fi
-        if [ -f "{{.PROJECT_DIR}}/{{.DB_FILE}}" ]; then echo "✅ Base {{.DB_FILE}} présente"; else echo "❌ Base {{.DB_FILE}} absente : task ingest puis task build"; ok=1; fi
+        if [ -f "{{.PROJECT_DIR}}/{{.DB_FILE}}" ]; then echo "✅ Base {{.DB_FILE}} présente"; else echo "ℹ️  Base {{.DB_FILE}} pas encore construite : task ingest puis task build"; fi
         if docker ps --format '{{"{{"}}.Names{{"}}"}}' 2>/dev/null | grep -qx {{.SUPERSET_CONTAINER}}; then
           if docker exec {{.SUPERSET_CONTAINER}} curl -sf http://localhost:8088/health > /dev/null 2>&1; then
             echo "✅ Superset répond : http://localhost:8089 (admin / admin)"
