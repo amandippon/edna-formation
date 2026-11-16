@@ -44,6 +44,27 @@ Les descriptions complètes sont dans `transformation/models/reporting/_reportin
 - **Cartes** : le chart **Country Map** (pays `usa`) attend des codes ISO comme `US-TX` : utilisez `team_state_iso` ou `state_iso`.
 - **Temps** : `game_date` est la colonne temporelle des tables de matchs ; `season_date` celle de `rpt_season_overview` (découpage **Year**). Sans colonne temporelle, utilisez `season` en dimension.
 
+## Filtrer un dashboard
+
+Un filtre de dashboard laisse le lecteur poser ses propres questions (« et sur 2010-2019 ? », « et pour Connecticut ? ») sans dupliquer les charts.
+
+1. Ouvre le dashboard. Dans le panneau des filtres à gauche (flèche pour le déplier), menu ⚙ > **Add or edit filters**.
+2. **Add filter**, puis choisis le **Filter Type** :
+   - **Value** : liste de valeurs d'une colonne texte (`team_name`, `game_type`, `upset_label`…). **Can select multiple values** pour en cocher plusieurs ;
+   - **Numerical range** : curseur entre deux bornes, idéal pour `season` (toutes les tables `reporting` l'ont) ;
+   - **Time range** : période sur la colonne temporelle des charts (`season_date`, `game_date`).
+3. Renseigne le nom affiché, le **Dataset** et la **Column**, puis **Save**.
+4. Onglet **Scoping** : par défaut, le filtre s'applique aux charts construits sur le même dataset. Pour qu'un filtre `season` agisse aussi sur un chart d'un autre dataset, sélectionne ce chart dans le scoping : Superset applique le filtre sur la colonne de même nom. Exclus les charts qui n'ont pas la colonne.
+5. Option utile : **Pre-filter available values** limite les valeurs proposées (par exemple `game_type = 'Tournament'`), et un filtre peut dépendre d'un autre (choix de la saison, puis des équipes de cette saison).
+
+Le **cross-filtering** complète les filtres : un clic sur une barre ou une part de camembert filtre les autres charts du dashboard. Le filtre actif s'affiche en haut du panneau, une croix l'enlève.
+
+Points d'attention :
+
+- Un **Big Number with Trendline** affiche la dernière valeur de la période filtrée : avec `season` entre 1998 et 2005, il montre 2005. Le titre du chart doit le dire.
+- Un filtre sur `season` ne corrige pas les trous de couverture : sur 1998-2009, les charts de box score restent vides. Ajoute une description au filtre (champ **Description**) pour le signaler.
+- Une métrique `AVG()` sur `rpt_season_overview` reste une moyenne de moyennes, quel que soit le filtre (voir les pièges ci-dessus).
+
 ## Commencer par une vue d'ensemble
 
 Avant de creuser une question, un dashboard d'ouverture situe le terrain de jeu : combien de matchs, combien d'équipes, à quoi ressemble un match type, qui gagne. Il sert de page d'accueil et fait apparaître les trous et les anomalies des données, ce qui évite de mal interpréter les dashboards suivants.
@@ -57,6 +78,7 @@ Avant de creuser une question, un dashboard d'ouverture situe le terrain de jeu 
   - victoires à domicile (`AVG(home_win_pct)`) : 60 à 63 % chaque saison.
 - **Évolution** : **Bar Chart** empilé `regular_games` + `tourney_games` par `season` ; **Line Chart** de `avg_total_points` et `avg_score_margin`.
 - **Palmarès** : **Table** `season`, `champion_name`, `champion_seed`, `runner_up_name`, `final_score`, triée par saison décroissante.
+- **Filtres** : **Numerical range** sur `season` (1998-2019), appliqué à tous les charts ; **Value** sur `champion_name` pour ne garder que les saisons gagnées par une équipe (appliqué au palmarès seulement, sinon les KPI ne portent plus que sur ces saisons).
 - **Lecture** : la moyenne de points fait un saut en 2014 (134,8 contre 123,6 en 2013), puis redescend à 128,6. La médiane fait le même saut, donc ce ne sont pas quelques matchs aberrants. Un changement de règles est possible, mais rien dans les données ne permet de le confirmer : c'est le genre de question que la vue d'ensemble doit soulever.
 - **Données manquantes visibles** : pas de prolongations avant 2005, pas de part des tirs à 3 points avant 2010, pas de tournoi en 2019. Laissez ces trous apparents sur les courbes plutôt que de les remplir par des zéros.
 
@@ -70,6 +92,7 @@ Chacun répond à une question, avec un chiffre qui l'ouvre. Les chiffres ont é
 - **Table** : `rpt_team_games`.
 - **Charts** : Big Number du taux de victoire à domicile (filtre `game_type = 'Regular'`, `team_location = 'Home'`) ; Line Chart de `home_win_pct` par saison depuis `rpt_season_overview` ; Bar Chart du taux de victoire du mieux classé au tournoi, par `team_location` (filtre `team_seed < opponent_seed`).
 - **Accroche** : en saison régulière, l'équipe qui reçoit gagne **61,6 %** des matchs non neutres. Au tournoi, elle en gagne **80 %**, mais c'est surtout parce que les mieux classées accueillent les premiers tours (93 % des cas). À seed meilleur égal, le favori gagne **75 %** des matchs sur terrain neutre et **83 %** chez lui : le terrain ajoute environ 8 points de pourcentage.
+- **Filtres** : **Value** sur `game_type` (Regular ou Tournament) ; **Numerical range** sur `season`, étendu dans le scoping au Line Chart de `rpt_season_overview` ; **Value** sur `team_name` pour l'avantage du terrain d'une équipe donnée.
 - **Piège** : les taux Home et Away sont complémentaires par construction (le perdant de l'un est le gagnant de l'autre) ; comparez des saisons, des contextes ou des équipes, pas Home contre Away.
 
 ### 2. Le tir à 3 points prend-il le pouvoir ?
@@ -78,6 +101,7 @@ Chacun répond à une question, avec un chiffre qui l'ouvre. Les chiffres ont é
 - **Tables** : `rpt_season_overview` pour la tendance, `rpt_team_games` pour les équipes (filtre `has_box_score`).
 - **Charts** : Line Chart de `three_pt_attempt_share` par saison ; Line Chart de l'adresse à 3 points (`SUM(fgm3) / SUM(fga3)` sur `rpt_team_games`) ; **Bubble Chart** une bulle par `team_name` sur une saison : x = `SUM(fga3) / SUM(fga)`, y = `AVG(CASE WHEN is_win THEN 1 ELSE 0 END)`, taille = `COUNT(*)`.
 - **Accroche** : la part des tirs tentés à 3 points passe de **28,3 %** en 2010 à **32,5 %** en 2019, et l'essentiel de la hausse se fait après 2015, alors que l'adresse à 3 points reste stable autour de **31 %**.
+- **Filtres** : **Numerical range** sur `season`, bornes par défaut 2010-2019 (pas de box score avant) ; **Value** sur `game_type` ; **Value** sur `team_name` (plusieurs valeurs) pour comparer quelques équipes sur le Bubble Chart.
 
 ### 3. Les surprises du tournoi
 
@@ -85,6 +109,7 @@ Chacun répond à une question, avec un chiffre qui l'ouvre. Les chiffres ont é
 - **Tables** : `rpt_games` (filtre `game_type = 'Tournament'`), `rpt_season_overview` pour les colonnes `champion_seed` et `tourney_upset_pct`.
 - **Charts** : Bar Chart des matchs par `upset_label` ; **Heatmap** `w_seed_number` x `l_seed_number` ; Line Chart de `tourney_upset_pct` par saison ; Pie Chart des titres par `champion_seed`.
 - **Accroche** : **21,7 %** des matchs du tournoi (287 sur 1 323) sont gagnés par l'équipe la moins bien classée, mais un seul avec 10 seeds d'écart ou plus en 21 tournois, et les 21 champions étaient tous seed 1 (17) ou seed 2 (4). Les surprises existent au premier tour, jamais au bout.
+- **Filtres** : **Value** sur `upset_label`, pré-filtré sur `game_type = 'Tournament'` ; **Numerical range** sur `season` (1998-2018), étendu aux charts de `rpt_season_overview` ; cross-filtering : un clic sur une case de la Heatmap filtre les autres charts sur cette affiche.
 
 ### 4. Les dynasties
 
@@ -92,6 +117,7 @@ Chacun répond à une question, avec un chiffre qui l'ouvre. Les chiffres ont é
 - **Tables** : `rpt_tourney_runs`, `rpt_team_season_stats`, ou les exemples `rpt_uconn_tennessee_*`.
 - **Charts** : Bar Chart des titres et des Final Four par équipe (`tourney_wins >= 4`) ; Line Chart du `win_pct` des 5 meilleures équipes par saison ; Table des saisons régulières invaincues (`losses = 0`).
 - **Accroche** : Connecticut remporte **10 des 21 titres** entre 1998 et 2018 et atteint **16** Final Four ; Tennessee suit avec 3 titres et 8 Final Four.
+- **Filtres** : **Value** sur `team_name` (plusieurs valeurs), appliqué à tous les charts puisque les deux tables ont la colonne ; **Numerical range** sur `season` pour isoler une époque ; **Value** sur `tournament_result` (charts de `rpt_tourney_runs` seulement).
 
 ### 5. Où sont les puissances ?
 
@@ -99,6 +125,7 @@ Chacun répond à une question, avec un chiffre qui l'ouvre. Les chiffres ont é
 - **Tables** : `rpt_team_season_stats` (par état d'équipe), `rpt_tourney_runs`.
 - **Charts** : deux **Country Map** côte à côte sur `team_state_iso` : qualifications au tournoi en volume (`SUM(CASE WHEN made_tourney THEN 1 ELSE 0 END)`) puis par équipe (la même somme divisée par `COUNT(DISTINCT team_name)`) ; Bar Chart des Final Four par état.
 - **Accroche** : en volume, le Texas mène (**101** qualifications, 23 équipes) devant la Californie (94, 25 équipes) : ce sont surtout les États qui ont le plus d'équipes. Par équipe, le Tennessee arrive en tête des grands États (**7,2** qualifications par équipe, contre 4,4 au Texas), et le Connecticut cumule **16** Final Four avec une seule équipe. Une carte en volume ressemble souvent à une carte de la population.
+- **Filtres** : **Numerical range** sur `season` ; **Value** sur `team_state` pour lister les équipes d'un État dans une Table ; cross-filtering : un clic sur un État de la carte filtre le Bar Chart.
 
 ### 6. Matchs serrés et prolongations
 
@@ -106,6 +133,7 @@ Chacun répond à une question, avec un chiffre qui l'ouvre. Les chiffres ont é
 - **Tables** : `rpt_games`, `rpt_team_games`.
 - **Charts** : **Histogram** de `score_margin` (ou de `total_points`) ; Big Number de la part des matchs serrés ; Table des équipes au meilleur bilan dans les matchs serrés (filtre `is_close_game`, au moins 30 matchs) à côté de leur bilan global ; Table des matchs à plusieurs prolongations (`num_ot >= 3`, filtre `season >= 2005`).
 - **Accroche** : en saison régulière, **21,4 %** des matchs se jouent à 5 points ou moins et **4,3 %** vont en prolongation sur 2005-2019, jusqu'à 5 prolongations dans un même match. Si le bilan d'une équipe dans les matchs serrés suit de près son bilan global, c'est du niveau plus que du sang-froid.
+- **Filtres** : **Value** sur `game_type` ; **Numerical range** sur `season`, à partir de 2005 pour les charts de prolongations ; **Numerical range** sur `num_ot` pour isoler les matchs à rallonge.
 
 ## Annexe : requêtes de vérification
 
