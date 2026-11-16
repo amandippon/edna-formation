@@ -39,8 +39,9 @@ There is no `dbt deps` step: the project has no dbt packages.
   - Layering rule: reporting models only `ref()` marts, never staging.
   - `models/marts/` (schema `marts`, tables): `dim_teams` (team_state inferred from home games, 2010+), `dim_seasons`, `dim_cities`, `dim_tourney_seeds` (one row per season and seeded team, with bracket region name), `fct_regular_season_games`, `fct_tourney_games` (winner/loser format, game_id, game_date, box score, seeds and upsets for tournament).
   - `models/reporting/` (schema `reporting`, tables): wide, denormalized tables meant as Superset datasets:
+    - `rpt_season_overview`: one row per season (1998-2019): game and team counts, regular season game profile (avg points, close/overtime/home win rates, 3-point attempt share), tournament upsets, champion and runner-up. `season_date` (Jan 1 of the season year) is the Superset time column. Source of the "overview" dashboard; refs marts only, so it builds on step 3 even with the mission skeleton.
     - `rpt_team_games`: one row per team per game (regular + tournament), team point of view, signed `pt_diff`, `team_location`, seeds, upset flags, team box score + a few opponent stats. PK `team_game_id`. Most flexible table.
-    - `rpt_games`: one row per game, winner/loser names, city/state, upset label.
+    - `rpt_games`: one row per game, winner/loser names, total points, num_ot, city/state, upset label.
     - `rpt_team_season_stats`: one row per team per regular season.
     - `rpt_tourney_runs`: one row per team per tournament, `tournament_result`, `is_champion`.
   - `models/reporting/examples/`: `rpt_uconn_tennessee_*` (5 models, schema `reporting`), example of "one business question = one model". Documented in `_examples_models.yml`.
@@ -81,7 +82,7 @@ There is no `dbt deps` step: the project has no dbt packages.
 
 3. Cast every `sum()` to `::integer` (`sum(is_win)::integer`, `(count(*) - sum(is_win))::integer`): DuckDB returns `HUGEINT` for sums of integers, which Superset does not treat as numeric.
 4. Run `task build`, then `task superset:sync` if Superset is running (it also flushes the Redis chart cache). In Superset: Datasets > + Dataset for a new table, or Edit dataset > Sync columns from source for a changed one.
-5. Keep data coverage in mind: box score and cities only from 2010, tournament until 2018, seeds null for regular season.
+5. Keep data coverage in mind: box score and cities only from 2010, overtime only recorded from 2005, tournament until 2018, seeds null for regular season.
 
 ## Dev environment
 
