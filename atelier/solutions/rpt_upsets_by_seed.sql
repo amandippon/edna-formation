@@ -18,8 +18,8 @@ final as (
         underdog_seed,
         underdog_seed - favorite_seed              as seed_gap,
         count(*)                                   as games,
-        sum(case when is_upset then 1 else 0 end)::bigint as upsets,
-        round(avg(case when is_upset then 1.0 else 0.0 end), 3) as upset_pct
+        count(*) filter (where is_upset)           as upsets,
+        round(upsets / games, 3)                   as upset_pct
     from matchups
     group by favorite_seed, underdog_seed
 )

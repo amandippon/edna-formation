@@ -8,9 +8,9 @@ by_season as (
     select
         season,
         count(*)                              as games,
-        sum(w_fga3 + l_fga3)::bigint          as fga3,
-        sum(w_fgm3 + l_fgm3)::bigint          as fgm3,
-        sum(w_fga + l_fga)::bigint            as fga
+        sum(w_fga3 + l_fga3)::integer         as fga3,
+        sum(w_fgm3 + l_fgm3)::integer         as fgm3,
+        sum(w_fga + l_fga)::integer           as fga
     from games
     group by season
 ),

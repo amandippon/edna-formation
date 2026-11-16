@@ -50,7 +50,7 @@ team_tourney_stats as (
                                                                  --   Convertir en entier : sum(colonne)::integer
                                                                  --   (sans ::integer, DuckDB renvoie un HUGEINT, mal géré par Superset)
         null::integer                       as tourney_losses,   -- TODO 2 : nombre de matchs (count(*)) moins les victoires,
-                                                                 --   le tout en entier : (... - ...)::integer
+                                                                 --   en entier lui aussi
         round(avg(pts_scored), 1)           as avg_pts_scored_tourney,
         round(avg(pts_allowed), 1)          as avg_pts_allowed_tourney
     from all_tourney_team_games
@@ -58,15 +58,12 @@ team_tourney_stats as (
 ),
 final as (
     select
-        null::varchar                   as team_name,       -- TODO 3 : joindre dim_teams (alias t) sur team_id,
-        null::varchar                   as team_state,      --   puis remplacer ces trois lignes par
-                                                            --   t.team_name, t.team_state, t.team_state_iso
+        null::varchar                   as team_name,       -- TODO 3 : ces trois colonnes existent sous le même nom
+        null::varchar                   as team_state,      --   dans dim_teams (alias t)
         null::varchar                   as team_state_iso,
         tts.season,
-        null::varchar                   as season_label,    -- TODO 4 : joindre dim_seasons (alias se) sur season,
-                                                            --   puis se.season_label
-        null::integer                   as seed_number,     -- TODO 5 : joindre dim_tourney_seeds (alias sd) sur season ET team_id,
-                                                            --   puis sd.seed_number
+        null::varchar                   as season_label,    -- TODO 4 : dans dim_seasons (alias se)
+        null::integer                   as seed_number,     -- TODO 5 : dans dim_tourney_seeds (alias sd)
         tts.tourney_wins,
         tts.tourney_losses,
         tts.avg_pts_scored_tourney,
@@ -82,10 +79,11 @@ final as (
             else 'First Round Exit'
         end                             as tournament_result
     from team_tourney_stats tts
-    -- TODO 3 à 5 : les trois jointures, chacune vers un mart lu avec ref (comme tourney_games plus haut) :
-    --   left join <ref vers dim_teams>         t  on tts.team_id = t.team_id
-    --   left join <ref vers dim_seasons>       se on ...
-    --   left join <ref vers dim_tourney_seeds> sd on ... and ...
+    -- TODO 3 à 5 : les trois jointures, chacune vers un mart lu avec ref (comme tourney_games plus haut).
+    --   La première, pour l'exemple :
+    --     left join {{ ref('dim_teams') }} t on tts.team_id = t.team_id
+    --   À toi d'écrire les deux autres. Une équipe a un seed différent chaque saison :
+    --   la jointure vers dim_tourney_seeds porte sur deux colonnes (on ... and ...).
     --   left join et non inner join : une ligne par équipe et par saison, la jointure ne doit ni en ajouter ni en retirer.
 )
 select * from final
